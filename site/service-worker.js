@@ -1,4 +1,4 @@
-const CACHE_NAME = 'water-tracker-v1';
+const CACHE_NAME = 'water-tracker-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -23,13 +23,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Network-first: always try to fetch the freshest copy while online, so
+// edits to config.js/bundle.js/index.html show up right away. Only fall
+// back to the cached copy if the network request fails (e.g. offline).
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).catch(() => cached);
-    })
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
