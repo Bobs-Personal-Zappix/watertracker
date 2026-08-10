@@ -1,0 +1,19 @@
+{
+  "name": "water-tracker-push",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "vapid": "npx @pushforge/builder vapid",
+    "tail": "wrangler tail",
+    "pretest": "openssl req -x509 -newkey rsa:2048 -keyout test/key.pem -out test/cert.pem -days 1 -nodes -subj \"/CN=127.0.0.1\"",
+    "test": "node test/run-tests.mjs"
+  },
+  "dependencies": {
+    "@pushforge/builder": "^2.0.5"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

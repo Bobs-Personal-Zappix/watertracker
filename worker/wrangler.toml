@@ -1,0 +1,20 @@
+name = "water-tracker-push"
+main = "src/worker.js"
+compatibility_date = "2026-01-01"
+
+# Every 15 minutes. Cloudflare cron runs in UTC; the Worker itself converts
+# to each subscriber's saved timezone before deciding whether to send.
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Create with: wrangler kv namespace create water-tracker-kv
+# then paste the id it prints below.
+[[kv_namespaces]]
+binding = "WATER_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Public key and contact email are not secret - safe to commit.
+# VAPID_PRIVATE_KEY is the one real secret - set with `wrangler secret put`, see README.
+[vars]
+VAPID_PUBLIC_KEY = "REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY"
+VAPID_CONTACT_EMAIL = "mailto:you@example.com"
