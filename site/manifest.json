@@ -1,7 +1,7 @@
 {
-  "name": "The Pro-Hydro Coach",
-  "short_name": "Pro-Hydro",
-  "description": "Personal daily water and protein tracker",
+  "name": "HydroPro Tracker",
+  "short_name": "HydroPro",
+  "description": "Personal daily water, protein, and calorie tracker",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
