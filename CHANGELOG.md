@@ -4,6 +4,23 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.2.0] — 2026-08-11
+
+Polish pass based on real usage — editable entries, clearer labeling, and visual tweaks across the header and Log screen.
+
+### Added
+- **Description field on the manual Log form.** Optional — type something like "Post-workout shake" instead of getting the auto-generated "Water + Protein" label. Presets are unaffected; this only applies to manual entries.
+- **Editable Today's log entries.** Each row now has an edit (pencil) button alongside delete — fixes the exact "clicked a preset but need to change the time" case, and also lets you adjust amounts or the description after the fact. Editing updates the entry in place; confirmed it doesn't create a duplicate.
+
+### Changed
+- "+ Add preset" is now a full-width button below the preset grid, styled larger — reads as a section-end separator rather than another grid tile.
+- "Day Tracker" label is now all caps.
+- Banner title "HydroPro Tracker" enlarged; the "...by Boston Pickleball Assoc." byline size left untouched.
+- Header badge icons are now colored to match each metric elsewhere in the app — blue water, green protein, orange calories — instead of all three sharing one color.
+- Settings' preset list is now alphabetical, matching the Log page's preset grid.
+
+---
+
 ## [1.1.0] — 2026-08-11
 
 The biggest single update yet — presets now work the way people actually eat and drink, and the Log screen got a real readability pass based on tester feedback.
