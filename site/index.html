@@ -19,7 +19,7 @@
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--paper); color:var(--ink); }
     .wrap { max-width: 480px; margin: 0 auto; }
     .hero { position:relative; background:linear-gradient(135deg, #0B4F72 0%, #158FB0 52%, #35D6E8 100%); padding: 34px 20px 42px; text-align:center; overflow:hidden; }
-    .badge { width:60px; height:60px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; gap:5px; margin:0 auto 16px; box-shadow:0 6px 16px rgba(4,40,54,.28); }
+    .badge { width:64px; height:64px; border-radius:50%; background:#fff; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; align-items:center; justify-items:center; margin:0 auto 16px; box-shadow:0 6px 16px rgba(4,40,54,.28); padding:6px; }
     .badge svg { width:18px; height:18px; stroke:#158FB0; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
     .badge svg.filled { fill:#158FB0; stroke:none; }
     .hero h1 { font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; color:#fff; margin:0; }
@@ -50,6 +50,7 @@
         <svg viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
         <svg viewBox="0 0 24 24"><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/></svg>
         <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
       </div>
       <h1>HydroPro Tracker</h1>
       <span class="byline">...by Boston Pickleball Assoc.</span>
