@@ -4,6 +4,14 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.7.1] — 2026-08-12
+
+### Fixed
+- Sleep tracker's icon, "Slept" label, and Log button sat higher than Calories' equivalent elements in the same grid row — the bed gauge was 88px tall while the other three were 96-97px, so everything below it landed at a different vertical offset. Equalized all four gauges to the same height, scaling each width proportionally to keep its own aspect ratio intact.
+- Also hardened the "to go" caption above each gauge to always reserve space for 2 lines regardless of whether that particular card's text actually wraps — this was a second, independent way the same kind of misalignment could have resurfaced later with a different combination of numbers (e.g., "550cal over" wrapping while "8hrs to go" doesn't).
+
+---
+
 ## [1.7.0] — 2026-08-12
 
 Sizing correction and a real logo redesign.
