@@ -4,6 +4,20 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.7.0] — 2026-08-12
+
+Sizing correction and a real logo redesign.
+
+### Changed
+- Tracker cards, gauges, and text bumped back up moderately (~30% bigger than the previous round) after they turned out too small — still fits all 4 on screen, just with the extra room put to use instead of left empty.
+- **New 4-icon logo**, used consistently in both the in-app header badge and the phone home-screen icon: droplet, battery, flame, and bed arranged in a 2×2 grid instead of squeezed into a single row. This reads as a deliberate mark rather than icons tacked on as they were added one at a time, and gives sleep equal visual weight to the original three.
+- Landing page hero badge updated to match (kept intentionally monochrome, consistent with its existing style, rather than colorizing it to match the in-app version).
+
+### Design note
+The bed icon worked on the first attempt this time — a simple headboard + mattress + pillow + legs construction, same "keep it simple" approach that worked well for the battery earlier. Confirmed by actually viewing the generated icon at multiple sizes before shipping, same discipline as every icon change this project has gone through.
+
+---
+
 ## [1.6.0] — 2026-08-12
 
 Fits all 4 trackers on screen at once, restructured the Log buttons per-card, and added the bedtime reminder.
