@@ -4,6 +4,17 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.4.0] — 2026-08-11
+
+Refined the tracker layout based on a "containers" mental model, plus follow-up icon polish.
+
+### Changed
+- Tracker column order changed to: goal → "to go" status → icon → consumed total. The idea: "to go" sits above the container since it's what's still coming in, while the running total sits below since it's what's already settled in the container — separates in vs. out more intuitively than having both numbers on the same side of the icon.
+- App icon: battery is now green and the flame is dark orange, so all three icons are distinguishable by color as well as shape (previously all white).
+- App icon: fixed a vertical alignment issue where the flame sat noticeably lower than the droplet — the two-tongue flame shape's visual weight was centered differently than the droplet's tip-heavy shape; nudged it up to match.
+
+---
+
 ## [1.3.0] — 2026-08-11
 
 Log screen readability pass, plus a real redesign of the home-screen icon.
