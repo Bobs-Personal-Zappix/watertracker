@@ -4,6 +4,12 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## Icon update — 2026-08-11
+
+- App icon recolored: droplet is now dark ocean blue, battery is white, flame is red — swapped away from the green battery, which was too close to the background's blue tone to read clearly, especially at small sizes. Confirmed the favicon-size legibility issue is actually fixed, not just improved.
+
+---
+
 ## [1.4.1] — 2026-08-11
 
 ### Added
