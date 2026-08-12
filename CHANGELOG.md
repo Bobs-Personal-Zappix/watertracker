@@ -4,6 +4,27 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.6.0] — 2026-08-12
+
+Fits all 4 trackers on screen at once, restructured the Log buttons per-card, and added the bedtime reminder.
+
+### Changed
+- All 4 tracker cards, their gauges, and their text shrunk significantly (~45% smaller graphics, tighter spacing) so the full 2×2 grid fits on a phone screen without scrolling. Presets and Today's Log remain below the fold, which is fine since they're used less at-a-glance than the trackers themselves.
+- Replaced the single shared "Log" button with four separate buttons — Log Water, Log Protein, Log Calories, Log Sleep — one under each tracker card. The first three all open the same unified multi-field sheet; only Sleep opens its own dedicated flow. This restores visual symmetry across all 4 cards.
+
+### Added
+- **Bedtime reminder.** New card in Remind → Bedtime reminder, with its own enable toggle and time picker, completely independent of the existing interval-based reminder schedule. Sends once per day via push notification.
+- Worker updated to store and check bedtime independently from the regular reminder schedule — both can fire in the same run if both are due, and each has its own de-duplication so neither can double-send in a day.
+- In-app tutorial and the public landing page both updated to mention sleep logging and the bedtime reminder, and the landing page's hero now shows all 4 tracked metrics instead of 3.
+
+### Testing note
+The Worker's bedtime logic got the same rigor as everything else this project has shipped: verified it fires independently of the interval schedule, doesn't re-send the same day, correctly sends both notifications when both are due in the same run, and respects being disabled — 9 new Worker-side tests, all passing alongside the 20 that already existed.
+
+### Deployment note
+This release requires **two separate deploys** — the site update as usual, and a Worker redeploy for the bedtime reminder to actually function. The site half will work fine on its own (the Settings UI will just save a preference that doesn't do anything yet) until the Worker catches up.
+
+---
+
 ## [1.5.0] — 2026-08-11
 
 Sleep added as a fourth tracked metric — water, protein, calories, and now sleep, covering all four fuel categories testers asked for.
