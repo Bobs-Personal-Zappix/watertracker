@@ -4,6 +4,37 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.5.0] — 2026-08-11
+
+Sleep added as a fourth tracked metric — water, protein, calories, and now sleep, covering all four fuel categories testers asked for.
+
+### Added
+- **Sleep tracking.** New "Log Sleep" button opens a dedicated flow with Lights Out and Woke Up time pickers. Duration is calculated automatically, including sessions that cross midnight — inferred by comparing clock times rather than requiring a manual "this was yesterday" toggle.
+- **Naps** use the exact same flow (just without crossing midnight) and accumulate into the same daily total as overnight sleep — no separate nap feature needed.
+- **Bed gauge** — a new fillable graphic matching the visual language of the other three trackers, filling as you approach your sleep goal.
+- Sleep integrated into **Reports**: its own metric option with Day/Week/Month views, and included in the combined "All 4" comparison view (renamed from "All 3").
+- Sleep goal and a "Show on Log page" visibility toggle added to Settings, matching the existing pattern for the other three metrics.
+- Log page moved from a 3-column row to a **2×2 grid** to fit the fourth tracker.
+- Today's Log shows a sleep session as one row with both times and total hours, rather than splitting it into separate entries.
+- Backup export/import and CSV export both updated to include sleep data and settings.
+
+### Fixed
+This round involved auditing a substantial amount of sleep-tracking code that already existed in the file from earlier work, and fixing several serious bugs found in it before any of it could be considered safe to ship:
+- **Critical data-loss bug**: the migration logic that runs on every page load had no awareness of sleep entries, and was silently zeroing them out — every sleep entry would have been destroyed on the very next reload. Fixed and specifically tested against a real reload cycle.
+- **App-breaking bug**: a `BedIcon` component was referenced in the UI but never defined or imported anywhere, which would have crashed the entire app on render.
+- The "Log Sleep" button and sheet existed in the UI but had no state or handlers actually wiring them together — tapping it would have done nothing.
+- Editing a sleep entry was routing to the wrong form entirely (the water/protein/calories editor instead of the sleep editor).
+- The 2×2 grid layout and the dual Log-button row were referenced in the code but had no CSS defining them.
+- There was no way to actually set a sleep goal or hide sleep from the Log page, despite the underlying data model supporting both.
+- Backup export/import and CSV export were all missing sleep entirely — the same category of bug caught twice before with presets, now fixed for sleep too before it could bite anyone.
+
+### Known follow-ups
+- The bedtime reminder (a push notification at a configured lights-out time) is intentionally not included in this release — it needs changes to the Cloudflare Worker, not just the site, so it's planned as its own follow-up deploy.
+- Tracker cards haven't been resized to take advantage of the extra width in the new 2×2 grid (they're sized the same as they were in the old 3-column row) — worth a look if the proportions feel off now that there's more room per card.
+- The Reports metric switcher now has 5 buttons in one row (Water/Protein/Cal/Sleep/All 4) — same pattern as before, just one more button; worth confirming it doesn't feel cramped on an actual phone.
+
+---
+
 ## Icon update — 2026-08-11
 
 - App icon recolored: droplet is now dark ocean blue, battery is white, flame is red — swapped away from the green battery, which was too close to the background's blue tone to read clearly, especially at small sizes. Confirmed the favicon-size legibility issue is actually fixed, not just improved.
