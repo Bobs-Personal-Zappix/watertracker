@@ -4,6 +4,13 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.4.1] — 2026-08-11
+
+### Added
+- Small "In" label under each tracker's consumed total, so the meaning of the bottom number is unambiguous at a glance — pairs with the "to go" text above the icon to make the in/out framing self-explanatory to a first-time viewer.
+
+---
+
 ## [1.4.0] — 2026-08-11
 
 Refined the tracker layout based on a "containers" mental model, plus follow-up icon polish.
