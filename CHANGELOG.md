@@ -4,6 +4,18 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [1.3.0] — 2026-08-11
+
+Log screen readability pass, plus a real redesign of the home-screen icon.
+
+### Changed
+- Each tracker column reordered: the running total and "to go" status now sit *above* the gauge graphic instead of below, and both are visually the biggest thing in the card — that's the info people actually check throughout the day.
+- The "to go" / "over" status text significantly enlarged and bolded (was small and muted, easy to miss); numbers themselves left unchanged as before.
+- The gold "over goal" bubble now centers itself in the middle of the gauge instead of overlapping awkwardly at the top edge.
+- **App icon completely redesigned.** Replaced the flat navy background and single plain droplet with a vibrant aqua-blue gradient (matching the in-app banner) and all three tracker icons — droplet, battery, flame — together as the mark. Verified by actually viewing the generated icon at multiple sizes before shipping, rather than guessing blind; went through several iterations after the first attempts (battery, then flame) didn't read correctly at small sizes.
+
+---
+
 ## [1.2.0] — 2026-08-11
 
 Polish pass based on real usage — editable entries, clearer labeling, and visual tweaks across the header and Log screen.
