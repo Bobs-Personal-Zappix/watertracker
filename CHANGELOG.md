@@ -4,6 +4,17 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.2.0] — 2026-08-13
+
+New brand mark, plus a second readability pass on the progress rings based on this morning's feedback.
+
+### Changed
+- **New main logo** — Rob's newest design (a droplet containing the moon, bicep, and apple, no text this time) now used for both the app icon/favicon and the in-app header badge, replacing the previous 2×2 grid of four separate icons in the header. Verified at 192px and 32px before shipping, same as every icon change this project has made. The 4 individual tracker gauge images are untouched — only the outer logo changed.
+- **Ring track darkened further** (opacity 0.22 → 0.42) — the previous pass helped, but testing this morning at the actual start of a real day showed it still wasn't visible enough.
+- **Added a position marker** — a small white dot with a colored border now sits at the current edge of the filled progress, making "this is exactly where you are right now" immediately clear rather than requiring someone to eyeball where the color stops.
+
+---
+
 ## [2.1.1] — 2026-08-13
 
 Readability pass on the tracker headers and rings, based on feedback that both were too subtle to read at a glance.
