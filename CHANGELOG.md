@@ -4,6 +4,42 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.4.0] — 2026-08-13
+
+Drag-to-enter dial for the manual Log form — the biggest interaction change since the app's original build, based on real gym-floor frustration with typing numbers one-handed.
+
+### Added
+- **Drag dial for Water, Protein, and Calories.** Tapping any of the three fields in the Log sheet now opens a full-size circular dial — drag your finger around it to set the amount, starting at 0 at the top and increasing clockwise. A text field stays visible below the dial at all times, so typing an exact number is just as available as dragging one; both update each other live.
+- Ranges: Water 0–64oz, Protein 0–80g, Calories 0–800cal, snapping to whole numbers.
+
+### Testing note
+This feature needed a different kind of testing than anything else in this project — dragging a finger around a circle isn't something the usual jsdom-based test suite can actually simulate, since it doesn't produce real screen geometry. Two things made this possible to verify properly instead of shipping blind:
+- The angle math itself (converting a touch position into a 0–max value) was pulled out into small, pure functions with no DOM dependency, so it could be unit-tested directly against known positions (12/3/6/9 o'clock) across all three metric ranges.
+- Playwright turned out to be available in this environment, which meant an actual headless browser could physically drag the mouse around the real, rendered dial and read back the resulting number — not a simulation of the interaction, a real one. This caught a real bug along the way (the dial modal was nested inside the Log sheet's own backdrop, so closing the dial would have also accidentally closed the whole sheet without an explicit fix).
+
+This new browser-based test (`dial-drag-test.py`) is saved permanently in the project, separate from the existing jsdom suite, specifically for future changes that touch drag/gesture behavior.
+
+### Known limitation
+No amount of simulated testing replaces an actual finger on an actual screen. This is flagged as needing real-world confirmation before considering it done.
+
+---
+
+## [2.3.0] — 2026-08-13
+
+Branding update, plus a teaser for what's coming next.
+
+### Changed
+- **Landing page redesigned** into a real structured business page: new logo and icons throughout, alternating light/dark sections instead of one continuous scroll, new tagline copy, and a new "Why These Four?" and "Good to Know" FAQ section. The old detailed step-by-step instructions (presets, reminders, backup) were removed from this page — that level of detail now lives exclusively in the app's own "How to use this" tutorial.
+- "...by Boston Pickleball Assoc." removed from the app header and the landing page hero/footer, replaced with "© 2026 HydroPro Tracker Inc. All Rights Reserved." on both the landing page footer and the app's Settings → About section.
+
+### Added
+- **"AI Coach" nav item** — a fifth bottom-nav button with a "Coming Soon" badge, intentionally non-functional. This is purely a teaser for future AI-driven analysis and recommendations; no actual AI functionality was built or implied to exist yet.
+
+### Process note
+Discovered mid-session that Playwright is available in this environment, which made it possible to genuinely render and screenshot both the new landing page and the live app itself before shipping — including the small "Coming Soon" badge, which needed visual confirmation it wouldn't overlap the Settings button next to it. This is a real capability upgrade over relying on structural DOM checks alone for anything visual.
+
+---
+
 ## [2.2.1] — 2026-08-13
 
 ### Changed
