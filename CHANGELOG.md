@@ -4,6 +4,39 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.1.0] — 2026-08-13
+
+Interactive sleep tracking, based on tester feedback.
+
+### Added
+- **"Start Sleeping" / "Finish Sleeping" buttons.** Tapping Log Sleep now shows the right action automatically — "Start Sleeping" if nothing's in progress, "Finish Sleeping" (with how long it's been) if a session is already running. Duration is calculated from the actual moment each button was tapped, not from typed-in clock times, so there's no midnight-crossing guesswork needed for this flow specifically.
+- The Sleep tracker card now shows a live "😴 Sleeping…" indicator in place of the usual "to go" text while a session is in progress.
+- A "Cancel — started by mistake" option clears an accidentally-started session without logging anything.
+- The original manual entry flow (enter both Lights Out and Woke Up times at once) is still available via "Enter times manually instead" — this stays the right tool for logging retroactively or catching up after forgetting to tap Start.
+- Naps work identically to overnight sleep in this new flow — Start, then Finish shortly after — no separate nap button needed, same as before.
+
+### Technical note
+Added a new top-level `activeSleepSession` field (an exact timestamp, not a time-of-day) specifically so a session can safely span across midnight or even multiple days without needing the same "guess whether it crossed midnight" heuristic the manual entry flow relies on. Included in backup export/import from the start this time, having been caught missing a new field from backups twice before with other features.
+
+---
+
+## [2.0.0] — 2026-08-13
+
+A full visual redesign using real generated artwork instead of hand-built shapes — the biggest visual change since the original build.
+
+### Changed
+- **All 4 tracker gauges rebuilt from scratch.** Replaced the hand-coded fillable shapes (bottle, battery, flame, bed) with a new design: Rob's own generated crystal/gem-style artwork for water, protein, calories, and sleep, each wrapped in a circular progress ring that fills as you approach your goal. This sidesteps a real, persistent limitation — some organic shapes (the bicep in particular, across five separate attempts throughout this project) never rendered convincingly from basic geometric primitives, while a progress ring is simple, reliable geometry that works regardless of what's inside it.
+- **New app icon** — cropped from Rob's generated mark down to just the icon itself (moon, droplet, HP lettermark, bicep, apple, ring), with the baked-in "HYDROPRO TRACKER" text removed after confirming empirically that it became unreadable noise at real icon sizes (192px and especially 32px).
+- **Header badge redesigned** to use the same 4 artwork images in a 2×2 grid, replacing the previous lucide-icon version, so the logo, the header, and the trackers themselves all now share one consistent visual identity for the first time.
+
+### Process note
+This redesign took a real wrong turn before landing right — several attempts to hand-build a fillable bicep shape (mirroring bed and flame's past construction techniques) all failed, producing shapes that read as a chess pawn, a mushroom, and a snowman in turn. Installed `cairosvg` mid-session specifically to render and inspect each SVG draft before committing to it, rather than continuing to guess blind — this is what caught those failures immediately instead of after shipping. The actual fix was recognizing the fillable-shape approach itself was the wrong tool for this particular case, not a shape worth continuing to iterate on — Rob's own reference images already contained the better answer (a progress ring), which sidesteps hand-building organic shapes entirely.
+
+### Technical note
+The 4 artwork images are stored as separate cacheable PNG files (not embedded in the JavaScript bundle), specifically to avoid the bundle's aggressive no-cache policy — a policy that exists for a good reason (an earlier caching bug), but would have meant re-downloading all 4 images on every single app open if they'd been embedded instead.
+
+---
+
 ## [1.7.1] — 2026-08-12
 
 ### Fixed
