@@ -4,6 +4,18 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.1.1] — 2026-08-13
+
+Readability pass on the tracker headers and rings, based on feedback that both were too subtle to read at a glance.
+
+### Changed
+- Tracker section titles (WATER/PROTEIN/CALORIES/SLEEP) significantly enlarged (12.5px → 16px) — this is now the loudest text in each card besides the number itself. Font weight was already at 700, which turned out to be the heaviest weight actually loaded for this typeface, so size was the real lever here, not weight.
+- **Ring track color now uses each metric's own color** (at low opacity) instead of a shared neutral gray — this directly fixes the "rings look grey and unnoticeable at the start of the day" problem, since the track itself is now tinted blue/green/orange/indigo depending on the metric, visible even at 0% progress.
+- Ring stroke thickened (6px → 7.5px) for more visual weight overall.
+- "Log Water/Protein/Calories/Sleep" button text bumped and bolded to match the more prominent header treatment above it.
+
+---
+
 ## [2.1.0] — 2026-08-13
 
 Interactive sleep tracking, based on tester feedback.
