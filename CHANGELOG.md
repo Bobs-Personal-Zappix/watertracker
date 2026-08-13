@@ -4,6 +4,20 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.4.1] — 2026-08-13
+
+### Added
+- **Quarter-point tick labels on the drag dial** — shows the actual value at the 3/6/9 o'clock positions (e.g., 16/32/48 for water's 0–64 range), so you know roughly how far to drag before you start. One correction along the way: the 9 o'clock mark is 75% of the max, not the max itself — the true max only appears back at the top after a full turn, so the labels show the mathematically accurate values that match where a drag actually lands.
+- Updated instructional text on the dial screen to be clearer about the two ways to enter a number.
+
+### Changed
+- Reordered Remind page: "In-app nudge" now comes before "Calendar backup," which moves to the very bottom of the page as the least-used option.
+
+### Testing note
+Re-ran the real-browser drag test after slightly shrinking the ring to make room for the tick labels — confirmed all four clock positions still land on the exact right values, since the drag math depends only on angle from center, not the ring's visual radius.
+
+---
+
 ## [2.4.0] — 2026-08-13
 
 Drag-to-enter dial for the manual Log form — the biggest interaction change since the app's original build, based on real gym-floor frustration with typing numbers one-handed.
