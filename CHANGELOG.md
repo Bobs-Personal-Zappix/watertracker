@@ -4,6 +4,14 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.2.1] — 2026-08-13
+
+### Changed
+- Header badge now shows just the droplet mark with its background removed, instead of the full square icon card, which looked out of place sitting next to the title text. Background removal needed a more careful approach than usual — a simple color/brightness cutoff couldn't cleanly separate the droplet from its background since some of the droplet's own shadow areas were just as dark as parts of the background; used a flood-fill technique instead (growing inward from the transparent corners, following color similarity) with two small manually-seeded spots for a couple of stubborn corners the automatic fill didn't reach on its own.
+- Badge enlarged (68px → 82px) to stand out more now that it's just the droplet rather than a full square card.
+
+---
+
 ## [2.2.0] — 2026-08-13
 
 New brand mark, plus a second readability pass on the progress rings based on this morning's feedback.
