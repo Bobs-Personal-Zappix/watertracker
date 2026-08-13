@@ -31,6 +31,11 @@
 
     .cta { display:inline-block; text-align:center; background:#fff; color:var(--deep); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; text-decoration:none; padding:16px 30px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.25); width:100%; max-width:340px; }
     .cta.dark { background:var(--deep); color:#fff; box-shadow:0 6px 16px rgba(27,79,114,.3); }
+    .cta.outline { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.6); box-shadow:none; margin-top:12px; }
+    .cta.outline.on-light { color:var(--deep); border-color:var(--deep); }
+
+    .hero-shot-wrap { margin-top:8px; }
+    .hero-shot { width:100%; max-width:280px; border-radius:22px; border:3px solid rgba(255,255,255,.25); box-shadow:0 20px 50px rgba(0,0,0,.4); display:block; margin:0 auto; }
 
     .pillars { background:#fff; }
     .pillar-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -75,7 +80,9 @@
         Water, protein, calories, and sleep — <b>the four primary numbers that are the most impactful markers of our day-to-day health.</b>
         Now easily tracked in one simple tool: the HydroPro Tracker.
       </p>
-      <a class="cta" href="/app/">Open the Tracker</a>
+      <div class="hero-shot-wrap">
+        <img class="hero-shot" src="images/app-screenshot.jpg" alt="HydroPro Tracker log screen" />
+      </div>
     </div>
 
     <section class="pillars">
@@ -163,6 +170,7 @@
       <h2 class="section-title">See Where You Stand Today</h2>
       <p class="section-sub">Set up takes under a minute.</p>
       <a class="cta dark" href="/app/">Open the Tracker</a>
+      <a class="cta outline" href="mailto:rob@bostonpickleballassociation.org?subject=Join%20Trial%20Request">Sign up for the Trial</a>
     </section>
 
     <footer>
