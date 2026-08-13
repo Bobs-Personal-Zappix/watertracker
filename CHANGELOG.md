@@ -4,6 +4,17 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.5.2] — 2026-08-13
+
+Real bug, found by actually using the feature: submitted feedback with the "notify me" toggle already on, and no notification arrived.
+
+### Fixed
+- The "Notify me when new feedback comes in" toggle only ever registered anything with the server if push notifications already had an active subscription — if push wasn't fully set up yet, flipping the toggle silently updated the on-screen switch and did nothing else. No error, no registration, nothing. Made worse by the toggle living in Settings while the actual push toggle lives in a separate Remind tab, so there was no visual cue connecting the two.
+- Now, trying to turn it on without push already active is blocked with a clear message pointing to the Remind tab, instead of silently no-op'ing.
+- If your device already has `feedbackWatching` stuck in this broken "on but never registered" state from before this fix: toggle it off, then make sure Push notifications shows "enabled on this device" in Remind, then toggle it back on.
+
+---
+
 ## [2.5.1] — 2026-08-13
 
 Solves a real gap: with no login system, feedback had no way to say who sent it.
