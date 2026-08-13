@@ -4,6 +4,21 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.5.1] — 2026-08-13
+
+Solves a real gap: with no login system, feedback had no way to say who sent it.
+
+### Added
+- **"Your name" field in Settings**, set once — automatically attached to every feedback submission from then on, rather than asking every single time and adding friction back to a form specifically built to be fast.
+- The feedback form now shows exactly who it'll be submitted as, or a clear warning ("this will be submitted anonymously") with a direct link back to Settings if no name has been set yet.
+- The push alert you get when new feedback arrives now includes the person's name, not just their overall rating.
+- Unlike the feedback-watch toggle (which is device-specific), the name is treated as a personal preference and included in backup export/import — restoring a backup on a new phone carries it over instead of asking again.
+
+### Considered and set aside
+Looked at auto-detecting identity through Cloudflare Access instead of asking people to type a name. This doesn't work as-is: the feedback API call goes to a separate Worker domain (`workers.dev`), not through the Access-protected `hydroprotracker.com` path, so the authenticated-user header Access provides never reaches it — the Access login cookie is scoped to the main domain and isn't sent cross-domain to the Worker. Solving this properly would mean routing the Worker under the main domain instead of a separate subdomain, a real infrastructure change. The name field solves the actual problem today without that.
+
+---
+
 ## [2.5.0] — 2026-08-13
 
 In-app feedback form, so testers don't need to leave the app to tell you what's working.
