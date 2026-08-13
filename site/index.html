@@ -4,150 +4,172 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HydroPro Tracker</title>
-  <meta name="description" content="Track water, protein, and calories in one place - by Boston Pickleball Association" />
-  <meta name="theme-color" content="#1B4F72" />
+  <meta name="description" content="Water, protein, calories, and sleep — the four most impactful daily health markers, tracked in one simple tool." />
+  <meta name="theme-color" content="#0B2038" />
   <link rel="icon" href="app/icons/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --light-green:#8DDD9B; --orange:#F0923B;
-      --paper:#F2F5F8; --line:#D5E1EC; --muted:#5C7085;
+      --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --cyan:#35D6E8;
+      --green:#3B9A4C; --orange:#F0923B; --indigo:#6C63B5;
+      --paper:#F7F9FB; --mist:#E7EEF4; --line:#DCE6EE; --muted:#5C7085;
     }
     * { box-sizing: border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--paper); color:var(--ink); }
     .wrap { max-width: 480px; margin: 0 auto; }
-    .hero { position:relative; background:linear-gradient(135deg, #0B4F72 0%, #158FB0 52%, #35D6E8 100%); padding: 34px 20px 42px; text-align:center; overflow:hidden; }
-    .badge { width:64px; height:64px; border-radius:50%; background:#fff; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; align-items:center; justify-items:center; margin:0 auto 16px; box-shadow:0 6px 16px rgba(4,40,54,.28); padding:6px; }
-    .badge svg { width:18px; height:18px; stroke:#158FB0; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-    .badge svg.filled { fill:#158FB0; stroke:none; }
-    .hero h1 { font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; color:#fff; margin:0; }
-    .hero .byline { display:block; font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:rgba(255,255,255,.85); margin-top:6px; }
-    .wave { position:absolute; bottom:-1px; left:0; width:100%; height:26px; display:block; }
-    .wave path { fill:var(--paper); }
-    .content { padding: 8px 22px 40px; }
-    .lede { font-size:16px; line-height:1.6; color:var(--ink); text-align:center; margin: 18px 0 24px; }
-    .cta { display:block; text-align:center; background:var(--deep); color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; text-decoration:none; padding:16px; border-radius:14px; box-shadow:0 4px 14px rgba(27,79,114,.25); }
-    .cta.secondary { background:#fff; color:var(--deep); border:1.5px solid var(--line); box-shadow:none; margin-top:36px; }
-    .metrics { display:flex; gap:10px; margin: 28px 0; }
-    .metric { flex:1; background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 8px; text-align:center; }
-    .metric svg { width:22px; height:22px; margin-bottom:8px; }
-    .metric p { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; margin:0; }
-    .section-label { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--muted); margin: 30px 0 10px; }
-    .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:10px; }
-    .card p.title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; }
-    .card ul { margin:0; padding-left:18px; font-size:13.5px; color:var(--muted); line-height:1.55; }
-    .card li { margin-bottom:4px; }
-    .footnote { text-align:center; font-size:12px; color:var(--muted); margin-top:30px; line-height:1.6; }
-    .footnote a { color:var(--deep); text-decoration:underline; }
+    section { padding: 46px 22px; }
+    h2.section-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; text-align:center; margin:0 0 8px; }
+    p.section-sub { text-align:center; font-size:14px; color:var(--muted); margin:0 0 30px; line-height:1.5; }
+
+    .hero { position:relative; background:linear-gradient(160deg, #0B2038 0%, #0B4F72 45%, #158FB0 82%, #35D6E8 120%); padding: 44px 22px 50px; text-align:center; overflow:hidden; }
+    .hero img.logo { width:108px; height:108px; object-fit:contain; filter:drop-shadow(0 10px 22px rgba(0,0,0,.35)); margin-bottom:6px; }
+    .hero h1 { font-family:'Space Grotesk',sans-serif; font-size:34px; font-weight:700; color:#fff; margin:0 0 24px; letter-spacing:-.01em; }
+    .hero .tagline { font-size:16.5px; line-height:1.65; color:rgba(255,255,255,.95); max-width:400px; margin:0 auto 30px; }
+    .hero .tagline b { color:#fff; font-weight:700; }
+
+    .cta { display:inline-block; text-align:center; background:#fff; color:var(--deep); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; text-decoration:none; padding:16px 30px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.25); width:100%; max-width:340px; }
+    .cta.dark { background:var(--deep); color:#fff; box-shadow:0 6px 16px rgba(27,79,114,.3); }
+
+    .pillars { background:#fff; }
+    .pillar-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .pillar { border:1px solid var(--line); border-radius:16px; padding:18px 14px; text-align:center; }
+    .pillar img { width:56px; height:56px; object-fit:contain; margin-bottom:10px; }
+    .pillar p.name { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 5px; }
+    .pillar p.desc { font-size:12px; color:var(--muted); line-height:1.5; margin:0; }
+
+    .why { background:var(--ink); color:#fff; }
+    .why h2.section-title { color:#fff; }
+    .why p.body { font-size:15px; line-height:1.75; color:rgba(255,255,255,.88); text-align:center; max-width:400px; margin:0 auto; }
+    .why p.body b { color:#fff; }
+
+    .how { background:var(--paper); }
+    .step-row { display:flex; align-items:flex-start; gap:16px; margin-bottom:26px; }
+    .step-row:last-child { margin-bottom:0; }
+    .step-num { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--deep); color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; display:flex; align-items:center; justify-content:center; }
+    .step-text p.title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15.5px; margin:2px 0 3px; }
+    .step-text p.desc { font-size:13.5px; color:var(--muted); margin:0; line-height:1.5; }
+
+    .know { background:#fff; }
+    .faq { border-bottom:1px solid var(--line); padding:16px 0; }
+    .faq:last-child { border-bottom:none; }
+    .faq p.q { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; margin:0 0 5px; }
+    .faq p.a { font-size:13.5px; color:var(--muted); margin:0; line-height:1.55; }
+
+    .final-cta { background:linear-gradient(160deg, #0B4F72 0%, #158FB0 60%, #35D6E8 130%); text-align:center; }
+    .final-cta h2.section-title { color:#fff; }
+    .final-cta p.section-sub { color:rgba(255,255,255,.85); }
+
+    footer { background:var(--ink); color:rgba(255,255,255,.7); text-align:center; padding:30px 22px; font-size:12.5px; line-height:1.7; }
+    footer a { color:#fff; text-decoration:underline; }
   </style>
 </head>
 <body>
   <div class="wrap">
+
     <div class="hero">
-      <div class="badge">
-        <svg viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
-        <svg viewBox="0 0 24 24"><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
-      </div>
+      <img class="logo" src="images/logo.png" alt="HydroPro Tracker" />
       <h1>HydroPro Tracker</h1>
-      <span class="byline">...by Boston Pickleball Assoc.</span>
-      <svg class="wave" viewBox="0 0 400 24" preserveAspectRatio="none">
-        <path d="M0,14 C33,4 67,24 100,14 C133,4 167,24 200,14 C233,4 267,24 300,14 C333,4 367,24 400,14 L400,24 L0,24 Z" />
-      </svg>
+      <p class="tagline">
+        Water, protein, calories, and sleep — <b>the four primary numbers that are the most impactful markers of our day-to-day health.</b>
+        Now easily tracked in one simple tool: the HydroPro Tracker.
+      </p>
+      <a class="cta" href="/app/">Open the Tracker</a>
     </div>
 
-    <div class="content">
-      <p class="lede">
-        Water, protein, calories, and sleep — the four numbers that actually matter day to day, tracked together in one simple screen. Built for our own trial group; free to use.
+    <section class="pillars">
+      <h2 class="section-title">The Four Pillars</h2>
+      <p class="section-sub">Everything that actually moves the needle, day to day.</p>
+      <div class="pillar-grid">
+        <div class="pillar">
+          <img src="images/water.png" alt="Water" />
+          <p class="name">Water</p>
+          <p class="desc">Drives energy, focus, and nearly every system in your body.</p>
+        </div>
+        <div class="pillar">
+          <img src="images/protein.png" alt="Protein" />
+          <p class="name">Protein</p>
+          <p class="desc">Fuels muscle repair and keeps you satisfied longer.</p>
+        </div>
+        <div class="pillar">
+          <img src="images/calories.png" alt="Calories" />
+          <p class="name">Calories</p>
+          <p class="desc">The foundation of every energy and weight goal you set.</p>
+        </div>
+        <div class="pillar">
+          <img src="images/sleep.png" alt="Sleep" />
+          <p class="name">Sleep</p>
+          <p class="desc">The single biggest lever for how you'll feel tomorrow.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="why">
+      <h2 class="section-title">Why These Four?</h2>
+      <p class="body">
+        Because they're the numbers that actually move the needle. <b>Hydration, protein, and calories</b> shape how your body performs today — <b>sleep</b> determines how well it recovers for tomorrow.
+        Track these four consistently, and most other health goals start taking care of themselves.
       </p>
+    </section>
 
-      <a class="cta" href="/app/">Open the tracker</a>
-
-      <div class="metrics">
-        <div class="metric">
-          <svg viewBox="0 0 24 24" style="stroke:#2E86C1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
-          <p>Water</p>
-        </div>
-        <div class="metric">
-          <svg viewBox="0 0 24 24" style="stroke:#3B9A4C;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/></svg>
-          <p>Protein</p>
-        </div>
-        <div class="metric">
-          <svg viewBox="0 0 24 24" style="stroke:#F0923B;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-          <p>Calories</p>
-        </div>
-        <div class="metric">
-          <svg viewBox="0 0 24 24" style="stroke:#6C63B5;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
-          <p>Sleep</p>
+    <section class="how">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">Three steps. No spreadsheets, no overthinking.</p>
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <p class="title">Log it</p>
+          <p class="desc">One tap for water, protein, calories, or sleep.</p>
         </div>
       </div>
-
-      <div class="section-label">How it works</div>
-
-      <div class="card">
-        <p class="title">Getting started</p>
-        <ul>
-          <li>Add it to your home screen (share icon → Add to Home Screen) so it opens like a real app.</li>
-          <li>Set your daily goals for water, protein, and calories in Settings.</li>
-          <li>Turn on notifications under Remind if you want reminders through the day.</li>
-        </ul>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <p class="title">Watch it fill</p>
+          <p class="desc">A ring around each icon shows exactly where you stand against today's goal.</p>
+        </div>
       </div>
-
-      <div class="card">
-        <p class="title">Logging something</p>
-        <ul>
-          <li>Tap Log under Water, Protein, or Calories on the main screen.</li>
-          <li>Pick a quick amount, or enter a custom one and adjust the time if you're catching up on something from earlier.</li>
-          <li>Sleep works differently — tap Log Sleep and enter Lights Out and Woke Up times; hours are calculated for you, including overnight sessions that cross midnight. Naps use the same button and add to the day's total.</li>
-          <li>Made a mistake? Tap the trash icon next to the entry in Today's log.</li>
-        </ul>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <p class="title">Stay consistent</p>
+          <p class="desc">Reminders keep you on track — day after day, without the mental math.</p>
+        </div>
       </div>
+    </section>
 
-      <div class="card">
-        <p class="title">Presets — one-tap logging</p>
-        <ul>
-          <li>In Settings, add anything you log often, with its amount.</li>
-          <li>It shows up as a button on the main screen — one tap, no typing.</li>
-        </ul>
+    <section class="know">
+      <h2 class="section-title">Good to Know</h2>
+      <div class="faq">
+        <p class="q">Is it free?</p>
+        <p class="a">Yes — it's currently free while we grow through real testing and feedback.</p>
       </div>
-
-      <div class="card">
-        <p class="title">Reports</p>
-        <ul>
-          <li>Switch between Water / Protein / Cal / Sleep, or pick "All 4" to compare them at once.</li>
-          <li>"All 4" shows each as a percentage of its own goal, since the units don't match.</li>
-          <li>Switch between Day / Week / Month, and use the arrows to look back.</li>
-        </ul>
+      <div class="faq">
+        <p class="q">Is my data private?</p>
+        <p class="a">Your data lives on your own device. Nothing is shared, sold, or visible to anyone else.</p>
       </div>
-
-      <div class="card">
-        <p class="title">Reminders</p>
-        <ul>
-          <li>Push notifications: real alerts even with the app closed. Turn on in Remind.</li>
-          <li>Bedtime reminder: a separate, once-a-day push at whatever time you want to start winding down.</li>
-          <li>In-app nudge: only works while the app is open on screen — a lighter backup.</li>
-          <li>Calendar file: a one-time download that adds recurring reminders to your phone's calendar.</li>
-        </ul>
+      <div class="faq">
+        <p class="q">What phones does it work on?</p>
+        <p class="a">Any modern iPhone or Android phone — add it to your home screen and it opens just like an app.</p>
       </div>
-
-      <div class="card">
-        <p class="title">Backing up your data</p>
-        <ul>
-          <li>In Settings → Backup, export a backup before switching phones or reinstalling.</li>
-          <li>Import it on the new device to bring your history back.</li>
-        </ul>
+      <div class="faq">
+        <p class="q">Found a bug, or have an idea?</p>
+        <p class="a">Email anytime — this is actively shaped by what real users actually run into.</p>
       </div>
+    </section>
 
-      <a class="cta secondary" href="/app/">Open the tracker</a>
+    <section class="final-cta">
+      <h2 class="section-title">See Where You Stand Today</h2>
+      <p class="section-sub">Set up takes under a minute.</p>
+      <a class="cta dark" href="/app/">Open the Tracker</a>
+    </section>
 
-      <p class="footnote">
-        This is a personal project currently in trial with a small group. Your data stays on your device.
-        Questions or feedback: <a href="mailto:rob@bostonpickleballassociation.org?subject=HydroPro%20Tracker%20feedback">email Rob</a>.
-      </p>
-    </div>
+    <footer>
+      Questions or feedback: <a href="mailto:rob@bostonpickleballassociation.org?subject=HydroPro%20Tracker%20feedback">email Rob</a><br />
+      © 2026 HydroPro Tracker Inc. All Rights Reserved.
+    </footer>
+
   </div>
 </body>
 </html>
