@@ -4,6 +4,23 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.5.0] — 2026-08-13
+
+In-app feedback form, so testers don't need to leave the app to tell you what's working.
+
+### Added
+- **"Give Feedback" in Settings** — a brief form (about 30 seconds): four quick tap-to-answer questions (overall experience, daily-use frequency, whether entries happen immediately or in batches, and opinion on the new drag dials), plus three optional short-text questions for what's working, what's missing, and what to add next. Only the first question is required.
+- Submissions are stored in the same Cloudflare KV store already used for push subscriptions, under a new `feedback:` key prefix.
+- **"Notify me when new feedback comes in"** toggle in Settings — reuses the existing push notification pipeline rather than adding a new service. Turning this on registers the current device as a "watcher"; every new submission pings all registered watchers. Multiple people could watch if that's ever useful — it's a list, not a single fixed admin slot.
+
+### Technical note
+Deliberately excluded the new watcher toggle from backup export/import, matching how the push subscription itself is already excluded — it's tied to a specific device, so restoring a backup on a new phone shouldn't silently make that new phone a feedback watcher too.
+
+### Testing note
+Worker-side (registration, storage, push-alerting, and graceful behavior with zero watchers) covered by 12 new tests. App-side UI (all 7 questions present, chip selection, required-field validation, optional text entry, graceful failure when unsubmitted) covered by 12 more. Visually confirmed the actual rendered form with a live screenshot before considering it done — with real network calls to the production Worker deliberately blocked during that check, since testing the live submission path would have created a real KV entry and potentially pushed a real device.
+
+---
+
 ## [2.4.1] — 2026-08-13
 
 ### Added
