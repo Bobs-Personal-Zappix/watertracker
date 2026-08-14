@@ -4,6 +4,23 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.7.0] — 2026-08-14
+
+Weight tracking, the second of three requested additions this round.
+
+### Added
+- **"Log My Weight"** — a full-width button below the four trackers, opening the same drag-dial interaction used elsewhere, but with a wider range (0–400lbs) and, unlike the other dials, decimal precision available in the manual entry field (e.g., 165.4) since weight tracking usually cares about tenths of a pound. The dial drag itself still snaps to whole numbers — dragging precisely to a decimal isn't realistic with a thumb, but typing one is.
+- Weight entries show in Today's Log alongside everything else, and can be edited or deleted the same way.
+- **New "Weight Over Time" section in Reports** — a line chart, always visible below the existing goal-comparison reports. Weight doesn't fit the "sum vs. daily goal" model the other four metrics use (there's no daily goal, and multiple same-day entries take the most recent one rather than summing), so this needed its own visualization rather than joining the existing segmented view.
+
+### Fixed along the way
+- Editing a weight entry from Today's Log was routing into the water/protein/calories editor by default, since only sleep had a special case — this would have silently misfired if not caught. Added the same explicit routing sleep already had.
+
+### Technical note
+Weight entries got the exact same migration guard added for sleep earlier this session (skip the consumption-metric transform in `migrateEntry`), since without it they'd have been silently destroyed on the next reload — same bug, same fix, applied proactively this time before it could ship. Verified with a dedicated reload test, same as sleep's.
+
+---
+
 ## [2.6.0] — 2026-08-14
 
 Streamlined logging flow, based on tester feedback that the per-card buttons felt busy.
