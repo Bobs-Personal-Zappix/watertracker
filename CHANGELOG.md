@@ -4,6 +4,25 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.8.0] — 2026-08-14
+
+Supplements & Medicine tracking — the third and last of this round's three requested additions.
+
+### Added
+- **"Log Supplements & Medicine"** — a full-width button below "Log My Weight." Opens a multi-select list of whatever you've set up in Settings; tap everything you're taking right now, then Log.
+- **New Settings section** to manage the list — add, rename, or remove any vitamin, supplement, or medicine you take regularly, so it shows up as a one-tap option in the log popup.
+- Multiple items selected at once combine into a single Today's Log row (e.g., "Took: Vitamin D, Fish Oil") rather than one row each, matching how sleep already combines lights-out/wake into one row instead of two.
+- Full editing support — reopening a logged entry shows exactly which items were selected, pre-checked, ready to adjust and re-save.
+- A clear empty state (with a direct link into Settings) if the popup is opened before anything's been added yet, rather than showing a confusing blank list.
+
+### Process note
+Two bugs from this same pattern were caught and fixed *before* shipping this time, not after: editing a supplement entry would have silently misrouted into the wrong editor (same class of bug found with weight last round), and the migration guard preventing data destruction on reload was added from the very first draft rather than as a follow-up fix. Both were things this project already had to learn the hard way twice — applying that lesson proactively a third time.
+
+### Testing note
+21 new tests cover the full flow: adding items in Settings, the empty state, multi-select toggling, the combined-row behavior, and editing. A dedicated reload-safety test (the same kind that caught real bugs for sleep and weight) confirmed supplement entries and the Settings list both survive a full reload intact.
+
+---
+
 ## [2.7.0] — 2026-08-14
 
 Weight tracking, the second of three requested additions this round.
