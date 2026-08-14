@@ -4,6 +4,20 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.6.0] — 2026-08-14
+
+Streamlined logging flow, based on tester feedback that the per-card buttons felt busy.
+
+### Changed
+- **The entire tracker card is now the button.** Tap anywhere on Water, Protein, or Calories and its dial opens immediately — no more separate "Log Water/Protein/Calories" buttons taking up space on each card. Sleep works the same way, tapping the card opens the sleep flow directly.
+- **New flow order for the three shared-sheet metrics:** tapping a card opens *that metric's* dial right away (skipping the old intermediate full-form screen). Hit Done, and *then* the full log sheet appears — pre-filled with the value you just chose — where you can add the other fields or just submit immediately. Fewer taps for the common case of logging one thing, while the "log several things at once" flow still works exactly as before once you're in the full sheet.
+- Cards now show a small tactile press effect when tapped, since they're the whole interactive surface now rather than just containing a button.
+
+### Testing note
+This changed the core interaction model enough that a large share of the existing test suite needed rewriting, not just patching — anywhere a test used to click a labeled button now taps the card itself and checks that the right dial opens first. Re-ran the real-browser drag test too, confirming actual mouse drags still land on the correct values through the new flow (tap card → dial opens → drag → Done → pre-filled full sheet).
+
+---
+
 ## [2.5.2] — 2026-08-13
 
 Real bug, found by actually using the feature: submitted feedback with the "notify me" toggle already on, and no notification arrived.
