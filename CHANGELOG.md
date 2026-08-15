@@ -4,6 +4,28 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.3.0] — 2026-08-15
+
+Smart reminders — Phase 1 of the roadmap. The app now tells the Worker a small amount about today's progress, so the recurring push reminder can skip itself when it's not needed and say something real when it does fire.
+
+### Added
+- **Reminder suppression.** If you logged something in the last 90 minutes, the interval reminder quietly skips itself instead of nagging you for what you just finished doing.
+- **Progress-aware push messages.** When the reminder does fire, it says "38oz of water to go" or "Almost there — just 12g of protein left" instead of the generic "time to log your stats" — the same logic already used for the in-app nudge, now ported server-side so it works even when the app is closed.
+- The app pushes a small summary (today's totals vs. goals, when you last logged, your current streak) to the Worker roughly 20 seconds after things stop changing, or immediately if you background the app first. Never your log history — just those few numbers.
+
+### Fixed
+Nothing user-facing this round, but two real issues surfaced and were fixed during testing:
+- A stray `server.close()` call was stranded mid-file in the Worker test suite (left over from an earlier session's edits), silently shutting down the test server before the newest tests ran against it.
+- Several fresh-mount tests schedule real timers that resolve against Node's actual global `setTimeout` rather than a per-window one, meaning they can't be fully torn down between tests in the same run. Rather than fight that limitation, the tests that could be affected now check for their own uniquely-identifiable data rather than "nothing happened at all" — a more robust way to verify the same thing.
+
+### Testing
+Verified with two different real-browser end-to-end tests (not just unit tests of the logic in isolation): one confirms a logged entry produces a real HTTP request to `/api/progress` with the exact right numbers, reaching an actual local server rather than asserting on internals. Building that test surfaced a genuine trap worth knowing about for any future browser-based testing here: reloading the page mid-test lets the app's own service worker serve a *cached* `config.js`, silently pointing the app at the real production Worker instead of the test server regardless of what the test tried to inject. The fix is to seed test data before the first page load rather than reloading — which is now the documented pattern in both new test files.
+
+### What this doesn't do yet
+This is intentionally the smaller of the two options on the roadmap. It does not include accounts, a real database, or anything beyond a tiny rotating progress snapshot per device. Full history still lives only in cloud backup (opt-in, from the last release) or on the device itself.
+
+---
+
 ## [3.2.0] — 2026-08-15
 
 Cloud backup. Addresses the most urgent practical risk in the app: until now, every tester's entire history lived in one browser's storage, with a manual JSON file as the only safety net.
