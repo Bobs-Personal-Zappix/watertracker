@@ -4,6 +4,25 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.0.0] — 2026-08-15
+
+Three design refinements, the biggest being a real navigation restructure — bumping to 3.0 since this changes how the whole app is organized, not just what's on one page.
+
+### Changed
+- **Tracker cards more compact** — trimmed internal padding and spacing (not font sizes or gauge sizes) so all four trackers plus both action buttons fit on a standard phone screen without scrolling.
+- **"Log My Weight" → "Log Weight"**, and the weight dial now has its own editable time field, so a weight logged after the fact lands at the right time in Today's Log rather than always using the current moment.
+- **New "Today" tab**, positioned right after Log — Today's Log (the full list of everything logged, with edit/delete) moved off the Log page onto its own dedicated page, now that it was getting long enough to deserve one.
+- **Remind is no longer its own tab** — all of it (push notifications, bedtime reminder, supplement reminder, in-app nudge, calendar backup) now lives inside Settings, positioned between Supplements & Prescriptions and Backup, under a new "Reminders" section label.
+
+### Fixed
+- A toast message and a line in the in-app tutorial both still referred to "the Remind tab" by name — now that it's not a tab anymore, both were updated to point to Settings instead, so the app doesn't send anyone looking for a page that no longer exists.
+- Removed a redundant date header on the new Today tab — the app already shows "Day Tracker: [date]" globally on every page, so an extra "Today: [date]" directly underneath it was just clutter, caught via an actual screenshot before shipping.
+
+### Testing note
+Moving Today's Log to its own tab broke a large number of existing tests that assumed the log list lived on the Log page — each one needed the same fix (navigate to Today to check the list, then back to Log to continue). Along the way, also hit and fixed a subtler issue: switching tabs unmounts and remounts the Log page's component, which invalidates any previously-captured references to its buttons — a couple of fixes needed re-querying elements fresh rather than reusing ones captured before the tab switch. All three suites (259 app checks, 41 Worker checks, plus the real-browser drag test) confirmed clean before packaging, and the actual spacing goal (fitting the Supplements button on screen) was confirmed with a real screenshot at a standard phone size, not just trusted from the CSS math.
+
+---
+
 ## [2.9.0] — 2026-08-14
 
 Four quick refinements to Supplements & Prescriptions, plus a programmable daily reminder for them, plus a real bug fix found along the way.
