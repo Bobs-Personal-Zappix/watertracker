@@ -4,6 +4,26 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.1.0] — 2026-08-15
+
+Refocusing release. First pass at aligning the app to its three core jobs: easy entry, reminders to log, and motivation to hit goals.
+
+### Added
+- **One-tap logging.** The dial now has a "Log 16oz" button right on it. Logging a single thing no longer routes through the full multi-field form — that's now a secondary "Add details instead" link for when you actually need a description or a custom time. Cuts the most common action in the app from four taps to two.
+- **Progress-aware nudges.** The in-app reminder used to say "time to log your stats" regardless of what you'd done. It now says something specific and true: "38oz of water to go", "Almost there — just 12g of protein left", or in the evening "…last stretch of the day". It picks whichever metric is furthest behind proportionally, so it names one concrete thing rather than listing everything. If all goals are met, it congratulates instead of nagging.
+- **Goal celebrations.** The log entry that pushes you over a goal now says "water goal hit for today!" instead of a plain confirmation. Only the crossing celebrates — logging again afterward goes back to a normal toast.
+
+### Changed
+- **Scope discipline on the landing page.** Removed "Community Connection" from the roadmap entirely — social features are a different product, and nothing about them serves entry, reminders, or motivation. Rescoped the "AI Coach" description away from "recommendations to improve" (health-coach territory, and a liability surface for AI-generated health advice) toward what's actually on-thesis: encouragement from your own numbers, and a clean summary to share with a doctor or coach.
+
+### Fixed
+- The day-streak calculation used `Number(e.oz)` directly, which returns `NaN` for sleep, weight, and supplement entries since those have no `oz` field — a single one of those in a day would poison the whole total and silently break the streak. Now uses the same helper the rest of the app uses.
+
+### Context
+This is the first release driven by strategic reassessment rather than feature requests. The app had grown well past its original job, and function 3 (motivation to actually consume) was named as a core pillar but was essentially unbuilt. These are the pieces of that which needed no architectural change. The larger items — server-side progress data for smart push notifications, and accounts with real sync — are deliberately held until tester feedback arrives.
+
+---
+
 ## [3.0.0] — 2026-08-15
 
 Three design refinements, the biggest being a real navigation restructure — bumping to 3.0 since this changes how the whole app is organized, not just what's on one page.
