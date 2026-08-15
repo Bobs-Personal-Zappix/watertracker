@@ -4,6 +4,36 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.2.0] — 2026-08-15
+
+Cloud backup. Addresses the most urgent practical risk in the app: until now, every tester's entire history lived in one browser's storage, with a manual JSON file as the only safety net.
+
+### Added
+- **Automatic cloud backup (opt-in).** Switch it on in Settings → Backup and the app quietly keeps a server-side copy of your data. Saves automatically about 20 seconds after you stop making changes, and flushes immediately if you background the app — so the common case of "log something, switch apps" doesn't lose the pending write.
+- **Recovery codes.** Turning backup on generates a code like `K7QM-3XPT-9B`. That code is the only way to pull your data onto a new device, and it's displayed prominently with an explicit warning to save it. The alphabet deliberately excludes O/0/I/1/L because people read these off a screen and retype them, and the app accepts the code lowercase, without dashes, or with stray spaces.
+- **Restore from a recovery code**, with a clear warning that it replaces whatever is currently on the device. A failed restore leaves the dialog open so the code can be corrected, and leaves existing data untouched.
+- **"Back up now"** for anyone who wants to force a save rather than wait for the automatic one.
+
+### Changed
+- The manual file backup is still there and unchanged — now framed as the option for people who'd rather keep an archive they control instead of relying on the server copy.
+- **Corrected the privacy claim on the landing page.** It said data "lives on your own device" and that nothing is shared — accurate before this release, not accurate after it. Now states plainly that cloud backup stores a copy on the server, that it's opt-in, and that it can be switched off.
+
+### Fixed
+- **A footgun in "Reset all data".** With cloud backup on, wiping local data would have immediately auto-pushed an empty backup over the user's cloud copy — quietly converting a local reset into permanent, unrecoverable loss. Reset now switches cloud backup off while keeping the recovery code, so a mistaken reset can still be undone by restoring.
+
+### Design notes
+- The recovery code is the whole design problem here. Keying a backup to a device ID stored in `localStorage` would be useless in the exact scenario the feature exists for — a cleared browser takes the key with it. Hence a code the user holds themselves.
+- Cloud backup settings are treated as device-specific, like the push subscription and bedtime reminder: restoring a backup never silently re-points a new device at someone else's backup slot.
+- Restore reuses the same import path as the file restore, so both inherit identical handling of device-specific settings rather than drifting apart.
+
+### Known tradeoff
+Anyone holding a recovery code can read that backup. The codes are crypto-random with roughly 5.9e14 combinations, and the endpoint has no enumeration, so this is acceptable for a closed test group — but it is not a substitute for real accounts. Proper per-user auth remains the Phase 2 item in the roadmap.
+
+### Testing
+354 checks across four suites, including a new end-to-end browser test that runs a live API, logs data on one browser context, then restores it on a completely separate context that has never seen the data — simulating an actual lost phone rather than asserting on internals. That test also caught a real flaw in its own setup: the app's `config.js` overwrites injected test config, which had silently pointed the first run at the production Worker.
+
+---
+
 ## [3.1.0] — 2026-08-15
 
 Refocusing release. First pass at aligning the app to its three core jobs: easy entry, reminders to log, and motivation to hit goals.
