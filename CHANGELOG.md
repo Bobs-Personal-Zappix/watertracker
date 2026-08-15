@@ -4,6 +4,28 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [2.9.0] — 2026-08-14
+
+Four quick refinements to Supplements & Prescriptions, plus a programmable daily reminder for them, plus a real bug fix found along the way.
+
+### Changed
+- Renamed to "Log Supplements & Prescriptions" throughout (button, sheet title, Settings section).
+- **Time field added** — the current time is used by default, but it's now editable, so you can log something after the fact without it showing at the wrong time.
+- **Quantity field added per item** — a free-text field (not restricted to numbers), so "1" for a tablet or "10mg" for a measured dose both work. Appears under each item once you select it, and shows in the combined Today's Log label, e.g. "Took: Vitamin D (1), Metformin (10mg)".
+- Today's Log time text darkened and bolded — now that the log is genuinely useful to scan at a glance, the time should be one of the first things that's easy to read, not a faded afterthought.
+- Backward compatible with entries already logged under the old format (items as plain names, no quantity or custom time) — editing one of those won't crash, it just treats the quantity as blank.
+
+### Added
+- **Supplement reminder** — a new card in Remind, matching the existing Bedtime reminder pattern exactly: toggle on, pick a time (like 10am), get a daily push notification. Reuses the same push infrastructure already built for bedtime and feedback alerts, so no new service or setup was needed beyond the Worker update this requires.
+
+### Fixed — a real, pre-existing bug
+While building the reminder above, testing surfaced something unrelated but serious: **restoring a backup was silently wiping out your Bedtime reminder setting**, and would have done the same to feedback-watch notifications and the new supplement reminder once shipped. The backup-import logic only remembered to preserve your push subscription from the current device — everything else device-specific in that same object was simply left out of the rebuilt settings, rather than carried forward. Fixed so bedtime, supplement reminder, feedback-watch, and push all correctly survive a restore now, with a dedicated test simulating a real file-based import to make sure this can't silently regress again.
+
+### Testing note
+Also found and fixed a second, unrelated latent bug in the Worker's own test suite — three tests computed a "due" time as "a couple minutes before whatever time it happens to be right now" but paired it with a hardcoded 11pm cutoff, which broke whenever the tests happened to run late at night (as they did today). Replaced with a time-of-day-safe calculation. Neither of these two bugs were introduced by today's changes — both were pre-existing, just waiting for the right conditions to surface, and both are now fixed with regression tests in place.
+
+---
+
 ## [2.8.0] — 2026-08-14
 
 Supplements & Medicine tracking — the third and last of this round's three requested additions.
