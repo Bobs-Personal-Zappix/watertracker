@@ -4,6 +4,28 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.6.0] — 2026-08-16
+
+Treatment tracking — periodic things like drips, shots, and PT sessions. Not daily habits like the core four metrics, but things on their own recurring schedule, with a "when's my next one due" the app actually keeps track of.
+
+### Added
+- **A new "Treatments" section in Settings.** Add anything on a recurring schedule — name it, optionally give it an interval in days. Leave the interval blank for pure history tracking with no due-date logic at all.
+- **"Log Treatment"** on the Log page, alongside Weight and Supplements. Tap what you had (more than one at once is fine — an IV drip and a B12 shot in the same visit becomes one combined entry), confirm the date and time, done.
+- **A "Treatments" status card on the Today tab** — shows anything overdue, due today, or coming up soon, sorted so the most urgent is first. Treatments with no schedule set, or that have never been logged, don't clutter this list.
+- **The next-due date is always editable, directly in that status card.** Life doesn't respect intervals — if a date lands on a holiday or just doesn't work, tap the date field and change it. No separate settings screen, no confirmation dialog, just an ordinary date picker sitting right next to the status.
+
+### Design notes
+- **Schedule drift is intentional, not a bug.** If a dose gets pushed back a few days, the *next* one calculates forward from when it was actually taken — not from the original planned date. For most periodic treatments, the spacing between doses is what matters medically, so the whole schedule shifting with a delay is the correct behavior, not something to "correct" back.
+- Deliberately scoped to **individual, self-directed tracking** — the person using this app chooses to track their own treatments because this is the best tool for not missing one and reporting on it later. This is not, and won't become, a way for a business to manage or monitor a customer's usage from their side.
+
+### Testing
+The scheduling math got tested in isolation before any UI was built on top of it — month rollover, year rollover, leap years, and the drift behavior specifically (a delayed dose correctly shifts the whole schedule forward, rather than snapping back to the original plan). 23 checks across CRUD, the logging flow, status display, and confirming the override genuinely persists and updates what's shown - not just accepted and silently ignored. 423 checks total across app and Worker suites.
+
+### What's not included yet
+Push reminders for overdue treatments — the equivalent of what supplements got as a follow-up after shipping. Not started; a natural next step, not forgotten.
+
+---
+
 ## [3.5.0] — 2026-08-15
 
 Cloud backup is now wired to real accounts — the last piece of Phase 2. This completes the roadmap's Phase 2 scope: accounts, a real database, and now data that follows your account instead of a code you have to hold onto.
