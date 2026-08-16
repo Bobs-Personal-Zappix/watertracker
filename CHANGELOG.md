@@ -4,6 +4,34 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.11.0] — 2026-08-16
+
+Three design refinements: the four new tiles now match the original four exactly, a unified "To Do Today" list, and presets moved into the tracker popups.
+
+### Changed — Tiles now match the original four precisely
+- Weight, RX & Supplements, Treatments, and Exercise tiles restructured to match the original four exactly: title with a small icon on the left at top, circular icon in the middle, status text below - not the boxy, icon-on-top layout from last round.
+- All four custom icons converted to circular crops, matching the round crystal style of the original tiles instead of looking like separate square app icons dropped in.
+- New status ring around each icon - not a percentage arc like the original four (none of these have a daily numeric goal in that sense), but a binary faded/lit state: faded when something's due, fully lit when there's nothing left to do for that category today.
+- Renamed to "RX & Supplements".
+
+### Added — "To Do Today"
+- A new section between the date header and Today's Log, titled "To Do Today" - showing anything due or overdue right now, combining supplements and treatments in one genuinely unified list (not two lists stacked on top of each other).
+- Shows "All Done for the Day 🎉" when nothing needs attention. Deliberately narrower than the full schedule view on purpose - upcoming (not-yet-due) items don't show here, so "All Done" is a statement that's actually true, not "nothing's overdue, but plenty is coming."
+- Each item keeps the always-editable due date this app has had since treatments first shipped.
+
+### Changed — Presets moved into the tracker popups
+- Presets no longer sit in their own section on the Log page. Tap Water, Protein, or Calories, and the same preset list appears at the top of whichever dial opens - one consistent location regardless of which tracker you tapped, rather than a separate section further down the page.
+- Tapping a preset from inside the popup logs it and closes cleanly - no detour through the full entry form, unlike the dial's own Close button (which intentionally still transitions there, unchanged from before).
+- Presets are still fully managed (add/edit/delete) in Settings, exactly as before - only the quick-tap logging location moved.
+
+### Fixed
+- A real, pre-existing test-isolation bug in the Worker test suite, unrelated to anything built this round: a leftover subscriber record from an early, unrelated test could coincidentally also be "due" depending on what time of night the tests happened to run, sharing the same fake push endpoint as a different test and inflating its push count. Confirmed stable across repeated runs after the fix.
+
+### Testing
+Building the "To Do Today" list surfaced a bug in my own test, not the app: an assertion checked for a name across the *entire page's* HTML, which produced a false failure since the same name legitimately also appears in Today's Log below - fixed by scoping the check to the actual to-do rows specifically. A dedicated test now confirms the list is genuinely unified (exactly one combined list, not two coincidentally stacked) by seeding one overdue supplement and one overdue treatment together and confirming both appear as two rows in the same list. 526 checks total across every suite in the project.
+
+---
+
 ## [3.10.0] — 2026-08-16
 
 Fixed a real bug in the shareable-link feature: links were unreachable by the exact people they were built for.
