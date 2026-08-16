@@ -4,6 +4,55 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.9.1] — 2026-08-16
+
+Fixed the crop on the four new tile icons (Weight, Supplements, Treatments, Exercise). The originals were resized directly from slightly non-square source images, causing a subtle stretch. Now center-cropped to a true square first, then resized - no distortion.
+
+---
+
+## [3.9.0] — 2026-08-16
+
+Two things this round: supplements now have a real schedule (not just "did you take it"), and the Log page's Weight/Supplements/Treatments buttons became tiles — alongside a brand new Exercise tracker.
+
+### Added — Supplement scheduling
+- Supplements now carry the same schedule shape treatments already had: how often (in days), when last taken, and an always-editable next-due override. **Defaults to daily** — most vitamins and prescriptions are, so that should be the thing nobody has to configure. Every-other-day, weekly, etc. are the exception you set, not the default everyone deals with.
+- Existing supplements (added before this existed) migrate automatically to daily. Nothing changes for you today unless you go set a different interval.
+- This is the foundation for real adherence tracking, not just "logged it once" — the kind of thing that makes the doctor/insurer story actually credible: not "did you drink water," but "did you take what you were supposed to, on schedule."
+
+### Added — Tiles + Exercise
+- **Weight, Supplements, and Treatments are now tiles**, matching the visual style of the four main trackers, replacing the three full-width buttons. Kept intentionally large — same accessibility reasoning as always: readable and easy to tap matters more than a tighter layout.
+- **A new Exercise tile** — type, minutes, time, and an optional description. No managed preset list like supplements/treatments have; exercise types vary too much per person for a fixed list to make sense, so it's a simple direct-entry form each time, the same way water/protein/calories work.
+- Each new tile shows a real, glanceable status: most recent weight (searched across all days, not just today, since weight isn't a daily goal), "X of Y taken today" for supplements, "X due" for treatments, minutes logged today for exercise.
+- **Rob's four custom icons are live** — the drip bag, fitness shield, scale, and pill bottle now anchor their respective tiles.
+
+### Design notes
+- The scheduling logic added for treatments turned out to be genuinely generic — reused as-is for supplements, not duplicated. One engine, two places it applies.
+- Exercise deliberately has no Settings CRUD, unlike supplements and treatments. A fixed list of "exercise types" would fight how varied people's routines actually are; a free-text field each time fits better.
+
+### Testing
+Supplement scheduling verified against the same kind of cases the treatment engine got: the underlying due-date math confirmed correct for a supplement-shaped object without any changes to the function itself, migration confirmed not to crash on a supplement missing every new field, and the interval field confirmed to actually default to daily rather than blank. The tile layout change surfaced two existing tests written for the old 4-tile world (both counting `.wt-tracker-col` elements) that needed updating now that eight tiles share that class - found and fixed rather than ignored. 525 checks total across every suite in the project.
+
+---
+
+## [3.8.0] — 2026-08-16
+
+Doctor-share as a shareable link — no email attachment needed. Sign in, generate a link, send it however's convenient; the recipient needs no account at all.
+
+### Added
+- **"Generate a link to share"** in the Health Summary view, shown once signed in. Creates a link like `.../app/?share=<id>` and shows it with a one-tap copy button.
+- **The link is a frozen snapshot, not a live feed** — deliberately. A link that always shows *current* data is a bigger privacy risk if it's ever forwarded beyond the intended doctor, and a snapshot matches the actual use case better anyway: "here's what happened before this appointment." Links expire after 90 days.
+- **Opening the link needs no account, no login, nothing installed** — the recipient just sees the summary. Built as a completely independent view that bypasses the app's normal UI entirely (no nav bar, no tabs, no dependency on local data), since the person opening it is very often on a different device that's never touched this app before.
+- New `shares` table in D1 (`schema-003-shares.sql`), separate from account backups, since a share and a full backup are different things serving different purposes.
+
+### Fixed
+- **A real rules-of-hooks bug introduced while building this**, caught immediately by the test suite crashing rather than silently misbehaving: a `useEffect` ended up positioned after a conditional early return, meaning React called a different number of hooks depending on whether the view was open. Moved to sit with the other hooks, where it belongs.
+- A test assertion that would have been a false positive: checking for the CSS class `wt-nav-btn` via a naive text search on `innerHTML` incorrectly matched the class name as it appears inside the page's own injected stylesheet, not an actual rendered nav button. Fixed to check the real DOM node instead.
+
+### Testing
+The real proof for this one: a signed-in browser with actual logged data generates a link, confirmed reaching a fake server; then a completely separate browser context — genuinely empty, no seeded data, no account — opens that exact link and is confirmed showing the real shared data, with no app chrome at all. Not two isolated mocks each checking their own internals; an actual simulated "texted my doctor a link" scenario. 502 checks total across every suite in the project.
+
+---
+
 ## [3.7.0] — 2026-08-16
 
 Two features this round: push reminders for overdue treatments, and a printable health summary for doctors and health advisors.
