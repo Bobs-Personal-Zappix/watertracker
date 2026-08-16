@@ -4,6 +4,24 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.12.0] — 2026-08-16
+
+Two real bugs from last round's changes, both fixed.
+
+### Fixed — RX & Supplements ring falsely showing "done"
+- A brand-new supplement that's never been taken was being read by the scheduling engine as "no schedule yet" (the same behavior treatments correctly have) rather than "due today" - so the status ring showed fully lit even with "0 of 2 taken today" sitting right below it.
+- Supplements default to daily, so there's no reason to wait for a first-ever log before counting one as part of today's routine. Fixed with a supplement-specific check that treats a configured-but-never-taken supplement as due immediately, without touching the treatment scheduling logic (which is correct as-is and already well-tested).
+
+### Redesigned — the quick-dial popup
+- Presets no longer live inside the quick-dial popup - that's what was causing them to get cut off with no way to scroll on smaller screens.
+- **The quick-dial's "X" and tapping outside it now genuinely just close it** - no more forced detour into the full entry form if you didn't enter anything. This was the real substance of "no way to get out."
+- **"Add details instead" is now "Manual or Presets Entry."** Tapping it opens the full entry sheet with presets shown at the top (their own scrollable area, so a long list never pushes the rest of the form out of reach) followed by the manual water/protein/calories fields below - exactly the layout requested.
+
+### Testing
+A dedicated test proves the ring fix directly: a freshly-added, never-taken supplement is confirmed to render with the faded (not-done) ring and to correctly appear on the To Do Today list. A second test confirms dismissing the quick-dial without entering anything creates zero log entries - not just that the popup visually closed. 557 checks total across every suite in the project, including real screenshots confirming both fixes actually resolve what was reported, not just that the code changed.
+
+---
+
 ## [3.11.0] — 2026-08-16
 
 Three design refinements: the four new tiles now match the original four exactly, a unified "To Do Today" list, and presets moved into the tracker popups.
