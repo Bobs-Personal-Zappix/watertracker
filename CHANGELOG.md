@@ -4,6 +4,29 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.7.0] — 2026-08-16
+
+Two features this round: push reminders for overdue treatments, and a printable health summary for doctors and health advisors.
+
+### Added — Treatment reminders
+- A daily push notification if anything in Treatments is due today or overdue, naming which one(s) so you know what to log. New card in Settings → Reminders, matching the existing Bedtime/Supplement reminder pattern.
+- Built on the same progress-push mechanism that already powers the smart water/protein/calorie reminders — the app computes each treatment's next-due date and includes it in that same small snapshot sent to the server, so the Worker never needs its own copy of the scheduling logic.
+
+### Added — Share with your doctor
+- A new "Health Summary" section in Settings generates a clean, formatted summary — daily averages vs. goals, weight trend, supplements/prescriptions (day-counts, not a made-up "adherence %"), and treatments with actual dates — over the last 7, 30, or 90 days.
+- **Print or save as PDF using your device's own native print function** — no PDF library, no server involvement, no new dependency. The same idea already used for calendar reminders, applied here.
+- Deliberately excludes anything that assumes a supplement is meant to be taken every single day, since that's often not true. An honest day-count is more useful to a clinician than a percentage built on a wrong assumption.
+- Carries an explicit disclaimer: self-reported by the user, not a clinical record, may include gaps or user error.
+
+### Fixed
+- **A real, meaningful bug in the reminder Worker code**: `/api/subscribe` was rebuilding its entire stored record from scratch every time *any* reminder setting changed — silently wiping out the progress data (including the new treatments-due list) until the next automatic sync happened to run again. Now only overwrites the specific fields it's actually meant to update.
+- **A complete failure of the doctor-share feature's actual purpose, caught before shipping**: the first version of the print styling looked correct in code, but real print-media testing showed the printed page was entirely blank. The cause: hiding the rest of the app with `visibility:hidden` still left it occupying layout space, which pushed the summary content thousands of pixels off-screen. Fixed by removing hidden elements from layout entirely (`display:none`) instead — and this is exactly the kind of bug a syntax check or a JSDOM-based test can't catch, since neither has a real layout engine. Only an actual browser under print-media emulation revealed it.
+
+### Testing
+The treatment-reminder logic was tested in three layers: the due-date math independently (already covered last release), the Worker's decision logic (fires when something's due, stays quiet and doesn't re-check all day when nothing is), and the full chain from the client computing a due date through to it reaching the Worker in the right shape. The doctor-share aggregation was verified against 22 hand-checked cases — date-range boundaries, weight-trend math, and the same backward-compatible handling of old-format supplement entries used elsewhere in the app — before any UI was built on top of it. A new permanent Playwright test locks in the print-rendering fix specifically, so this exact regression can't silently return. 488 checks total across every suite in the project.
+
+---
+
 ## [3.6.0] — 2026-08-16
 
 Treatment tracking — periodic things like drips, shots, and PT sessions. Not daily habits like the core four metrics, but things on their own recurring schedule, with a "when's my next one due" the app actually keeps track of.
