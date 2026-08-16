@@ -4,6 +4,24 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.4.0] — 2026-08-15
+
+Real sign-in, built on last session's accounts foundation. This is the piece a real person actually taps through, rather than curl commands.
+
+### Added
+- **New "Account" section in Settings**, sitting above Backup. Enter your email, get a sign-in link, tap it — no password. Signed-in state shows your email and a Sign out button.
+- **Clicking the email link actually works now.** The app detects a `?login=` token in the URL on load, verifies it against the server, and signs you in — cleaning up the URL afterward either way, so a page refresh can't retry an already-used token.
+- **Sign out is a real security action, not cosmetic.** Added a `DELETE /api/auth/session` endpoint that actually revokes the session server-side. Previously (this session, caught before shipping) there was no way to revoke a session at all — "signing out" would only have meant forgetting the token locally while it stayed valid forever on the server.
+- Accounts are intentionally **not yet connected to anything** — cloud backup still uses its own separate recovery-code system, unchanged. The Account section says this plainly rather than implying more than it does.
+
+### Testing
+Real end-to-end verification, not just unit tests: a fresh browser context loads with `?login=<token>` in the URL, the app is confirmed to call verify exactly once, store the session, show "Signed in as...", and clean up the URL — then Sign out is confirmed to actually call the revoke endpoint with the correct token, not just clear local state. Building this test surfaced the same cross-window `fetch`/`setTimeout` resolution quirk found last session (bundle code resolves bare globals through Node's actual global scope, not the jsdom window it was evaluated in) — this time it meant a test's own reassigned mock silently wasn't being used, caught and fixed before treating the result as real. 306 app checks, 81 Worker checks, all passing.
+
+### What's still ahead
+Wiring cloud backup to use real accounts instead of the recovery-code system remains the next piece, not started yet.
+
+---
+
 ## [3.3.0] — 2026-08-15
 
 Smart reminders — Phase 1 of the roadmap. The app now tells the Worker a small amount about today's progress, so the recurring push reminder can skip itself when it's not needed and say something real when it does fire.
