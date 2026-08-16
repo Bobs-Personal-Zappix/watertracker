@@ -4,6 +4,34 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.13.0] — 2026-08-16
+
+Three changes this round: toggles for the new tiles, sleep gets its own trend view, and Settings splits into two focused tabs.
+
+### Added — Toggle on/off for all 8 tiles
+- Weight, RX & Supplements, Treatments, and Exercise can now be hidden from the Log page individually, matching what Water/Protein/Calories/Sleep already had. New "Other trackers" section with all four switches.
+
+### Changed — Sleep moved to its own "Over Time" section
+- Sleep is no longer part of the Water/Protein/Calories percentage-of-goal comparison — it now gets a dedicated line chart over time, right alongside Weight's, with a goal reference line when a sleep goal is set.
+- Water, Protein, and Calories are completely unchanged — same bar charts, same day/week/month views, same everything.
+- The combined comparison view is now "All 3" instead of "All 4," since sleep moved out.
+
+### Changed — Settings split into two tabs
+- **Settings**: name, feedback, reminders, account sign-in, cloud/file backup, health summary, data export/reset, about.
+- **Setup**: daily goals, all tracker on/off toggles, presets, supplements & prescriptions, treatments — replacing the old single long Settings page.
+- **AI Coach removed** from the navigation bar entirely, replaced by Setup in the same slot.
+
+### Also in this round
+- Removed the "X-day streak" badge from the header — unclear what it meant out of context. The underlying calculation is untouched, since the Worker's smart reminders still use it.
+- "Day Tracker" is now "Day Planner" specifically on the Today tab; the Log tab keeps "Day Tracker."
+- "To Do Today" now stays pinned at the top of the Today tab while the log entries below it scroll past underneath.
+- Fixed a real bug found while building the tile toggles: a brand-new, never-yet-taken supplement was incorrectly showing its status ring as fully "done" instead of due, since the scheduling engine's "never logged = no schedule yet" behavior (correct for treatments) doesn't fit supplements, which default to daily.
+
+### Testing
+Splitting Settings into two tabs meant walking through the entire migration suite section by section, since dozens of existing tests referenced content by its old location — goals, presets, supplements, and treatments all needed their navigation updated to Setup, and toggle-index tests needed adjusting since Setup's switches no longer have a feedback-watch toggle preceding them. Each fix was verified individually rather than assumed. 578 checks total across every suite in the project, plus real screenshots confirming both new tabs show the right content in the right place.
+
+---
+
 ## [3.12.0] — 2026-08-16
 
 Two real bugs from last round's changes, both fixed.
