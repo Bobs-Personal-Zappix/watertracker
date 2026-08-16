@@ -4,6 +4,30 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.5.0] — 2026-08-15
+
+Cloud backup is now wired to real accounts — the last piece of Phase 2. This completes the roadmap's Phase 2 scope: accounts, a real database, and now data that follows your account instead of a code you have to hold onto.
+
+### Added
+- **Automatic account backup.** The moment you're signed in, your data backs up to your account in the background — no separate toggle, no recovery code to remember. Same 20-second debounce pattern as everything else that auto-saves in this app, plus an immediate flush if you background the app.
+- **"Restore from my account"** — sign in on a brand new device and pull your data straight back, no code needed at all.
+- **"Back up now"** for account backup specifically, alongside the existing one for the recovery-code system.
+- New `account_backups` table in D1 (separate migration file, `schema-002-account-backup.sql`) — one row per account, isolated per user, confirmed one signed-in account genuinely cannot see another's data.
+
+### Changed
+- **The recovery-code cloud backup system is completely untouched.** As promised when accounts were first introduced, this sits alongside it, not in place of it — nothing breaks for anyone already relying on the recovery code.
+
+### Fixed
+- Caught before shipping: the new endpoints were briefly misplaced outside the Worker's request-handling function during a mid-edit mistake — a syntax check alone didn't catch it (JavaScript doesn't require an error for slightly-wrong-but-still-technically-legal placement), so it needed an explicit look at the actual file structure to confirm the code was really where it needed to be.
+
+### Testing
+The real proof for this one: two entirely separate fresh browser instances sharing nothing but a login. "Device A" signs in, logs a real entry, and it's confirmed reaching a fake account-backup server. Then "device B" — genuinely starting empty — signs into the *same* account and is confirmed pulling that exact entry back. Not two isolated mocks asserting on their own internals; an actual simulated lost-phone-and-got-a-new-one scenario. 400 checks total across app and Worker suites, all passing.
+
+### Where Phase 2 stands now
+The full arc: real accounts, D1 storage, magic-link sign-in, and data that travels with your account. Phase 3 (the actual integration layer — doctor-share, then eventually Apple Health / Health Connect via a native wrapper) is next on the roadmap whenever you're ready, though as before, real tester feedback should keep having the final say over what gets prioritized next.
+
+---
+
 ## [3.4.0] — 2026-08-15
 
 Real sign-in, built on last session's accounts foundation. This is the piece a real person actually taps through, rather than curl commands.
