@@ -4,6 +4,31 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.15.0] — 2026-08-17
+
+Two features tonight: a way to look back at past days' logs, and inventory/subscription tracking for supplements and treatments.
+
+### Added — Past days' logs
+- A calendar icon next to "Today's Log" opens a list of every past day that has entries, most recent first.
+- Tapping a day shows that day's logged items, read-only, using the exact same row rendering as Today's Log.
+- No retention limit — every day's logs were already being kept (Reports has always read multiple days), this just adds a way to actually see them. Nothing new to prune or manage.
+
+### Added — Inventory / subscription tracking for RX & Supplements and Treatments
+- Each supplement or treatment can now optionally track a real inventory: turn on "Track inventory / subscription" when adding or editing one, and set units/sessions remaining plus an expiration date.
+- Logging a dose or session the normal way (tapping the tile, same as always) automatically decrements the count — respects a per-item quantity if you log more than one at a time. Deleting or editing a past log entry correctly gives the count back, so it can't drift out of sync from real usage.
+- Low-supply (\u22643 remaining) and near-expiration (\u22647 days) warnings show up right in the Setup list next to the item, and as a short flag on the RX & Supplements / Treatments tile itself.
+- New **Subscriptions** view under Stats (next to Water/Protein/Cal/All 3) lists every tracked item with its remaining count, expiration, and full usage history pulled straight from existing logged entries — no separate purchase ledger to maintain.
+- Kept deliberately simple: one live "remaining" count per item, correctable any time (e.g. after a refill), rather than tracking separate purchase batches. Covers the actual ask — knowing what's left and when to reorder — without extra bookkeeping.
+
+### Fixed — two real bugs caught before shipping
+- The existing supplement-loading code (`vj`, used every time the app starts) rebuilt each supplement from a fixed field list that predated tonight's work — it was silently dropping the new tracking fields on every reload. Would have meant inventory tracking looked like it worked in the moment but reset on next launch. Fixed to preserve the new fields; treatments were unaffected (they load without a similar rebuild step).
+- A first draft of the delete-entry logic lost its inventory-restore behavior partway through editing. Caught by directly testing delete-and-confirm-restore end-to-end, not just a syntax check, before packaging.
+
+### Testing
+Built and verified in a simulated browser (not just syntax-checked): booted the app fresh, added a tracked supplement end-to-end through Setup, logged it and confirmed the count decremented, deleted the log entry and confirmed the count restored, repeated for treatments, confirmed low-supply badges and the Subscriptions panel render correctly, and confirmed tracked data survives a simulated reload. Also ran a full-file sweep for undefined-reference bugs (the exact class of bug that broke the previous release) — none found. All of the above re-run against the exact minified file being shipped, not just the working copy. Still needs your usual real-device pass — simulated-browser testing catches logic and reference errors but isn't a substitute for using it on your phone.
+
+---
+
 ## [3.14.0] — 2026-08-17
 
 Four items held back from the last design batch, all closed out tonight: real progress rings on the four new tiles, layout uniformity across all eight, a nav bar tweak, and a proper scrolling Today tab.
