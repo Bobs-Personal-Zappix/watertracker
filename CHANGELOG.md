@@ -4,6 +4,37 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.14.0] — 2026-08-17
+
+Four items held back from the last design batch, all closed out tonight: real progress rings on the four new tiles, layout uniformity across all eight, a nav bar tweak, and a proper scrolling Today tab.
+
+### Changed — Weight, RX & Supplements, Treatments, and Exercise now have real progress rings
+- Replaced the binary faded/lit status ring on all four newer tiles with the same percentage-fill ring the original four (Water, Protein, Calories, Sleep) use.
+- **Weight**: ring stays empty until a weight is logged for the day, then fills as today's weight ÷ target weight. No "over goal" celebration badge — being over or under is just a fact, not an achievement. New **Weight — target in lbs** goal added in Setup → Daily goals.
+- **Exercise**: ring fills same as Water/Protein/Calories — minutes logged today ÷ daily minutes goal, with the same "+X min over 🎉" badge when you beat it. New **Exercise — minutes per day** goal added in Setup → Daily goals.
+- **RX & Supplements**: ring fill = how many of today's due items are taken, over how many are due — pulls directly from each supplement's existing schedule, no new setup required.
+- **Treatments**: ring fill = planned recurring treatments not currently pending, over the total planned — same existing due-date engine, no new setup required.
+
+### Changed — All 8 tiles now share one layout
+- Weight/RX & Supplements/Treatments/Exercise restructured to match Water/Protein/Calories/Sleep exactly: label → goal → status line → ring → number → bottom label. Numbers stay below the ring, never inside it.
+- Weight shows `Goal {X}lbs` / today's recorded weight with a signed lbs-to-go stat (`+X` over, `-X` under). Exercise shows `Goal {X}min` / minutes logged today. Supplements and Treatments show how many are planned/due today, pulling from what's already configured for each.
+
+### Changed — Nav bar
+- Setup and Settings swapped positions (Setup now sits before Settings).
+- "Log" renamed to **"Log It!"**. "Reports" renamed to **"Stats"**.
+
+### Changed — Today tab scrolling
+- "To Do Today" and "Today's Log" are now two independently scrollable boxes instead of relying on page-level sticky positioning. Today's Log is guaranteed at least 50% of the viewport height (scrolls internally past that). To Do Today scrolls internally too if a lot of items are due, so it never pushes Today's Log off-screen.
+
+### Notes
+- Built directly against the live production bundle rather than `src/App.jsx`, since the committed source had drifted out of sync with what's actually deployed (missing Treatment tracking and Exercise entirely). Worth re-syncing `src/App.jsx` to the real deployed code at some point so this doesn't happen again — flagged separately for the roadmap discussion.
+- The Supplements/Treatments ring-fill formulas are a direct, minimal extension of the existing due/not-due logic already powering their status text — nothing new was invented there, just turned into a percentage instead of a yes/no.
+
+### Testing
+Not yet run through the project's automated test suite or on a real device — built and verified for syntactic correctness and logical consistency against the existing codebase, but this round needs your usual real-device pass before it's considered confirmed.
+
+---
+
 ## [3.13.0] — 2026-08-16
 
 Three changes this round: toggles for the new tiles, sleep gets its own trend view, and Settings splits into two focused tabs.
