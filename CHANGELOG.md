@@ -4,6 +4,31 @@ All notable changes to this project are tracked here, most recent first.
 
 ---
 
+## [3.16.0] — 2026-08-17
+
+Six small-but-real fixes: moved Health Summary to the Stats page, reordered a Log tab tile, gave three tabs proper titles, and fixed a real logic bug in the Treatments tile.
+
+### Changed — Health Summary moved to Stats
+- "Health Summary" and "Share with your doctor" moved from Settings to the bottom of the Stats page — makes more sense there, since sharing is usually top-of-mind while looking at your stats.
+
+### Changed — Log It! tile order
+- Exercise and RX & Supplements swapped positions. New order: Weight, Exercise, Treatments, RX & Supplements.
+
+### Changed — Tab titles
+- Stats now reads "TO DATE STATS:" plus today's date.
+- Setup now reads "Setup for:" plus today's date.
+- Settings now reads just "Settings" — no date, since nothing there is day-specific.
+
+### Fixed — Treatments tile showing "Done" for things that were never logged
+- The Treatments tile's progress ring and "Done" count were built from "not currently pending," which incorrectly counted a treatment as done if it simply had no schedule established yet (i.e. added in Setup but never actually logged even once). Two treatments sitting untouched showed up as "2 Done."
+- Now: the goal only counts treatments actually due today (or overdue), and "done" only counts ones actually logged today. Nothing scheduled for today → goal is 0, ring shows complete, "0 Done" — matching what you'd expect at a glance.
+- Checked RX & Supplements for the same issue: it doesn't have it. Supplements are deliberately built to treat a never-taken item as due immediately (from earlier work in this project), so a never-logged supplement already correctly shows up as due-and-not-done rather than falsely "done." No change needed there.
+
+### Testing
+Verified all six changes in a simulated browser: tile order, all three tab titles (including Settings correctly showing no date), Health Summary present on Stats and gone from Settings, and the full Treatments cycle — two never-logged treatments correctly excluded from the goal, a genuinely-due treatment correctly showing 0 done until logged, then correctly flipping to done once logged today. Also re-ran the full inventory decrement/restore regression suite from the last release to confirm nothing broke. All of the above run against the exact minified file being shipped.
+
+---
+
 ## [3.15.0] — 2026-08-17
 
 Two features tonight: a way to look back at past days' logs, and inventory/subscription tracking for supplements and treatments.
