@@ -30,8 +30,13 @@ Four items held back from the last design batch, all closed out tonight: real pr
 - Built directly against the live production bundle rather than `src/App.jsx`, since the committed source had drifted out of sync with what's actually deployed (missing Treatment tracking and Exercise entirely). Worth re-syncing `src/App.jsx` to the real deployed code at some point so this doesn't happen again — flagged separately for the roadmap discussion.
 - The Supplements/Treatments ring-fill formulas are a direct, minimal extension of the existing due/not-due logic already powering their status text — nothing new was invented there, just turned into a percentage instead of a yes/no.
 
+### Fixed — blank white screen on load
+The first upload of this release had a real bug: the new `ringWeight` component referenced `recordedToday` instead of the local variable it was actually destructured into (`r`), throwing a `ReferenceError` the instant the Weight tile tried to render — which happens on first load for anyone with Weight showing (the default). That's why the app came up as a blank white screen after deploying.
+
+Fixed, and this time verified by actually booting the app in a simulated browser environment (jsdom) rather than relying on a syntax check alone — confirmed it mounts with zero errors, and clicked through Log, Setup, and Today tabs to confirm each renders correctly with the new tiles, goal inputs, and scroll layout present. Also ran the full file through ESLint's `no-undef` check across all ~34,000 lines to catch any other undefined-reference bugs of the same kind — none found.
+
 ### Testing
-Not yet run through the project's automated test suite or on a real device — built and verified for syntactic correctness and logical consistency against the existing codebase, but this round needs your usual real-device pass before it's considered confirmed.
+Verified via simulated-browser boot (jsdom) across Log/Setup/Today tabs, plus a full-file undefined-reference sweep. Not yet run through the project's own automated test suite or on a real device — still needs your usual real-device pass before it's considered fully confirmed.
 
 ---
 
