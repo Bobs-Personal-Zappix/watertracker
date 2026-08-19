@@ -138,6 +138,30 @@ export default {
       }
     }
 
+    if (url.pathname === '/api/progress' && request.method === 'POST') {
+      let payload;
+      try {
+        payload = await request.json();
+      } catch (e) {
+        return json({ error: 'Invalid JSON body.' }, 400);
+      }
+      const { id } = payload;
+      if (!id) return json({ error: 'Missing id.' }, 400);
+
+      // Only id + server-assigned date are ever persisted. Everything else in the
+      // payload (goals, totals, streak, treatment names) is read and discarded —
+      // never written to D1, per the retention feature's privacy constraint.
+      const today = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+      try {
+        await env.DB.prepare(
+          'INSERT OR IGNORE INTO user_activity (user_id, activity_date) VALUES (?, ?)'
+        ).bind(id, today).run();
+      } catch (e) {
+        // fire-and-forget from the client; don't fail the response over a D1 hiccup
+      }
+      return json({ ok: true });
+    }
+
     return json({ error: 'Not found.' }, 404);
   },
 

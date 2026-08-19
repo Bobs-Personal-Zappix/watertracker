@@ -11,7 +11,12 @@ crons = ["*/15 * * * *"]
 # then paste the id it prints below.
 [[kv_namespaces]]
 binding = "WATER_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "40e3319e7b504939a6cceb722b5d1448"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hydropro-db"
+database_id = "476d5b17-f469-4a88-bdfe-50dff6dba624"
 
 # Public key and contact email are not secret - safe to commit.
 # VAPID_PRIVATE_KEY is the one real secret - set with `wrangler secret put`, see README.

@@ -120,7 +120,7 @@ global.requestAnimationFrame = (cb) => setTimeout(cb, 0);
 global.cancelAnimationFrame = (id) => clearTimeout(id);
 
 try {
-  new vm.Script(bundleSrc, { filename: "bundle.js" }).runInContext(vm.createContext(window));
+  vm.runInContext(bundleSrc, dom.getInternalVMContext(), { filename: "bundle.js" });
 } catch (err) {
   console.log("FATAL — threw during eval:", err && (err.stack || err.message));
   process.exit(1);

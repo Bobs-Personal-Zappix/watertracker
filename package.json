@@ -1,0 +1,13 @@
+{
+  "name": "hydropro-tracker-tools",
+  "private": true,
+  "description": "Dev-only tooling (jsdom harness, bundle lint). Does not build site/app/bundle.js — see CLAUDE.md.",
+  "scripts": {
+    "lint:bundle": "eslint site/app/bundle.js"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0"
+  }
+}
