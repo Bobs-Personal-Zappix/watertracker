@@ -20,6 +20,70 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.23.0] — 2026-08-20
+
+`UX-OPEN-01` Phase 1b — My Plan visual redesign, built in `src/app.js` and deployed to
+`site/app/bundle.js` the same day via the build pipeline (second deploy through that path, after
+v3.22.0/v3.21.0's manual patches and v3.22.0's own deploy). Replaces v3.22.0's generic-settings-form
+look with a purpose-built visual language, keeping all of v3.22.0's structural logic (state,
+callbacks, modals) unchanged underneath.
+
+### Changed — "What I'm Tracking": tracker rows became a 2-column card grid
+- `TrackerRow` rebuilt as a tappable card (icon in a teal-tinted rounded square, bold 17px name,
+  formatted goal value or "Set a goal", "● Active"/"○ Off" status pill) instead of an
+  always-visible toggle-and-input row.
+- New `TrackerSheet` component: a single shared bottom sheet (reusing existing
+  `.wt-backdrop`/`.wt-sheet` modal classes) replaces the old always-rendered inline inputs — tap a
+  card to open it, toggle visibility and edit the goal there, Save to commit. The six existing
+  per-field `useState`/`useEffect` pairs from v3.22.0 are unchanged; the sheet just borrows them via
+  a per-tracker closure instead of rendering its own input.
+- "Show hidden trackers (N)" link moved below the grid with a live count, wording updated from
+  "Show all trackers".
+- Icon-per-tracker corrected against what Log It! tiles actually use, not guessed: Protein →
+  `Battery`, Sleep → `Bed` (both already imported; previously would have been wrong if built from
+  the original brief's untested guesses of `Flame`/`Dumbbell` and `Moon`).
+
+### Changed — "My Regimen": provider-grouped full-width cards replace plain CRUD summary rows
+- New `RegimenSummaryCard` (icon optional, title, live count, item preview) replaces v3.22.0's
+  `CrudSummaryRow` pill button, which is now deleted (unused once both call sites migrated).
+- **Self-Managed card** combines Supplements + Treatments into one summary (combined count,
+  combined name preview) — expands to the two *existing* lists (unchanged markup, unchanged
+  `CO`/`jO` add/edit modals) under their own sub-headers, not a merged data model.
+- **Quick Presets card** — same existing preset list/modal, now under a `RegimenSummaryCard` with a
+  new `Zap` icon import (`lucide-react`, already an installed dependency — no new package).
+- **Clinic provider card — hardcoded demo data, explicitly marked in code as a placeholder.** One
+  static card ("Austin Drip Lounge", a fixed protocol item list, a fixed sessions/next-date line,
+  two inert buttons) exists purely to visually demo the concept to clinic partners. Not wired to
+  any data model; no backend/Worker/schema changes anywhere in this release.
+
+### Design system
+Stayed in the app's real light theme (`--paper`/`--ink`/`--teal`/`--mist`/`--line`/`--muted`, all
+pre-existing) after catching that an earlier draft of the session brief specified dark colors
+(`#080808`/`#191919`) that don't exist anywhere in the actual stylesheet — confirmed against `iO`
+(line 591) before writing any CSS, corrected before building. "Bold and exciting" delivered through
+real box-shadows (the old flat `.wt-card` has none), a stronger `--teal` presence (card borders,
+icon badges, the show-hidden link), larger card-title type (17px vs. the old 14.5px), and more
+generous spacing — not a theme change. ~14 new CSS rules added to the existing `iO` stylesheet
+string; no separate stylesheet, no new fonts (`'Space Grotesk'` was already loaded).
+
+### Testing
+`node esbuild.config.js`: clean, 705.2KB → 722,137 bytes after copying to `bundle.js`. Harness and
+lint (11 no-undef, matching baseline) both clean on `bundle.build.js` and, after the copy, on the
+exact deployed `site/app/bundle.js` — full six-step build→verify→deploy→re-verify sequence, same
+as v3.22.0's deploy. Beyond that: a scratchpad-only harness variant (deleted after use, never
+committed) drove the real UI against both files — section headers, tracker-card goal formatting,
+hide-by-default, the clinic card's full content, Self-Managed's combined count/preview across both
+arrays, opening/closing the tracker bottom sheet, and expanding Self-Managed to confirm both a
+supplement and a treatment render under their correct sub-headers (an ordering bug caught and fixed
+during the session, before it ever reached a build).
+
+**Not yet verified:** real-browser visual check — jsdom has no layout engine, so shadows, spacing,
+the bottom sheet's slide-up feel, and whether "bold and exciting" actually reads that way in a real
+browser are all unconfirmed. This matters more than usual this release, since the whole point was
+visual polish.
+
+---
+
 ## [3.22.0] — 2026-08-20
 
 `UX-OPEN-01` Phase 1 — "My Plan" page redesign, built in `src/app.js`. **Deployed to
