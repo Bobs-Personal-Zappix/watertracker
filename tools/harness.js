@@ -152,7 +152,7 @@ function setInput(placeholder, value) {
   el.dispatchEvent(new window.Event("input", { bubbles: true }));
   return true;
 }
-const nav = (tab) => clickByText(tab); // "Log It!" | "Today" | "Stats" | "Setup" | "Settings"
+const nav = (tab) => clickByText(tab); // "Log It!" | "Today" | "Stats" | "My Plan" | "Settings"
 const stored = () => JSON.parse(window.localStorage.getItem(STORAGE_KEY));
 const supp = (name) => stored().settings.supplements.find((s) => s.name === name);
 const treat = (name) => stored().settings.treatments.find((t) => t.name === name);
@@ -178,7 +178,7 @@ const STEPS = [
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => check("nav to Stats", nav("Stats")),
-  () => check("nav to Setup", nav("Setup")),
+  () => check("nav to My Plan", nav("My Plan")),
   () => check("nav to Today", nav("Today")),
   () => check("nav to Log It!", nav("Log It!")),
   // Add assertions for whatever changed this session.
