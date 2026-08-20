@@ -20,6 +20,50 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.21.0] — 2026-08-20
+
+Production bundle patch: fixes `goalWeight`/`goalExerciseMinutes` silently dropping from backup
+export/import in the **deployed** `site/app/bundle.js`. This is the same bug fixed in `src/app.js`
+under `ARCH-OPEN-05` (v3.20.0, below) — that fix never touched the deployed bundle, since it was
+part of the source-reconciliation effort, not a production patch. This release is the direct,
+minimal, two-location patch to the actual artifact serving `hydroprotracker.com`.
+
+### Fixed — `goalWeight`/`goalExerciseMinutes` silently dropped by backup export/import
+- Backup export (`ve()`): the exported settings object skipped straight from `goalSleepHours` to
+  `showWater`, omitting `goalWeight` and `goalExerciseMinutes` entirely. Added both, using the same
+  bare-property pattern every other field in the function already uses.
+- Backup import (`xe()`): same omission, mirrored on the restore side. Added both using the same
+  `stored||default` fallback convention (`r.settings.goalWeight||ES.settings.goalWeight`) already
+  used by every other numeric goal field in the function.
+- The localStorage load path already had both fields correctly — only export and import were
+  affected. A user who never used the backup feature was never exposed to this bug.
+- Two-location, content-anchored edit via Python (the file is a single 702KB line; anchors were
+  confirmed unique via `content.count(target) == 1` immediately before editing). No other change to
+  `site/app/bundle.js`.
+
+### Testing
+`node --check`: clean. `npm run lint:bundle`: 11 no-undef errors, unchanged from baseline (same
+errors, same locations). `node tools/harness.js site/app/bundle.js`: exit 0, 8 tiles, all nav clean,
+zero runtime errors. Beyond the harness's default smoke test: a scratchpad-only harness variant
+(deleted after use, never committed) drove the actual UI — seeded `localStorage` with non-default
+goal values, clicked "Export backup" for real and captured the Blob content at construction time to
+confirm both fields appear in the export, then simulated picking a backup file with different
+goal values via a real file-input `change` event and confirmed the app applied them instead of
+dropping them. Both directions of the bug verified fixed through the real code path. End-state
+audit: diffed the final `ve()`/`xe()` function bodies against pre-edit snapshots — confirmed
+removing only the inserted text reproduces the original functions byte-for-byte, nothing else
+changed.
+
+**Real-device verification: pending.** This patches the bundle serving production, but jsdom has no
+layout engine and this touches actual data persistence — Rob needs to export a backup with
+non-default weight/exercise goals set, import it back, and confirm both goals survive, before this
+is considered verified. Per this project's front-end deploy path (`git push` to `main` is what
+serves `site/app/bundle.js` via Cloudflare Pages — there is no separate manual deploy step for the
+app, unlike the Worker), pushing this commit **is** the production deploy. That push is being held
+until the real-device check above happens.
+
+---
+
 ## [3.20.0] — 2026-08-20
 
 `ARCH-OPEN-05` — versioned schema and deep-merge migrations, in the extracted `src/app.js`.
