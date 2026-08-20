@@ -1,51 +1,48 @@
-import * as er from "react";
-import * as Jn from "react-dom/client";
+import * as React from "react";
+import * as ReactDOM from "react-dom/client";
 
-// recharts is installed at v3.10.1 (package.json pins "latest"); the vendor code
-// this app was originally bundled against looks like an older recharts major
-// (e.g. class-component Legend). Export names below are unchanged across that
-// gap, but runtime prop/behavior differences are possible and haven't been
-// verified yet.
+// recharts is pinned to 2.15.4 (see docs/DECISION-LOG.md ARCH-OPEN-01) to
+// match the version vendored in the deployed bundle.
 import {
-  ResponsiveContainer as zl,
-  CartesianGrid as rE,
-  XAxis as IE,
-  YAxis as XE,
-  Tooltip as Pl,
-  Legend as Ii,
-  ReferenceLine as zw,
-  Bar as Xb,
-  Cell as Il,
-  Line as SE,
-  LineChart as Jk,
-  BarChart as eS,
+  ResponsiveContainer,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ReferenceLine,
+  Bar,
+  Cell,
+  Line,
+  LineChart,
+  BarChart,
 } from "recharts";
 
 import {
-  BarChart3 as ur,
-  Battery as sr,
-  Bed as cr,
-  Bell as fr,
-  ChevronLeft as dr,
-  ChevronRight as pr,
-  ClipboardList as mr,
-  Clock as hr,
-  Cloud as gr,
-  Download as yr,
-  Droplet as vr,
-  Dumbbell as br,
-  Flame as wr,
-  Mail as xr,
-  Moon as Er,
-  Pencil as kr,
-  Pill as Sr,
-  Plus as Or,
-  Settings as Pr,
-  SlidersVertical as Cr,
-  Syringe as jr,
-  Trash2 as Nr,
-  Weight as Tr,
-  X as Ar,
+  BarChart3,
+  Battery,
+  Bed,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Cloud,
+  Download,
+  Droplet,
+  Dumbbell,
+  Flame,
+  Mail,
+  Moon,
+  Pencil,
+  Pill,
+  Plus,
+  Settings,
+  SlidersVertical,
+  Syringe,
+  Trash2,
+  Weight,
+  X as XIcon,
 } from "lucide-react";
 
     function tS(e) {
@@ -564,25 +561,25 @@ import {
             s = (i / 100 * 360 - 90) * (Math.PI / 180),
             c = 50 + 42 * Math.cos(s),
             f = 50 + 42 * Math.sin(s);
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-gauge-wrap"
-        }, er.default.createElement("svg", {
+        }, React.default.createElement("svg", {
             viewBox: "0 0 100 100",
             className: "wt-gauge-svg wt-gauge-ring"
-        }, er.default.createElement("defs", null, er.default.createElement("clipPath", {
+        }, React.default.createElement("defs", null, React.default.createElement("clipPath", {
             id: `ring-clip-${r}`
-        }, er.default.createElement("circle", {
+        }, React.default.createElement("circle", {
             cx: "50",
             cy: "50",
             r: "34"
-        }))), er.default.createElement("image", {
+        }))), React.default.createElement("image", {
             href: `${o}/${r}.png`,
             x: "12",
             y: "12",
             width: "76",
             height: "76",
             clipPath: `url(#ring-clip-${r})`
-        }), er.default.createElement("circle", {
+        }), React.default.createElement("circle", {
             cx: "50",
             cy: "50",
             r: 42,
@@ -590,7 +587,7 @@ import {
             stroke: a,
             strokeWidth: "7.5",
             opacity: "0.42"
-        }), er.default.createElement("circle", {
+        }), React.default.createElement("circle", {
             cx: "50",
             cy: "50",
             r: 42,
@@ -601,14 +598,14 @@ import {
             strokeDashoffset: u,
             strokeLinecap: "round",
             transform: "rotate(-90 50 50)"
-        }), er.default.createElement("circle", {
+        }), React.default.createElement("circle", {
             cx: c,
             cy: f,
             r: "5.5",
             fill: "#fff",
             stroke: a,
             strokeWidth: "2.5"
-        })), t && er.default.createElement("div", {
+        })), t && React.default.createElement("div", {
             className: "wt-overflow"
         }, n))
     }
@@ -619,7 +616,7 @@ import {
         recordedToday: n
     }) {
         let r = n && t > 0 ? e / t * 100 : 0;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: r,
             over: !1,
             overText: "",
@@ -632,7 +629,7 @@ import {
     function sO({
         pct: e
     }) {
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: e,
             over: !1,
             overText: "",
@@ -645,7 +642,7 @@ import {
     function cO({
         pct: e
     }) {
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: e,
             over: !1,
             overText: "",
@@ -661,7 +658,7 @@ import {
     }) {
         let n = e / Math.max(1, t) * 100,
             r = e > t && t > 0;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: n,
             over: r,
             overText: `+${e-t}min`,
@@ -677,7 +674,7 @@ import {
     }) {
         let n = e / Math.max(1, t) * 100,
             r = e > t && t > 0;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: n,
             over: r,
             overText: `+${e-t}oz`,
@@ -692,7 +689,7 @@ import {
     }) {
         let n = e / Math.max(1, t) * 100,
             r = e > t && t > 0;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: n,
             over: r,
             overText: `+${e-t}g`,
@@ -707,7 +704,7 @@ import {
     }) {
         let n = e / Math.max(1, t) * 100,
             r = e > t && t > 0;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: n,
             over: r,
             overText: `+${e-t}cal`,
@@ -723,7 +720,7 @@ import {
         let n = e / Math.max(1, t) * 100,
             r = e > t && t > 0,
             a = Math.round(10 * (e - t)) / 10;
-        return er.default.createElement(lO, {
+        return React.default.createElement(lO, {
             pct: n,
             over: r,
             overText: `+${a}hrs`,
@@ -736,9 +733,9 @@ import {
         toast: e,
         onDismiss: t
     }) {
-        return e ? er.default.createElement("div", {
+        return e ? React.default.createElement("div", {
             className: "wt-toast"
-        }, er.default.createElement("span", null, e.message), e.undo && er.default.createElement("button", {
+        }, React.default.createElement("span", null, e.message), e.undo && React.default.createElement("button", {
             onClick: () => {
                 e.undo(), t()
             }
@@ -749,57 +746,57 @@ import {
         open: e,
         onClose: t
     }) {
-        return e ? er.default.createElement("div", {
+        return e ? React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: t
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal wt-modal-tall",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, "How to use this"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, "How to use this"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: t,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("div", {
+        }))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Getting started"), er.default.createElement("ul", {
+        }, "Getting started"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, "Add this to your home screen (share icon → Add to Home Screen) so it opens like a real app."), er.default.createElement("li", null, "Set your daily goals for water, protein, and calories in Setup — the defaults are just a starting point."), er.default.createElement("li", null, "Turn on notifications under Remind if you want reminders through the day."))), er.default.createElement("div", {
+        }, React.default.createElement("li", null, "Add this to your home screen (share icon → Add to Home Screen) so it opens like a real app."), React.default.createElement("li", null, "Set your daily goals for water, protein, and calories in Setup — the defaults are just a starting point."), React.default.createElement("li", null, "Turn on notifications under Remind if you want reminders through the day."))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Logging something"), er.default.createElement("ul", {
+        }, "Logging something"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, "Tap Log under Water, Protein, or Calories on the main screen."), er.default.createElement("li", null, "Pick a quick amount, or enter a custom one and adjust the time if you're catching up on something from earlier."), er.default.createElement("li", null, "Sleep works differently — tap Log Sleep and enter Lights Out and Woke Up times; the hours are calculated for you, including overnight sessions that cross midnight. Naps use the same button and add to the day's total."), er.default.createElement("li", null, "Made a mistake? Tap the trash icon next to the entry in Today's log to remove it."))), er.default.createElement("div", {
+        }, React.default.createElement("li", null, "Tap Log under Water, Protein, or Calories on the main screen."), React.default.createElement("li", null, "Pick a quick amount, or enter a custom one and adjust the time if you're catching up on something from earlier."), React.default.createElement("li", null, "Sleep works differently — tap Log Sleep and enter Lights Out and Woke Up times; the hours are calculated for you, including overnight sessions that cross midnight. Naps use the same button and add to the day's total."), React.default.createElement("li", null, "Made a mistake? Tap the trash icon next to the entry in Today's log to remove it."))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Presets — one-tap logging"), er.default.createElement("ul", {
+        }, "Presets — one-tap logging"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, "In Settings, add anything you log often — a drink, a shake, a usual snack — with its amount."), er.default.createElement("li", null, "It shows up as a button on the main screen. One tap logs it, no typing."))), er.default.createElement("div", {
+        }, React.default.createElement("li", null, "In Settings, add anything you log often — a drink, a shake, a usual snack — with its amount."), React.default.createElement("li", null, "It shows up as a button on the main screen. One tap logs it, no typing."))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Reports"), er.default.createElement("ul", {
+        }, "Reports"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, 'Switch between Water / Protein / Cal / Sleep at the top, or pick "All 4" to compare all of them at once.'), er.default.createElement("li", null, '"All 4" shows each as a percentage of its own goal, since oz, grams, calories, and hours don\'t share a scale.'), er.default.createElement("li", null, "Switch between Day / Week / Month, and use the arrows to look back at previous ones."))), er.default.createElement("div", {
+        }, React.default.createElement("li", null, 'Switch between Water / Protein / Cal / Sleep at the top, or pick "All 4" to compare all of them at once.'), React.default.createElement("li", null, '"All 4" shows each as a percentage of its own goal, since oz, grams, calories, and hours don\'t share a scale.'), React.default.createElement("li", null, "Switch between Day / Week / Month, and use the arrows to look back at previous ones."))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Reminders"), er.default.createElement("ul", {
+        }, "Reminders"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, "Push notifications: real alerts even with the app closed. Turn on in Settings."), er.default.createElement("li", null, "Bedtime reminder: a separate, once-a-day push at whatever time you want to start winding down — set it in Remind too."), er.default.createElement("li", null, "In-app nudge: only works while this is open on screen — a lighter backup, not the main way."), er.default.createElement("li", null, "Calendar file: a one-time download that adds recurring reminders to your phone's own calendar."))), er.default.createElement("div", {
+        }, React.default.createElement("li", null, "Push notifications: real alerts even with the app closed. Turn on in Settings."), React.default.createElement("li", null, "Bedtime reminder: a separate, once-a-day push at whatever time you want to start winding down — set it in Remind too."), React.default.createElement("li", null, "In-app nudge: only works while this is open on screen — a lighter backup, not the main way."), React.default.createElement("li", null, "Calendar file: a one-time download that adds recurring reminders to your phone's own calendar."))), React.default.createElement("div", {
             className: "wt-help-section"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-help-title"
-        }, "Backing up your data"), er.default.createElement("ul", {
+        }, "Backing up your data"), React.default.createElement("ul", {
             className: "wt-help-list"
-        }, er.default.createElement("li", null, "In Settings → Backup, export a backup before switching phones or reinstalling."), er.default.createElement("li", null, "Import it on the new device to bring your history back — nothing is stored anywhere else."))), er.default.createElement("p", {
+        }, React.default.createElement("li", null, "In Settings → Backup, export a backup before switching phones or reinstalling."), React.default.createElement("li", null, "Import it on the new device to bring your history back — nothing is stored anywhere else."))), React.default.createElement("p", {
             style: {
                 fontSize: 12,
                 color: wS,
@@ -817,33 +814,33 @@ import {
         onCancel: a,
         onConfirm: o
     }) {
-        return e ? er.default.createElement("div", {
+        return e ? React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: a
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, t)), er.default.createElement("p", {
+        }, React.default.createElement("h3", null, t)), React.default.createElement("p", {
             style: {
                 fontSize: 13.5,
                 color: wS,
                 marginTop: 0,
                 marginBottom: 18
             }
-        }, n), er.default.createElement("div", {
+        }, n), React.default.createElement("div", {
             style: {
                 display: "flex",
                 gap: 10
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 flex: 1
             },
             onClick: a
-        }, "Cancel"), er.default.createElement("button", {
+        }, "Cancel"), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 flex: 1,
@@ -859,8 +856,8 @@ import {
         color: n,
         onChange: r
     }) {
-        let a = (0, er.useRef)(null),
-            o = (0, er.useRef)(!1);
+        let a = (0, React.useRef)(null),
+            o = (0, React.useRef)(!1);
 
         function i(e) {
             let n = a.current.getBoundingClientRect();
@@ -885,7 +882,7 @@ import {
                 val: Math.round(e),
                 pos: ZS(e, t, u, s, 90)
             }));
-        return er.default.createElement("svg", {
+        return React.default.createElement("svg", {
             ref: a,
             viewBox: "0 0 200 200",
             className: "wt-dial",
@@ -897,12 +894,12 @@ import {
             },
             onPointerUp: l,
             onPointerCancel: l
-        }, er.default.createElement("circle", {
+        }, React.default.createElement("circle", {
             cx: u,
             cy: s,
             r: "98",
             fill: "transparent"
-        }), er.default.createElement("circle", {
+        }), React.default.createElement("circle", {
             cx: u,
             cy: s,
             r: 70,
@@ -910,7 +907,7 @@ import {
             stroke: n,
             strokeWidth: "16",
             opacity: "0.18"
-        }), er.default.createElement("circle", {
+        }), React.default.createElement("circle", {
             cx: u,
             cy: s,
             r: 70,
@@ -921,21 +918,21 @@ import {
             strokeDashoffset: f,
             strokeLinecap: "round",
             transform: "rotate(-90 100 100)"
-        }), p.map((e, t) => er.default.createElement("text", {
+        }), p.map((e, t) => React.default.createElement("text", {
             key: t,
             x: e.pos.x,
             y: e.pos.y,
             textAnchor: "middle",
             dominantBaseline: "middle",
             className: "wt-dial-tick"
-        }, e.val)), er.default.createElement("circle", {
+        }, e.val)), React.default.createElement("circle", {
             cx: d.x,
             cy: d.y,
             r: "15",
             fill: "#fff",
             stroke: n,
             strokeWidth: "4"
-        }), er.default.createElement("text", {
+        }), React.default.createElement("text", {
             x: u,
             y: 102,
             textAnchor: "middle",
@@ -961,23 +958,23 @@ import {
     }) {
         if (!e) return null;
         let p = d || l;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: e => {
                 e.stopPropagation(), p()
             }
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, t), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: p,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
@@ -985,17 +982,17 @@ import {
                 marginBottom: 16,
                 textAlign: "center"
             }
-        }, u ? "Drag the dial for a rough number, or type the exact amount down below." : f ? 'Drag the dial or type an amount, then log it. Want to pick from your presets, or add a description or different time? Use "Manual or Presets Entry".' : "Drag the dial to the amount you consumed, or manually type in the exact amount down below."), er.default.createElement(bO, {
+        }, u ? "Drag the dial for a rough number, or type the exact amount down below." : f ? 'Drag the dial or type an amount, then log it. Want to pick from your presets, or add a description or different time? Use "Manual or Presets Entry".' : "Drag the dial to the amount you consumed, or manually type in the exact amount down below."), React.default.createElement(bO, {
             value: a,
             max: r,
             color: o,
             onChange: i
-        }), er.default.createElement("label", {
+        }), React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginTop: 18
             }
-        }, n, er.default.createElement("input", {
+        }, n, React.default.createElement("input", {
             type: "number",
             inputMode: u ? "decimal" : "numeric",
             step: u ? "0.1" : "1",
@@ -1006,23 +1003,23 @@ import {
                     n = u ? Math.round(10 * t) / 10 : Math.round(t);
                 i(Number.isFinite(t) ? Math.max(0, n) : 0)
             }
-        })), c && er.default.createElement("label", {
+        })), c && React.default.createElement("label", {
             className: "wt-field"
-        }, "Time", er.default.createElement("input", {
+        }, "Time", React.default.createElement("input", {
             type: "time",
             value: s,
             onChange: e => c(e.target.value)
-        })), f ? er.default.createElement(er.default.Fragment, null, er.default.createElement("button", {
+        })), f ? React.default.createElement(React.default.Fragment, null, React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 marginTop: 16
             },
             disabled: a <= 0,
             onClick: f
-        }, a > 0 ? `Log ${a}${n}` : "Log"), er.default.createElement("button", {
+        }, a > 0 ? `Log ${a}${n}` : "Log"), React.default.createElement("button", {
             className: "wt-btn-text",
             onClick: l
-        }, "Manual or Presets Entry")) : er.default.createElement("button", {
+        }, "Manual or Presets Entry")) : React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 marginTop: 16
@@ -1040,36 +1037,36 @@ import {
         presets: o,
         onQuickLogPreset: i
     }) {
-        let [l, u] = (0, er.useState)(""), [s, c] = (0, er.useState)(""), [f, d] = (0, er.useState)(""), [p, m] = (0, er.useState)(""), [h, g] = (0, er.useState)(JS()), [y, v] = (0, er.useState)(null);
-        if ((0, er.useEffect)(() => {
+        let [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""), [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""), [h, g] = (0, React.useState)(JS()), [y, v] = (0, React.useState)(null);
+        if ((0, React.useEffect)(() => {
                 e && (u(t && t.oz ? String(t.oz) : n && "oz" === n.field ? String(n.value) : ""), c(t && t.grams ? String(t.grams) : n && "grams" === n.field ? String(n.value) : ""), d(t && t.calories ? String(t.calories) : n && "calories" === n.field ? String(n.value) : ""), m(t ? t.label : ""), g(t ? eO(t.timeMinutes) : JS()), v(null))
             }, [e, t, n]), !e) return null;
         let b = Number(l) || 0,
             w = Number(s) || 0,
             x = Number(f) || 0,
             E = (b > 0 || w > 0 || x > 0) && "" !== h;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: r
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, t ? "Edit entry" : "Log"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit entry" : "Log"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -6,
                 marginBottom: 16
             }
-        }, "Fill in whichever apply — leave the rest blank."), !t && o && o.length > 0 && er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, "Fill in whichever apply — leave the rest blank."), !t && o && o.length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 fontWeight: 700,
@@ -1078,63 +1075,63 @@ import {
                 letterSpacing: ".04em",
                 marginBottom: 8
             }
-        }, "Presets — tap to log instantly"), er.default.createElement("div", {
+        }, "Presets — tap to log instantly"), React.default.createElement("div", {
             className: "wt-preset-grid",
             style: {
                 maxHeight: 160,
                 overflowY: "auto",
                 marginBottom: 8
             }
-        }, [...o].sort((e, t) => e.name.localeCompare(t.name)).map(e => er.default.createElement("button", {
+        }, [...o].sort((e, t) => e.name.localeCompare(t.name)).map(e => React.default.createElement("button", {
             key: e.id,
             className: "wt-preset-btn",
             onClick: () => i(e)
-        }, e.name))), er.default.createElement("div", {
+        }, e.name))), React.default.createElement("div", {
             className: "wt-divider",
             style: {
                 margin: "4px 0 18px"
             }
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-field-row"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Water (oz)", er.default.createElement("button", {
+        }, "Water (oz)", React.default.createElement("button", {
             type: "button",
             className: "wt-dial-trigger",
             onClick: () => v("oz")
-        }, l || "0")), er.default.createElement("label", {
+        }, l || "0")), React.default.createElement("label", {
             className: "wt-field"
-        }, "Protein (g)", er.default.createElement("button", {
+        }, "Protein (g)", React.default.createElement("button", {
             type: "button",
             className: "wt-dial-trigger",
             onClick: () => v("grams")
-        }, s || "0")), er.default.createElement("label", {
+        }, s || "0")), React.default.createElement("label", {
             className: "wt-field"
-        }, "Calories", er.default.createElement("button", {
+        }, "Calories", React.default.createElement("button", {
             type: "button",
             className: "wt-dial-trigger",
             onClick: () => v("calories")
-        }, f || "0"))), er.default.createElement("label", {
+        }, f || "0"))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Description (optional)", er.default.createElement("input", {
+        }, "Description (optional)", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Post-workout shake",
             value: p,
             onChange: e => m(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Time", er.default.createElement("input", {
+        }, "Time", React.default.createElement("input", {
             type: "time",
             value: h,
             onChange: e => g(e.target.value)
-        })), er.default.createElement("p", {
+        })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -8,
                 marginBottom: 14
             }
-        }, "Defaults to now — change it if you're catching up on something from earlier today."), er.default.createElement("button", {
+        }, "Defaults to now — change it if you're catching up on something from earlier today."), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: !E,
             onClick: () => a({
@@ -1142,7 +1139,7 @@ import {
                 grams: w,
                 calories: x
             }, h, p)
-        }, t ? "Save changes" : "Log Items")), er.default.createElement(wO, {
+        }, t ? "Save changes" : "Log Items")), React.default.createElement(wO, {
             open: "oz" === y,
             title: "Water",
             unit: "oz",
@@ -1151,7 +1148,7 @@ import {
             color: mS,
             onChange: e => u(String(e)),
             onClose: () => v(null)
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: "grams" === y,
             title: "Protein",
             unit: "g",
@@ -1160,7 +1157,7 @@ import {
             color: hS,
             onChange: e => c(String(e)),
             onClose: () => v(null)
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: "calories" === y,
             title: "Calories",
             unit: "cal",
@@ -1178,13 +1175,13 @@ import {
         value: n,
         onChange: r
     }) {
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-feedback-q"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-feedback-label"
-        }, e), er.default.createElement("div", {
+        }, e), React.default.createElement("div", {
             className: "wt-chip-row"
-        }, t.map(e => er.default.createElement("button", {
+        }, t.map(e => React.default.createElement("button", {
             key: e,
             type: "button",
             className: "wt-chip " + (n === e ? "active" : ""),
@@ -1199,100 +1196,100 @@ import {
         onSubmit: r,
         onGoToSettings: a
     }) {
-        let [o, i] = (0, er.useState)(""), [l, u] = (0, er.useState)(""), [s, c] = (0, er.useState)(""), [f, d] = (0, er.useState)(""), [p, m] = (0, er.useState)(""), [h, g] = (0, er.useState)(""), [y, v] = (0, er.useState)(""), [b, w] = (0, er.useState)(!1), [x, E] = (0, er.useState)("");
-        if ((0, er.useEffect)(() => {
+        let [o, i] = (0, React.useState)(""), [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""), [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""), [h, g] = (0, React.useState)(""), [y, v] = (0, React.useState)(""), [b, w] = (0, React.useState)(!1), [x, E] = (0, React.useState)("");
+        if ((0, React.useEffect)(() => {
                 e && (i(""), u(""), c(""), d(""), m(""), g(""), v(""), w(!1), E(""))
             }, [e]), !e) return null;
         let k = "" !== o;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: n
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet wt-sheet-tall",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, "Feedback"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, "Feedback"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -6,
                 marginBottom: 16
             }
-        }, "Takes about 30 seconds — only the first question is required."), t ? er.default.createElement("p", {
+        }, "Takes about 30 seconds — only the first question is required."), t ? React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -4,
                 marginBottom: 16
             }
-        }, "Submitting as ", er.default.createElement("b", {
+        }, "Submitting as ", React.default.createElement("b", {
             style: {
                 color: dS
             }
-        }, t), ".") : er.default.createElement("p", {
+        }, t), ".") : React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: -4,
                 marginBottom: 16
             }
-        }, "No name set — this will be submitted anonymously.", " ", er.default.createElement("button", {
+        }, "No name set — this will be submitted anonymously.", " ", React.default.createElement("button", {
             type: "button",
             className: "wt-inline-link",
             onClick: a
-        }, "Add your name")), er.default.createElement(EO, {
+        }, "Add your name")), React.default.createElement(EO, {
             label: "Overall, how's it going?",
             options: ["Great", "Good", "OK", "Frustrating"],
             value: o,
             onChange: i
-        }), er.default.createElement(EO, {
+        }), React.default.createElement(EO, {
             label: "Are you using it every day?",
             options: ["Yes, every day", "Most days", "A few times a week", "Not really"],
             value: l,
             onChange: u
-        }), er.default.createElement(EO, {
+        }), React.default.createElement(EO, {
             label: "Do you enter things immediately or more in bunches?",
             options: ["Right away, each time", "In a batch, later", "A mix of both"],
             value: s,
             onChange: c
-        }), er.default.createElement(EO, {
+        }), React.default.createElement(EO, {
             label: "Do you like the dials for entry?",
             options: ["Love them", "They're fine", "Prefer typing", "Haven't tried them"],
             value: f,
             onChange: d
-        }), er.default.createElement("label", {
+        }), React.default.createElement("label", {
             className: "wt-field"
-        }, "What's working well? (optional)", er.default.createElement("textarea", {
+        }, "What's working well? (optional)", React.default.createElement("textarea", {
             rows: "2",
             value: p,
             onChange: e => m(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "What's frustrating or missing? (optional)", er.default.createElement("textarea", {
+        }, "What's frustrating or missing? (optional)", React.default.createElement("textarea", {
             rows: "2",
             value: h,
             onChange: e => g(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Anything specific you'd want added? (optional)", er.default.createElement("textarea", {
+        }, "Anything specific you'd want added? (optional)", React.default.createElement("textarea", {
             rows: "2",
             value: y,
             onChange: e => v(e.target.value)
-        })), x && er.default.createElement("p", {
+        })), x && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 4,
                 marginBottom: 10
             }
-        }, x), er.default.createElement("button", {
+        }, x), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: !k || b,
             onClick: async function() {
@@ -1324,8 +1321,8 @@ import {
         onFinishSleeping: i,
         onCancelSession: l
     }) {
-        let [u, s] = (0, er.useState)(!1), [c, f] = (0, er.useState)("22:00"), [d, p] = (0, er.useState)("06:00");
-        if ((0, er.useEffect)(() => {
+        let [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)("22:00"), [d, p] = (0, React.useState)("06:00");
+        if ((0, React.useEffect)(() => {
                 e && (s(!!t), f(t ? eO(t.lightsOutMinutes) : "22:00"), p(t ? eO(t.wokeUpMinutes) : JS()))
             }, [e, t]), !e) return null;
         let m = nO(c),
@@ -1335,48 +1332,48 @@ import {
                 return e > t
             }(m, h),
             v = g > 0;
-        if (t || u) return er.default.createElement("div", {
+        if (t || u) return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: r
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, t ? "Edit sleep" : "Log Sleep"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit sleep" : "Log Sleep"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -6,
                 marginBottom: 16
             }
-        }, "If Lights Out was last night, just pick that time — crossing into today is handled automatically."), er.default.createElement("div", {
+        }, "If Lights Out was last night, just pick that time — crossing into today is handled automatically."), React.default.createElement("div", {
             className: "wt-field-row"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Lights Out", er.default.createElement("input", {
+        }, "Lights Out", React.default.createElement("input", {
             type: "time",
             value: c,
             onChange: e => f(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Woke Up", er.default.createElement("input", {
+        }, "Woke Up", React.default.createElement("input", {
             type: "time",
             value: d,
             onChange: e => p(e.target.value)
-        }))), er.default.createElement("div", {
+        }))), React.default.createElement("div", {
             className: "wt-sleep-preview"
-        }, "= ", g, "hrs", y ? " (overnight)" : " (nap)"), er.default.createElement("button", {
+        }, "= ", g, "hrs", y ? " (overnight)" : " (nap)"), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: !v,
             onClick: () => a(m, h)
-        }, t ? "Save changes" : "Log Sleep"), !t && er.default.createElement("button", {
+        }, t ? "Save changes" : "Log Sleep"), !t && React.default.createElement("button", {
             className: "wt-btn-text",
             onClick: () => s(!1)
         }, "← Back")));
@@ -1388,21 +1385,21 @@ import {
                     minute: "2-digit"
                 }),
                 o = t > 16;
-            return er.default.createElement("div", {
+            return React.default.createElement("div", {
                 className: "wt-backdrop",
                 onClick: r
-            }, er.default.createElement("div", {
+            }, React.default.createElement("div", {
                 className: "wt-sheet",
                 onClick: e => e.stopPropagation()
-            }, er.default.createElement("div", {
+            }, React.default.createElement("div", {
                 className: "wt-sheet-header"
-            }, er.default.createElement("h3", null, "Sleeping"), er.default.createElement("button", {
+            }, React.default.createElement("h3", null, "Sleeping"), React.default.createElement("button", {
                 className: "wt-icon-btn",
                 onClick: r,
                 "aria-label": "Close"
-            }, er.default.createElement(Ar, {
+            }, React.default.createElement(XIcon, {
                 size: 18
-            }))), er.default.createElement("p", {
+            }))), React.default.createElement("p", {
                 style: {
                     fontSize: 13.5,
                     color: dS,
@@ -1410,7 +1407,7 @@ import {
                     marginBottom: 18,
                     textAlign: "center"
                 }
-            }, "Started at ", a, " — about ", t, "hrs ago"), o && er.default.createElement("p", {
+            }, "Started at ", a, " — about ", t, "hrs ago"), o && React.default.createElement("p", {
                 style: {
                     fontSize: 11.5,
                     color: bS,
@@ -1418,35 +1415,35 @@ import {
                     marginBottom: 14,
                     textAlign: "center"
                 }
-            }, "That's a long stretch — double check this is right, or enter times manually instead."), er.default.createElement("button", {
+            }, "That's a long stretch — double check this is right, or enter times manually instead."), React.default.createElement("button", {
                 className: "wt-btn-primary wt-tracker-btn-sleep",
                 style: {
                     marginBottom: 12
                 },
                 onClick: i
-            }, "Finish Sleeping"), er.default.createElement("button", {
+            }, "Finish Sleeping"), React.default.createElement("button", {
                 className: "wt-btn-text",
                 onClick: () => s(!0)
-            }, "Enter times manually instead"), er.default.createElement("button", {
+            }, "Enter times manually instead"), React.default.createElement("button", {
                 className: "wt-btn-text wt-btn-text-danger",
                 onClick: l
             }, "Cancel — started by mistake")))
         }
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: r
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, "Sleep"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, "Sleep"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 13,
                 color: wS,
@@ -1454,13 +1451,13 @@ import {
                 marginBottom: 18,
                 textAlign: "center"
             }
-        }, "Tap when you're about to fall asleep, then again when you wake up."), er.default.createElement("button", {
+        }, "Tap when you're about to fall asleep, then again when you wake up."), React.default.createElement("button", {
             className: "wt-btn-primary wt-tracker-btn-sleep",
             style: {
                 marginBottom: 12
             },
             onClick: o
-        }, "Start Sleeping"), er.default.createElement("button", {
+        }, "Start Sleeping"), React.default.createElement("button", {
             className: "wt-btn-text",
             onClick: () => s(!0)
         }, "Enter times manually instead")))
@@ -1472,69 +1469,69 @@ import {
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, er.useState)(""), [i, l] = (0, er.useState)(""), [u, s] = (0, er.useState)(""), [c, f] = (0, er.useState)("");
-        if ((0, er.useEffect)(() => {
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(""), [c, f] = (0, React.useState)("");
+        if ((0, React.useEffect)(() => {
                 e && (o(t ? t.name : ""), l(t && t.oz ? String(t.oz) : ""), s(t && t.grams ? String(t.grams) : ""), f(t && t.calories ? String(t.calories) : ""))
             }, [e, t]), !e) return null;
         let d = Number(i) || 0,
             p = Number(u) || 0,
             m = Number(c) || 0,
             h = a.trim().length > 0 && (d > 0 || p > 0 || m > 0);
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: n
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, t ? "Edit preset" : "Add preset"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit preset" : "Add preset"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Name", er.default.createElement("input", {
+        }, "Name", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Protein shake",
             value: a,
             onChange: e => o(e.target.value)
-        })), er.default.createElement("p", {
+        })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -8,
                 marginBottom: 14
             }
-        }, "Fill in whichever apply — leave the rest blank. A protein shake might have all three; a black coffee just water."), er.default.createElement("div", {
+        }, "Fill in whichever apply — leave the rest blank. A protein shake might have all three; a black coffee just water."), React.default.createElement("div", {
             className: "wt-field-row"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Water (oz)", er.default.createElement("input", {
+        }, "Water (oz)", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             placeholder: "0",
             value: i,
             onChange: e => l(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Protein (g)", er.default.createElement("input", {
+        }, "Protein (g)", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             placeholder: "0",
             value: u,
             onChange: e => s(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Calories", er.default.createElement("input", {
+        }, "Calories", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             placeholder: "0",
             value: c,
             onChange: e => f(e.target.value)
-        }))), er.default.createElement("button", {
+        }))), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: !h,
             onClick: () => r({
@@ -1551,25 +1548,25 @@ import {
         onClose: t,
         onRestore: n
     }) {
-        let [r, a] = (0, er.useState)(""), [o, i] = (0, er.useState)(!1);
-        if ((0, er.useEffect)(() => {
+        let [r, a] = (0, React.useState)(""), [o, i] = (0, React.useState)(!1);
+        if ((0, React.useEffect)(() => {
                 e && (a(""), i(!1))
             }, [e]), !e) return null;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: t
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, "Restore from backup"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, "Restore from backup"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: t,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("p", {
+        }))), React.default.createElement("p", {
             style: {
                 fontSize: 12,
                 color: bS,
@@ -1577,16 +1574,16 @@ import {
                 marginBottom: 14,
                 lineHeight: 1.5
             }
-        }, "This replaces everything currently in the app on this device with whatever was backed up under that code."), er.default.createElement("label", {
+        }, "This replaces everything currently in the app on this device with whatever was backed up under that code."), React.default.createElement("label", {
             className: "wt-field"
-        }, "Recovery code", er.default.createElement("input", {
+        }, "Recovery code", React.default.createElement("input", {
             type: "text",
             placeholder: "ABCD-EFGH-JK",
             autoCapitalize: "characters",
             autoCorrect: "off",
             value: r,
             onChange: e => a(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
@@ -1607,82 +1604,82 @@ import {
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, er.useState)(""), [i, l] = (0, er.useState)("1"), [u, s] = (0, er.useState)(!1), [c, f] = (0, er.useState)(""), [d, p] = (0, er.useState)("");
-        if ((0, er.useEffect)(() => {
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)("");
+        if ((0, React.useEffect)(() => {
                 e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: n
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, t ? "Edit item" : "Add supplement or medicine"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit item" : "Add supplement or medicine"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Name", er.default.createElement("input", {
+        }, "Name", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Vitamin D, Metformin",
             value: a,
             onChange: e => o(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Take every (days)", er.default.createElement("input", {
+        }, "Take every (days)", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             min: "1",
             placeholder: "1",
             value: i,
             onChange: e => l(e.target.value)
-        })), er.default.createElement("p", {
+        })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -8,
                 marginBottom: 14
             }
-        }, "Most people leave this at 1 (daily). Set it to 2, 3, 7, etc. for anything you take less often — like every other day, or once a week."), er.default.createElement("div", {
+        }, "Most people leave this at 1 (daily). Set it to 2, 3, 7, etc. for anything you take less often — like every other day, or once a week."), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: u ? 12 : 4
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Track inventory / subscription"), er.default.createElement("button", {
+        }, "Track inventory / subscription"), React.default.createElement("button", {
             className: "wt-switch " + (u ? "on" : ""),
             onClick: () => s(!u),
             "aria-label": "Toggle inventory tracking"
-        }, er.default.createElement("span", null))), u && er.default.createElement("label", {
+        }, React.default.createElement("span", null))), u && React.default.createElement("label", {
             className: "wt-field"
-        }, "Units remaining", er.default.createElement("input", {
+        }, "Units remaining", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             min: "0",
             placeholder: "e.g. 30",
             value: c,
             onChange: e => f(e.target.value)
-        })), u && er.default.createElement("label", {
+        })), u && React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginTop: 12,
                 marginBottom: 14
             }
-        }, "Expiration date", er.default.createElement("input", {
+        }, "Expiration date", React.default.createElement("input", {
             type: "date",
             value: d,
             onChange: e => p(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
@@ -1699,81 +1696,81 @@ import {
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, er.useState)(""), [i, l] = (0, er.useState)(""), [u, s] = (0, er.useState)(!1), [c, f] = (0, er.useState)(""), [d, p] = (0, er.useState)("");
-        if ((0, er.useEffect)(() => {
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)("");
+        if ((0, React.useEffect)(() => {
                 e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: n
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-modal-header"
-        }, er.default.createElement("h3", null, t ? "Edit treatment" : "Add a treatment"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit treatment" : "Add a treatment"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Name", er.default.createElement("input", {
+        }, "Name", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. B12 Shot, IV Drip, Allergy Shot",
             value: a,
             onChange: e => o(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Repeats every (optional)", er.default.createElement("input", {
+        }, "Repeats every (optional)", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             placeholder: "e.g. 14 (leave blank to just track history)",
             value: i,
             onChange: e => l(e.target.value)
-        })), er.default.createElement("p", {
+        })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: -8,
                 marginBottom: 14
             }
-        }, 'Leave the interval blank if you just want to log when you had it, with no "next due" reminder.'), er.default.createElement("div", {
+        }, 'Leave the interval blank if you just want to log when you had it, with no "next due" reminder.'), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: u ? 12 : 4
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Track inventory / subscription"), er.default.createElement("button", {
+        }, "Track inventory / subscription"), React.default.createElement("button", {
             className: "wt-switch " + (u ? "on" : ""),
             onClick: () => s(!u),
             "aria-label": "Toggle inventory tracking"
-        }, er.default.createElement("span", null))), u && er.default.createElement("label", {
+        }, React.default.createElement("span", null))), u && React.default.createElement("label", {
             className: "wt-field"
-        }, "Sessions/doses remaining", er.default.createElement("input", {
+        }, "Sessions/doses remaining", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             min: "0",
             placeholder: "e.g. 12",
             value: c,
             onChange: e => f(e.target.value)
-        })), u && er.default.createElement("label", {
+        })), u && React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginTop: 12,
                 marginBottom: 14
             }
-        }, "Expiration date", er.default.createElement("input", {
+        }, "Expiration date", React.default.createElement("input", {
             type: "date",
             value: d,
             onChange: e => p(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
@@ -1792,8 +1789,8 @@ import {
         onSubmit: a,
         onGoToSettings: o
     }) {
-        let [i, l] = (0, er.useState)([]), [u, s] = (0, er.useState)(JS());
-        if ((0, er.useEffect)(() => {
+        let [i, l] = (0, React.useState)([]), [u, s] = (0, React.useState)(JS());
+        if ((0, React.useEffect)(() => {
                 if (e)
                     if (n) {
                         let e = (n.items || []).map(e => "string" == typeof e ? {
@@ -1803,21 +1800,21 @@ import {
                         l(e), s(eO(n.timeMinutes))
                     } else l([]), s(JS())
             }, [e, n]), !e) return null;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: r
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet wt-sheet-tall",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, n ? "Edit entry" : "Supplements & Prescriptions"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, n ? "Edit entry" : "Supplements & Prescriptions"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), 0 === t.length ? er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }))), 0 === t.length ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 13,
                 color: wS,
@@ -1825,10 +1822,10 @@ import {
                 marginBottom: 18,
                 textAlign: "center"
             }
-        }, "Nothing set up yet. Add the supplements, vitamins, and medicines you take regularly in Setup, and they'll show up here to log with one tap."), er.default.createElement("button", {
+        }, "Nothing set up yet. Add the supplements, vitamins, and medicines you take regularly in Setup, and they'll show up here to log with one tap."), React.default.createElement("button", {
             className: "wt-btn-primary",
             onClick: o
-        }, "Go to Settings")) : er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, "Go to Settings")) : React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
@@ -1836,12 +1833,12 @@ import {
                 marginBottom: 16,
                 textAlign: "center"
             }
-        }, "Tap everything you're taking right now."), er.default.createElement("div", {
+        }, "Tap everything you're taking right now."), React.default.createElement("div", {
             className: "wt-chip-row",
             style: {
                 marginBottom: i.length > 0 ? 14 : 18
             }
-        }, t.map(e => er.default.createElement("button", {
+        }, t.map(e => React.default.createElement("button", {
             key: e.id,
             type: "button",
             className: "wt-chip " + (i.some(t => t.name === e.name) ? "active" : ""),
@@ -1851,16 +1848,16 @@ import {
                     qty: ""
                 }])
             }(e.name)
-        }, e.name))), i.length > 0 && er.default.createElement("div", {
+        }, e.name))), i.length > 0 && React.default.createElement("div", {
             style: {
                 marginBottom: 16
             }
-        }, i.map(e => er.default.createElement("div", {
+        }, i.map(e => React.default.createElement("div", {
             key: e.name,
             className: "wt-qty-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-qty-name"
-        }, e.name), er.default.createElement("input", {
+        }, e.name), React.default.createElement("input", {
             type: "text",
             className: "wt-qty-input",
             placeholder: "Qty (e.g. 1 or 10mg)",
@@ -1871,13 +1868,13 @@ import {
                     qty: t
                 } : n))
             }(e.name, t.target.value)
-        })))), er.default.createElement("label", {
+        })))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Time", er.default.createElement("input", {
+        }, "Time", React.default.createElement("input", {
             type: "time",
             value: u,
             onChange: e => s(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 marginTop: 6
@@ -1893,57 +1890,57 @@ import {
         onClose: n,
         onSubmit: r
     }) {
-        let [a, o] = (0, er.useState)(""), [i, l] = (0, er.useState)(""), [u, s] = (0, er.useState)(""), [c, f] = (0, er.useState)(JS());
-        if ((0, er.useEffect)(() => {
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(""), [c, f] = (0, React.useState)(JS());
+        if ((0, React.useEffect)(() => {
                 e && (o(t ? t.exerciseType : ""), l(t ? String(t.minutes) : ""), s(t && t.description || ""), f(t ? eO(t.timeMinutes) : JS()))
             }, [e, t]), !e) return null;
         let d = Number(i) || 0,
             p = a.trim().length > 0 && d > 0;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: n
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, t ? "Edit exercise" : "Log Exercise"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? "Edit exercise" : "Log Exercise"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Type", er.default.createElement("input", {
+        }, "Type", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Running, Weights, Yoga",
             value: a,
             onChange: e => o(e.target.value)
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-field-row"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Minutes", er.default.createElement("input", {
+        }, "Minutes", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             placeholder: "30",
             value: i,
             onChange: e => l(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Time", er.default.createElement("input", {
+        }, "Time", React.default.createElement("input", {
             type: "time",
             value: c,
             onChange: e => f(e.target.value)
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Description (optional)", er.default.createElement("textarea", {
+        }, "Description (optional)", React.default.createElement("textarea", {
             rows: "2",
             placeholder: "e.g. 5k around the park",
             value: u,
             onChange: e => s(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
@@ -1962,25 +1959,25 @@ import {
         onSubmit: a,
         onGoToSettings: o
     }) {
-        let [i, l] = (0, er.useState)([]), [u, s] = (0, er.useState)(""), [c, f] = (0, er.useState)(JS());
-        if ((0, er.useEffect)(() => {
+        let [i, l] = (0, React.useState)([]), [u, s] = (0, React.useState)(""), [c, f] = (0, React.useState)(JS());
+        if ((0, React.useEffect)(() => {
                 e && (n ? (l(n.items || []), s(n.dateKeyStr || HS(new Date)), f(eO(n.timeMinutes))) : (l([]), s(HS(new Date)), f(JS())))
             }, [e, n]), !e) return null;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: r
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet wt-sheet-tall",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, n ? "Edit entry" : "Log Treatment"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, n ? "Edit entry" : "Log Treatment"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), 0 === t.length ? er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }))), 0 === t.length ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 13,
                 color: wS,
@@ -1988,10 +1985,10 @@ import {
                 marginBottom: 18,
                 textAlign: "center"
             }
-        }, "Nothing set up yet. Add periodic treatments — drips, shots, sessions — in Setup, and they'll show up here to log with one tap."), er.default.createElement("button", {
+        }, "Nothing set up yet. Add periodic treatments — drips, shots, sessions — in Setup, and they'll show up here to log with one tap."), React.default.createElement("button", {
             className: "wt-btn-primary",
             onClick: o
-        }, "Go to Settings")) : er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, "Go to Settings")) : React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
@@ -1999,31 +1996,31 @@ import {
                 marginBottom: 16,
                 textAlign: "center"
             }
-        }, "Tap everything you had, and set the date if it wasn't today."), er.default.createElement("div", {
+        }, "Tap everything you had, and set the date if it wasn't today."), React.default.createElement("div", {
             className: "wt-chip-row",
             style: {
                 marginBottom: 18
             }
-        }, t.map(e => er.default.createElement("button", {
+        }, t.map(e => React.default.createElement("button", {
             key: e.id,
             type: "button",
             className: "wt-chip " + (i.includes(e.name) ? "active" : ""),
             onClick: () => function(e) {
                 l(t => t.includes(e) ? t.filter(t => t !== e) : [...t, e])
             }(e.name)
-        }, e.name))), er.default.createElement("label", {
+        }, e.name))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Date", er.default.createElement("input", {
+        }, "Date", React.default.createElement("input", {
             type: "date",
             value: u,
             onChange: e => s(e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Time", er.default.createElement("input", {
+        }, "Time", React.default.createElement("input", {
             type: "time",
             value: c,
             onChange: e => f(e.target.value)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: 0 === i.length,
             onClick: () => a(i, u, c)
@@ -2110,199 +2107,199 @@ import {
             K = (Math.max(1, F), F <= 0 ? "Set a goal" : F - R > 0 ? F - R + "min to go" : R - F + "min over 🎉"),
             Q = e.settings.supplements.map(QS).find(e => e) || null,
             Z = e.settings.treatments.map(QS).find(e => e) || null;
-        return er.default.createElement("div", null, er.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-trackers-grid"
-        }, x && er.default.createElement("div", {
+        }, x && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: () => n("oz"),
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(vr, {
+        }, React.default.createElement(Droplet, {
             size: 16
-        }), " Water"), er.default.createElement("div", {
+        }), " Water"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, "Goal ", p, "oz"), er.default.createElement("div", {
+        }, "Goal ", p, "oz"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, p <= 0 ? "Set a goal" : y > 0 ? `${y}oz to go` : s - p + "oz over 🎉"), er.default.createElement(dO, {
+        }, p <= 0 ? "Set a goal" : y > 0 ? `${y}oz to go` : s - p + "oz over 🎉"), React.default.createElement(dO, {
             consumedOz: s,
             goalOz: p
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, s, er.default.createElement("span", {
+        }, s, React.default.createElement("span", {
             className: "unit"
-        }, "oz")), er.default.createElement("div", {
+        }, "oz")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "In")), E && er.default.createElement("div", {
+        }, "In")), E && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: () => n("grams"),
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(sr, {
+        }, React.default.createElement(Battery, {
             size: 16
-        }), " Protein"), er.default.createElement("div", {
+        }), " Protein"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, "Goal ", m, "g"), er.default.createElement("div", {
+        }, "Goal ", m, "g"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, m <= 0 ? "Set a goal" : v > 0 ? `${v}g to go` : c - m + "g over 🎉"), er.default.createElement(pO, {
+        }, m <= 0 ? "Set a goal" : v > 0 ? `${v}g to go` : c - m + "g over 🎉"), React.default.createElement(pO, {
             consumedGrams: c,
             goalGrams: m
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, c, er.default.createElement("span", {
+        }, c, React.default.createElement("span", {
             className: "unit"
-        }, "g")), er.default.createElement("div", {
+        }, "g")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "In")), k && er.default.createElement("div", {
+        }, "In")), k && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: () => n("calories"),
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(wr, {
+        }, React.default.createElement(Flame, {
             size: 16
-        }), " Calories"), er.default.createElement("div", {
+        }), " Calories"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, "Goal ", h, "cal"), er.default.createElement("div", {
+        }, "Goal ", h, "cal"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, h <= 0 ? "Set a goal" : b > 0 ? `${b}cal left` : f - h + "cal over"), er.default.createElement(mO, {
+        }, h <= 0 ? "Set a goal" : b > 0 ? `${b}cal left` : f - h + "cal over"), React.default.createElement(mO, {
             consumedCal: f,
             goalCal: h
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, f, er.default.createElement("span", {
+        }, f, React.default.createElement("span", {
             className: "unit"
-        }, "cal")), er.default.createElement("div", {
+        }, "cal")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "In")), S && er.default.createElement("div", {
+        }, "In")), S && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: r,
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(cr, {
+        }, React.default.createElement(Bed, {
             size: 16
-        }), " Sleep"), er.default.createElement("div", {
+        }), " Sleep"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, "Goal ", g, "hrs"), er.default.createElement("div", {
+        }, "Goal ", g, "hrs"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, e.activeSleepSession ? er.default.createElement("span", {
+        }, e.activeSleepSession ? React.default.createElement("span", {
             style: {
                 color: yS
             }
-        }, "😴 Sleeping…") : g <= 0 ? "Set a goal" : w > 0 ? `${w}hrs to go` : `${Math.abs(w)}hrs over 🎉`), er.default.createElement(hO, {
+        }, "😴 Sleeping…") : g <= 0 ? "Set a goal" : w > 0 ? `${w}hrs to go` : `${Math.abs(w)}hrs over 🎉`), React.default.createElement(hO, {
             hours: d,
             goalHours: g
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, d, er.default.createElement("span", {
+        }, d, React.default.createElement("span", {
             className: "unit"
-        }, "hrs")), er.default.createElement("div", {
+        }, "hrs")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "Slept")), !N && er.default.createElement("p", {
+        }, "Slept")), !N && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 width: "100%"
             }
-        }, "All trackers are hidden from this screen. Turn one back on in Setup → Daily goals.")), er.default.createElement("div", {
+        }, "All trackers are hidden from this screen. Turn one back on in Setup → Daily goals.")), React.default.createElement("div", {
             className: "wt-trackers-grid",
             style: {
                 marginTop: 14
             }
-        }, O && er.default.createElement("div", {
+        }, O && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: a,
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(Tr, {
+        }, React.default.createElement(Weight, {
             size: 16
-        }), " Weight"), er.default.createElement("div", {
+        }), " Weight"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, $ <= 0 ? "Set a goal" : `Goal ${$}lbs`), er.default.createElement("div", {
+        }, $ <= 0 ? "Set a goal" : `Goal ${$}lbs`), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, W), er.default.createElement(uO, {
+        }, W), React.default.createElement(uO, {
             todayValue: B ? T.value : 0,
             goal: $,
             recordedToday: B
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, B ? T.value : "—", er.default.createElement("span", {
+        }, B ? T.value : "—", React.default.createElement("span", {
             className: "unit"
-        }, "lbs")), er.default.createElement("div", {
+        }, "lbs")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "Today")), j && er.default.createElement("div", {
+        }, "Today")), j && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: l,
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(br, {
+        }, React.default.createElement(Dumbbell, {
             size: 16
-        }), " Exercise"), er.default.createElement("div", {
+        }), " Exercise"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, F <= 0 ? "Set a goal" : `Goal ${F}min`), er.default.createElement("div", {
+        }, F <= 0 ? "Set a goal" : `Goal ${F}min`), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, K), er.default.createElement(fO, {
+        }, K), React.default.createElement(fO, {
             minutes: R,
             goalMinutes: F
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, R, er.default.createElement("span", {
+        }, R, React.default.createElement("span", {
             className: "unit"
-        }, "min")), er.default.createElement("div", {
+        }, "min")), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "Today")), C && er.default.createElement("div", {
+        }, "Today")), C && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: i,
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(jr, {
+        }, React.default.createElement(Syringe, {
             size: 16
-        }), " Treatments"), er.default.createElement("div", {
+        }), " Treatments"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, 0 === z.length ? "Add in Setup" : G > 0 ? `Goal ${G} today` : "Nothing planned"), er.default.createElement("div", {
+        }, 0 === z.length ? "Add in Setup" : G > 0 ? `Goal ${G} today` : "Nothing planned"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, Z ? `${L} · ${Z}` : L), er.default.createElement(cO, {
+        }, Z ? `${L} · ${Z}` : L), React.default.createElement(cO, {
             pct: Y
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, X), er.default.createElement("div", {
+        }, X), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "Done")), P && er.default.createElement("div", {
+        }, "Done")), P && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             onClick: o,
             role: "button",
             tabIndex: 0
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-tracker-label"
-        }, er.default.createElement(Sr, {
+        }, React.default.createElement(Pill, {
             size: 16
-        }), " RX & Supplements"), er.default.createElement("div", {
+        }), " RX & Supplements"), React.default.createElement("div", {
             className: "wt-tracker-goal"
-        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), er.default.createElement("div", {
+        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), React.default.createElement("div", {
             className: "wt-tracker-sub"
-        }, Q ? `${_} · ${Q}` : _), er.default.createElement(sO, {
+        }, Q ? `${_} · ${Q}` : _), React.default.createElement(sO, {
             pct: q
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-tracker-number"
-        }, M.size), er.default.createElement("div", {
+        }, M.size), React.default.createElement("div", {
             className: "wt-tracker-in-label"
-        }, "Taken")), !O && !P && !C && !j && er.default.createElement("p", {
+        }, "Taken")), !O && !P && !C && !j && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 width: "100%"
             }
-        }, "All of these trackers are hidden from this screen. Turn one back on in Setup.")), er.default.createElement("div", {
+        }, "All of these trackers are hidden from this screen. Turn one back on in Setup.")), React.default.createElement("div", {
             className: "wt-divider"
         }))
     }
@@ -2312,8 +2309,8 @@ import {
         data: t,
         onClose: n
     }) {
-        let [r, a] = (0, er.useState)(30), [o, i] = (0, er.useState)("idle"), [l, u] = (0, er.useState)(""), [s, c] = (0, er.useState)(""), [f, d] = (0, er.useState)(!1);
-        if ((0, er.useEffect)(() => {
+        let [r, a] = (0, React.useState)(30), [o, i] = (0, React.useState)("idle"), [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""), [f, d] = (0, React.useState)(!1);
+        if ((0, React.useEffect)(() => {
                 i("idle"), u(""), c("")
             }, [r]), !e) return null;
         let p = function(e, t) {
@@ -2380,39 +2377,39 @@ import {
             }(t, r),
             m = (t.settings.testerName || "").trim(),
             h = t.settings.account && t.settings.account.sessionToken;
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-doctor-share-overlay"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-doctor-share-toolbar wt-no-print"
-        }, er.default.createElement("h3", null, "Health Summary"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, "Health Summary"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: n,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), er.default.createElement("div", {
+        }))), React.default.createElement("div", {
             className: "wt-doctor-share-controls wt-no-print"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-doctor-share-range-label"
-        }, "Time period"), er.default.createElement("div", {
+        }, "Time period"), React.default.createElement("div", {
             className: "wt-chip-row"
-        }, [7, 30, 90].map(e => er.default.createElement("button", {
+        }, [7, 30, 90].map(e => React.default.createElement("button", {
             key: e,
             type: "button",
             className: "wt-chip " + (r === e ? "active" : ""),
             onClick: () => a(e)
-        }, "Last ", e, " days"))), er.default.createElement("button", {
+        }, "Last ", e, " days"))), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
                 marginTop: 14
             },
             onClick: () => window.print()
-        }, "Print / Save as PDF"), h ? er.default.createElement("div", {
+        }, "Print / Save as PDF"), h ? React.default.createElement("div", {
             style: {
                 marginTop: 12
             }
-        }, "ready" !== o && er.default.createElement("button", {
+        }, "ready" !== o && React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%"
@@ -2446,22 +2443,22 @@ import {
                     c(e.message || "Could not generate a link."), i("error")
                 }
             }
-        }, "generating" === o ? "Generating…" : "Generate a link to share"), "error" === o && er.default.createElement("p", {
+        }, "generating" === o ? "Generating…" : "Generate a link to share"), "error" === o && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 8,
                 marginBottom: 0
             }
-        }, s), "ready" === o && er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, s), "ready" === o && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginBottom: 6
             }
-        }, "Anyone with this link can view this summary — no account needed. It expires in 90 days."), er.default.createElement("div", {
+        }, "Anyone with this link can view this summary — no account needed. It expires in 90 days."), React.default.createElement("div", {
             className: "wt-share-link-box"
-        }, l), er.default.createElement("button", {
+        }, l), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
@@ -2472,14 +2469,14 @@ import {
                     await navigator.clipboard.writeText(l), d(!0), setTimeout(() => d(!1), 2e3)
                 } catch {}
             }
-        }, f ? "Copied!" : "Copy link"))) : er.default.createElement("p", {
+        }, f ? "Copied!" : "Copy link"))) : React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, "Sign in (below, in Account) to generate a shareable link instead of printing.")), er.default.createElement(DO, {
+        }, "Sign in (below, in Account) to generate a shareable link instead of printing.")), React.default.createElement(DO, {
             summary: p,
             testerName: m,
             generatedAt: new Date
@@ -2499,43 +2496,43 @@ import {
                 year: "numeric"
             })
         }
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-doctor-share-content"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-doctor-share-header"
-        }, er.default.createElement("h1", null, "HydroPro Tracker — Health Summary"), t && er.default.createElement("p", {
+        }, React.default.createElement("h1", null, "HydroPro Tracker — Health Summary"), t && React.default.createElement("p", {
             className: "wt-doctor-share-name"
-        }, t), er.default.createElement("p", {
+        }, t), React.default.createElement("p", {
             className: "wt-doctor-share-dates"
-        }, r(e.rangeStart), " – ", r(e.rangeEnd), " (", e.daysInRange, " days, logged on ", e.daysWithAnyLog, ")")), er.default.createElement("div", {
+        }, r(e.rangeStart), " – ", r(e.rangeEnd), " (", e.daysInRange, " days, logged on ", e.daysWithAnyLog, ")")), React.default.createElement("div", {
             className: "wt-doctor-share-section"
-        }, er.default.createElement("h2", null, "Daily Averages"), er.default.createElement("table", {
+        }, React.default.createElement("h2", null, "Daily Averages"), React.default.createElement("table", {
             className: "wt-doctor-share-table"
-        }, er.default.createElement("thead", null, er.default.createElement("tr", null, er.default.createElement("th", null, "Metric"), er.default.createElement("th", null, "Average"), er.default.createElement("th", null, "Goal"))), er.default.createElement("tbody", null, er.default.createElement("tr", null, er.default.createElement("td", null, "Water"), er.default.createElement("td", null, e.averages.avgOz, "oz"), er.default.createElement("td", null, e.goals.goalOz > 0 ? `${e.goals.goalOz}oz` : "—")), er.default.createElement("tr", null, er.default.createElement("td", null, "Protein"), er.default.createElement("td", null, e.averages.avgProtein, "g"), er.default.createElement("td", null, e.goals.goalProtein > 0 ? `${e.goals.goalProtein}g` : "—")), er.default.createElement("tr", null, er.default.createElement("td", null, "Calories"), er.default.createElement("td", null, e.averages.avgCalories, "cal"), er.default.createElement("td", null, e.goals.goalCalories > 0 ? `${e.goals.goalCalories}cal` : "—")), er.default.createElement("tr", null, er.default.createElement("td", null, "Sleep"), er.default.createElement("td", null, e.averages.avgSleepHours, "hrs"), er.default.createElement("td", null, e.goals.goalSleepHours > 0 ? `${e.goals.goalSleepHours}hrs` : "—"))))), er.default.createElement("div", {
+        }, React.default.createElement("thead", null, React.default.createElement("tr", null, React.default.createElement("th", null, "Metric"), React.default.createElement("th", null, "Average"), React.default.createElement("th", null, "Goal"))), React.default.createElement("tbody", null, React.default.createElement("tr", null, React.default.createElement("td", null, "Water"), React.default.createElement("td", null, e.averages.avgOz, "oz"), React.default.createElement("td", null, e.goals.goalOz > 0 ? `${e.goals.goalOz}oz` : "—")), React.default.createElement("tr", null, React.default.createElement("td", null, "Protein"), React.default.createElement("td", null, e.averages.avgProtein, "g"), React.default.createElement("td", null, e.goals.goalProtein > 0 ? `${e.goals.goalProtein}g` : "—")), React.default.createElement("tr", null, React.default.createElement("td", null, "Calories"), React.default.createElement("td", null, e.averages.avgCalories, "cal"), React.default.createElement("td", null, e.goals.goalCalories > 0 ? `${e.goals.goalCalories}cal` : "—")), React.default.createElement("tr", null, React.default.createElement("td", null, "Sleep"), React.default.createElement("td", null, e.averages.avgSleepHours, "hrs"), React.default.createElement("td", null, e.goals.goalSleepHours > 0 ? `${e.goals.goalSleepHours}hrs` : "—"))))), React.default.createElement("div", {
             className: "wt-doctor-share-section"
-        }, er.default.createElement("h2", null, "Weight"), 0 === e.weight.entries.length ? er.default.createElement("p", {
+        }, React.default.createElement("h2", null, "Weight"), 0 === e.weight.entries.length ? React.default.createElement("p", {
             className: "wt-doctor-share-empty"
-        }, "No weight logged in this period.") : er.default.createElement(er.default.Fragment, null, er.default.createElement("p", null, e.weight.first.value, "lbs (", r(e.weight.first.date), ") → ", e.weight.last.value, "lbs (", r(e.weight.last.date), ")", null !== e.weight.change && er.default.createElement(er.default.Fragment, null, " — ", er.default.createElement("b", null, e.weight.change > 0 ? `+${e.weight.change}` : e.weight.change, "lbs"))), er.default.createElement("table", {
+        }, "No weight logged in this period.") : React.default.createElement(React.default.Fragment, null, React.default.createElement("p", null, e.weight.first.value, "lbs (", r(e.weight.first.date), ") → ", e.weight.last.value, "lbs (", r(e.weight.last.date), ")", null !== e.weight.change && React.default.createElement(React.default.Fragment, null, " — ", React.default.createElement("b", null, e.weight.change > 0 ? `+${e.weight.change}` : e.weight.change, "lbs"))), React.default.createElement("table", {
             className: "wt-doctor-share-table"
-        }, er.default.createElement("thead", null, er.default.createElement("tr", null, er.default.createElement("th", null, "Date"), er.default.createElement("th", null, "Weight"))), er.default.createElement("tbody", null, e.weight.entries.map((e, t) => er.default.createElement("tr", {
+        }, React.default.createElement("thead", null, React.default.createElement("tr", null, React.default.createElement("th", null, "Date"), React.default.createElement("th", null, "Weight"))), React.default.createElement("tbody", null, e.weight.entries.map((e, t) => React.default.createElement("tr", {
             key: t
-        }, er.default.createElement("td", null, r(e.date)), er.default.createElement("td", null, e.value, "lbs"))))))), er.default.createElement("div", {
+        }, React.default.createElement("td", null, r(e.date)), React.default.createElement("td", null, e.value, "lbs"))))))), React.default.createElement("div", {
             className: "wt-doctor-share-section"
-        }, er.default.createElement("h2", null, "Supplements & Prescriptions"), 0 === e.supplements.length ? er.default.createElement("p", {
+        }, React.default.createElement("h2", null, "Supplements & Prescriptions"), 0 === e.supplements.length ? React.default.createElement("p", {
             className: "wt-doctor-share-empty"
-        }, "None logged in this period.") : er.default.createElement("table", {
+        }, "None logged in this period.") : React.default.createElement("table", {
             className: "wt-doctor-share-table"
-        }, er.default.createElement("thead", null, er.default.createElement("tr", null, er.default.createElement("th", null, "Name"), er.default.createElement("th", null, "Days taken (of ", e.daysInRange, ")"))), er.default.createElement("tbody", null, e.supplements.map((e, t) => er.default.createElement("tr", {
+        }, React.default.createElement("thead", null, React.default.createElement("tr", null, React.default.createElement("th", null, "Name"), React.default.createElement("th", null, "Days taken (of ", e.daysInRange, ")"))), React.default.createElement("tbody", null, e.supplements.map((e, t) => React.default.createElement("tr", {
             key: t
-        }, er.default.createElement("td", null, e.name), er.default.createElement("td", null, e.daysTaken)))))), er.default.createElement("div", {
+        }, React.default.createElement("td", null, e.name), React.default.createElement("td", null, e.daysTaken)))))), React.default.createElement("div", {
             className: "wt-doctor-share-section"
-        }, er.default.createElement("h2", null, "Treatments"), 0 === e.treatments.length ? er.default.createElement("p", {
+        }, React.default.createElement("h2", null, "Treatments"), 0 === e.treatments.length ? React.default.createElement("p", {
             className: "wt-doctor-share-empty"
-        }, "None logged in this period.") : er.default.createElement("table", {
+        }, "None logged in this period.") : React.default.createElement("table", {
             className: "wt-doctor-share-table"
-        }, er.default.createElement("thead", null, er.default.createElement("tr", null, er.default.createElement("th", null, "Name"), er.default.createElement("th", null, "Dates"))), er.default.createElement("tbody", null, e.treatments.map((e, t) => er.default.createElement("tr", {
+        }, React.default.createElement("thead", null, React.default.createElement("tr", null, React.default.createElement("th", null, "Name"), React.default.createElement("th", null, "Dates"))), React.default.createElement("tbody", null, e.treatments.map((e, t) => React.default.createElement("tr", {
             key: t
-        }, er.default.createElement("td", null, e.name), er.default.createElement("td", null, e.dates.map(e => r(e)).join(", "))))))), er.default.createElement("p", {
+        }, React.default.createElement("td", null, e.name), React.default.createElement("td", null, e.dates.map(e => r(e)).join(", "))))))), React.default.createElement("p", {
             className: "wt-doctor-share-disclaimer"
         }, "This summary is self-reported by the user via the HydroPro Tracker app and is provided for informational purposes only. It is not a clinical record and may include gaps, estimates, or user error. Generated ", n.toLocaleDateString([], {
             month: "short",
@@ -2547,8 +2544,8 @@ import {
     function zO({
         shareId: e
     }) {
-        let [t, n] = (0, er.useState)("loading"), [r, a] = (0, er.useState)(null), [o, i] = (0, er.useState)("");
-        return (0, er.useEffect)(() => {
+        let [t, n] = (0, React.useState)("loading"), [r, a] = (0, React.useState)(null), [o, i] = (0, React.useState)("");
+        return (0, React.useEffect)(() => {
             let t = !1;
             return async function(e) {
                 let t = rS();
@@ -2564,34 +2561,34 @@ import {
             }), () => {
                 t = !0
             }
-        }, [e]), er.default.createElement("div", {
+        }, [e]), React.default.createElement("div", {
             className: "wt-doctor-share-overlay",
             style: {
                 position: "static"
             }
-        }, er.default.createElement("style", null, iO), "loading" === t && er.default.createElement("div", {
+        }, React.default.createElement("style", null, iO), "loading" === t && React.default.createElement("div", {
             className: "wt-doctor-share-content"
-        }, er.default.createElement("p", null, "Loading shared summary…")), "error" === t && er.default.createElement("div", {
+        }, React.default.createElement("p", null, "Loading shared summary…")), "error" === t && React.default.createElement("div", {
             className: "wt-doctor-share-content"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             style: {
                 color: bS,
                 fontWeight: 600
             }
-        }, o), er.default.createElement("p", {
+        }, o), React.default.createElement("p", {
             style: {
                 fontSize: 13,
                 color: wS
             }
-        }, "This link may have expired, or may no longer exist.")), "ready" === t && er.default.createElement(er.default.Fragment, null, er.default.createElement("div", {
+        }, "This link may have expired, or may no longer exist.")), "ready" === t && React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
             className: "wt-doctor-share-controls wt-no-print",
             style: {
                 textAlign: "center"
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "wt-btn-primary",
             onClick: () => window.print()
-        }, "Print / Save as PDF")), er.default.createElement(DO, {
+        }, "Print / Save as PDF")), React.default.createElement(DO, {
             summary: r,
             testerName: "",
             generatedAt: new Date
@@ -2599,83 +2596,83 @@ import {
     }
 
     function IO(e, t, n, r) {
-        return er.default.createElement("li", {
+        return React.default.createElement("li", {
             key: e.id,
             className: "wt-log-row"
-        }, PS(e) ? er.default.createElement(er.default.Fragment, null, er.default.createElement(cr, {
+        }, PS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Bed, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label"
-        }, "Sleep"), er.default.createElement("span", {
+        }, "Sleep"), React.default.createElement("span", {
             className: "wt-log-metrics"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 color: yS,
                 fontWeight: 700,
                 fontSize: 12
             }
-        }, tO(e.lightsOutMinutes), " → ", tO(e.wokeUpMinutes), " · ", e.hours, "hrs"))) : jS(e) ? er.default.createElement(er.default.Fragment, null, er.default.createElement(Tr, {
+        }, tO(e.lightsOutMinutes), " → ", tO(e.wokeUpMinutes), " · ", e.hours, "hrs"))) : jS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Weight, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label"
-        }, "Weight"), er.default.createElement("span", {
+        }, "Weight"), React.default.createElement("span", {
             className: "wt-log-metrics"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 color: yS,
                 fontWeight: 700
             }
-        }, e.value, "lbs"))) : NS(e) ? er.default.createElement(er.default.Fragment, null, er.default.createElement(Sr, {
+        }, e.value, "lbs"))) : NS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Pill, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label",
             style: {
                 flex: 2
             }
-        }, e.label)) : zS(e) ? er.default.createElement(er.default.Fragment, null, er.default.createElement(jr, {
+        }, e.label)) : zS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Syringe, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label",
             style: {
                 flex: 2
             }
-        }, e.label)) : IS(e) ? er.default.createElement(er.default.Fragment, null, er.default.createElement(br, {
+        }, e.label)) : IS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Dumbbell, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label",
             style: {
                 flex: 2
             }
-        }, e.exerciseType, e.description ? ` — ${e.description}` : ""), er.default.createElement("span", {
+        }, e.exerciseType, e.description ? ` — ${e.description}` : ""), React.default.createElement("span", {
             className: "wt-log-metrics"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 color: gS,
                 fontWeight: 700
             }
-        }, e.minutes, "min"))) : er.default.createElement(er.default.Fragment, null, er.default.createElement(hr, {
+        }, e.minutes, "min"))) : React.default.createElement(React.default.Fragment, null, React.default.createElement(Clock, {
             size: 13,
             className: "wt-log-icon"
-        }), er.default.createElement("span", {
+        }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), er.default.createElement("span", {
+        }, e.time), React.default.createElement("span", {
             className: "wt-log-label"
-        }, e.label), er.default.createElement("span", {
+        }, e.label), React.default.createElement("span", {
             className: "wt-log-metrics"
         }, function(e) {
             let t = [];
@@ -2692,27 +2689,27 @@ import {
                 unit: "cal",
                 color: gS
             }), t
-        }(e).map((e, t) => er.default.createElement("span", {
+        }(e).map((e, t) => React.default.createElement("span", {
             key: t,
             style: {
                 color: e.color,
                 fontWeight: 700
             }
-        }, t > 0 && er.default.createElement("span", {
+        }, t > 0 && React.default.createElement("span", {
             style: {
                 color: vS
             }
-        }, " · "), e.amount, e.unit)))), t && er.default.createElement("button", {
+        }, " · "), e.amount, e.unit)))), t && React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => n(e),
             "aria-label": "Edit entry"
-        }, er.default.createElement(kr, {
+        }, React.default.createElement(Pencil, {
             size: 14
-        })), t && er.default.createElement("button", {
+        })), t && React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => r(e.id),
             "aria-label": "Delete entry"
-        }, er.default.createElement(Nr, {
+        }, React.default.createElement(Trash2, {
             size: 14
         })))
     }
@@ -2726,34 +2723,34 @@ import {
         onSelectDate: o,
         onBack: i
     }) {
-        return e ? er.default.createElement("div", {
+        return e ? React.default.createElement("div", {
             className: "wt-backdrop",
             onClick: a
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet wt-sheet-tall",
             onClick: e => e.stopPropagation()
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, er.default.createElement("h3", null, t ? YS(MS(t)) : "Past days"), er.default.createElement("button", {
+        }, React.default.createElement("h3", null, t ? YS(MS(t)) : "Past days"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: a,
             "aria-label": "Close"
-        }, er.default.createElement(Ar, {
+        }, React.default.createElement(XIcon, {
             size: 18
-        }))), t ? er.default.createElement(er.default.Fragment, null, er.default.createElement("button", {
+        }))), t ? React.default.createElement(React.default.Fragment, null, React.default.createElement("button", {
             className: "wt-btn-text",
             style: {
                 textAlign: "left",
                 padding: "0 0 12px"
             },
             onClick: i
-        }, "← All past days"), 0 === r.length ? er.default.createElement("p", {
+        }, "← All past days"), 0 === r.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "No entries logged that day.") : er.default.createElement("ul", {
+        }, "No entries logged that day.") : React.default.createElement("ul", {
             className: "wt-log-list"
-        }, r.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !1, null, null)))) : 0 === n.length ? er.default.createElement("p", {
+        }, r.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !1, null, null)))) : 0 === n.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "No past days logged yet.") : er.default.createElement("div", null, n.map(e => er.default.createElement("button", {
+        }, "No past days logged yet.") : React.default.createElement("div", null, n.map(e => React.default.createElement("button", {
             key: e,
             className: "wt-preset-row",
             style: {
@@ -2763,7 +2760,7 @@ import {
                 border: "none"
             },
             onClick: () => o(e)
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-preset-name"
         }, YS(MS(e)))))))) : null
     }
@@ -2775,7 +2772,7 @@ import {
         onEditLogEntry: r,
         onEditNextDue: a
     }) {
-        let [o, i] = (0, er.useState)(!1), [l, u] = (0, er.useState)(null), s = Object.keys(e.logs).filter(n => n !== t && (e.logs[n] || []).length > 0).sort().reverse(), c = e.logs[t] || [], f = new Set;
+        let [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), s = Object.keys(e.logs).filter(n => n !== t && (e.logs[n] || []).length > 0).sort().reverse(), c = e.logs[t] || [], f = new Set;
         c.forEach(e => {
             NS(e) && (e.items || []).forEach(e => f.add("string" == typeof e ? e : e.name))
         });
@@ -2788,67 +2785,67 @@ import {
             kind: "supplement",
             status: DS(e, t)
         })).filter(e => "overdue" === e.status.state || "today" === e.status.state)].sort((e, t) => e.status.daysAway - t.status.daysAway);
-        return er.default.createElement("div", null, er.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-todo-today-sticky"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"
-        }, "To Do Today"), 0 === d.length ? er.default.createElement("p", {
+        }, "To Do Today"), 0 === d.length ? React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 marginBottom: 22
             }
-        }, "All Done for the Day 🎉") : er.default.createElement("div", {
+        }, "All Done for the Day 🎉") : React.default.createElement("div", {
             className: "wt-todo-today-scroll",
             style: {
                 marginBottom: 22
             }
-        }, d.map(e => er.default.createElement("div", {
+        }, d.map(e => React.default.createElement("div", {
             key: `${e.kind}-${e.id}`,
             className: `wt-treatment-row wt-treatment-${e.status.state}`
-        }, "supplement" === e.kind ? er.default.createElement(Sr, {
+        }, "supplement" === e.kind ? React.default.createElement(Pill, {
             size: 15,
             className: "wt-log-icon"
-        }) : er.default.createElement(jr, {
+        }) : React.default.createElement(Syringe, {
             size: 15,
             className: "wt-log-icon"
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-treatment-info"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-treatment-name"
-        }, e.name), er.default.createElement("span", {
+        }, e.name), React.default.createElement("span", {
             className: "wt-treatment-due-label"
-        }, "overdue" === e.status.state ? `${Math.abs(e.status.daysAway)} day${1===Math.abs(e.status.daysAway)?"":"s"} overdue` : "Due today")), er.default.createElement("input", {
+        }, "overdue" === e.status.state ? `${Math.abs(e.status.daysAway)} day${1===Math.abs(e.status.daysAway)?"":"s"} overdue` : "Due today")), React.default.createElement("input", {
             type: "date",
             className: "wt-treatment-date-input",
             value: e.status.due,
             onChange: t => a(e.kind, e.id, t.target.value),
             "aria-label": `Change next due date for ${e.name}`
-        }))))), er.default.createElement("div", {
+        }))))), React.default.createElement("div", {
             style: {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between"
             }
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg",
             style: {
                 margin: 0
             }
-        }, "Today's log"), er.default.createElement("button", {
+        }, "Today's log"), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => {
                 u(null), i(!0)
             },
             "aria-label": "View past days"
-        }, er.default.createElement(hr, {
+        }, React.default.createElement(Clock, {
             size: 18
-        }))), er.default.createElement("div", {
+        }))), React.default.createElement("div", {
             className: "wt-today-log-scroll"
-        }, 0 === c.length ? er.default.createElement("p", {
+        }, 0 === c.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "Nothing logged yet today — head to the Log tab to get started.") : er.default.createElement("ul", {
+        }, "Nothing logged yet today — head to the Log tab to get started.") : React.default.createElement("ul", {
             className: "wt-log-list"
-        }, c.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !0, r, n)))), er.default.createElement(LO, {
+        }, c.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !0, r, n)))), React.default.createElement(LO, {
             open: o,
             historyDate: l,
             dates: s,
@@ -2881,32 +2878,32 @@ import {
                 }(t.name, n),
                 a = QS(t),
                 o = t.expirationDate ? YS(MS(t.expirationDate)) : null;
-            return er.default.createElement("div", {
+            return React.default.createElement("div", {
                 key: t.id,
                 className: "wt-card"
-            }, er.default.createElement("div", {
+            }, React.default.createElement("div", {
                 className: "wt-card-title"
-            }, t.name), er.default.createElement("div", {
+            }, t.name), React.default.createElement("div", {
                 style: {
                     fontSize: 13,
                     color: wS,
                     marginBottom: 8
                 }
-            }, `${t.qtyRemaining||0} remaining`, o ? ` · expires ${o}` : ""), a && er.default.createElement("div", {
+            }, `${t.qtyRemaining||0} remaining`, o ? ` · expires ${o}` : ""), a && React.default.createElement("div", {
                 style: {
                     fontSize: 12.5,
                     fontWeight: 700,
                     color: bS,
                     marginBottom: 8
                 }
-            }, a), er.default.createElement("div", {
+            }, a), React.default.createElement("div", {
                 style: {
                     fontSize: 12,
                     color: wS,
                     marginBottom: 4,
                     fontWeight: 600
                 }
-            }, `Used ${r.length} time${1===r.length?"":"s"}`), r.length > 0 && er.default.createElement("div", {
+            }, `Used ${r.length} time${1===r.length?"":"s"}`), r.length > 0 && React.default.createElement("div", {
                 style: {
                     fontSize: 12,
                     color: dS,
@@ -2914,20 +2911,20 @@ import {
                 }
             }, r.slice(0, 10).map(e => YS(MS(e))).join(", ") + (r.length > 10 ? ` … and ${r.length-10} more` : "")))
         }
-        return er.default.createElement("div", null, er.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-segment",
             style: {
                 marginBottom: 14
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             onClick: t
-        }, "← Back to charts")), er.default.createElement("div", {
+        }, "← Back to charts")), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"
-        }, "Subscriptions"), 0 === n.length && 0 === r.length ? er.default.createElement("p", {
+        }, "Subscriptions"), 0 === n.length && 0 === r.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "No tracked subscriptions yet. Turn on “Track inventory / subscription” for a supplement or treatment in Setup to see it here.") : er.default.createElement(er.default.Fragment, null, n.length > 0 && er.default.createElement("div", {
+        }, "No tracked subscriptions yet. Turn on “Track inventory / subscription” for a supplement or treatment in Setup to see it here.") : React.default.createElement(React.default.Fragment, null, n.length > 0 && React.default.createElement("div", {
             className: "wt-section-label"
-        }, "RX & Supplements"), n.map(e => a(e, "supplement")), r.length > 0 && er.default.createElement("div", {
+        }, "RX & Supplements"), n.map(e => a(e, "supplement")), r.length > 0 && React.default.createElement("div", {
             className: "wt-section-label"
         }, "Treatments"), r.map(e => a(e, "treatment"))))
     }
@@ -2936,12 +2933,12 @@ import {
         data: e,
         onDrShare: t
     }) {
-        let [n, r] = (0, er.useState)("water"), [a, o] = (0, er.useState)("week"), [i, l] = (0, er.useState)(new Date), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
+        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
 
         function d(e) {
             r(e), "combined" === e && "day" === a && o("week")
         }
-        let p = (0, er.useMemo)(() => {
+        let p = (0, React.useMemo)(() => {
                 let t = {};
                 return Object.keys(e.logs).sort().forEach(n => {
                     let r = (e.logs[n] || []).filter(e => "weight" === e.type);
@@ -2954,7 +2951,7 @@ import {
                     weight: t[e]
                 }))
             }, [e.logs]),
-            m = (0, er.useMemo)(() => {
+            m = (0, React.useMemo)(() => {
                 let t = {};
                 return Object.keys(e.logs).sort().forEach(n => {
                     let r = (e.logs[n] || []).reduce((e, t) => e + CS(t), 0);
@@ -2973,7 +2970,7 @@ import {
                 daysCounted: w,
                 isCurrent: x,
                 logCount: E
-            } = (0, er.useMemo)(() => {
+            } = (0, React.useMemo)(() => {
                 let t = new Date;
                 t.setHours(0, 0, 0, 0);
                 let n = e.settings.goalOz || 0,
@@ -3125,97 +3122,97 @@ import {
             }],
             O = "protein" === n ? hS : "calories" === n ? gS : mS,
             P = u ? 10 * Math.ceil(Math.max(100, ...h.flatMap(e => [e.Water || 0, e.Protein || 0, e.Calories || 0])) / 10) : void 0;
-        return "subscriptions" === n ? er.default.createElement($O, {
+        return "subscriptions" === n ? React.default.createElement($O, {
             data: e,
             onBack: () => d("water")
-        }) : er.default.createElement("div", null, er.default.createElement("div", {
+        }) : React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-segment",
             style: {
                 marginBottom: 8
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "water" === n ? "active" : "",
             onClick: () => d("water")
-        }, er.default.createElement(vr, {
+        }, React.default.createElement(Droplet, {
             size: 12,
             style: {
                 marginRight: 3,
                 verticalAlign: -2
             }
-        }), "Water"), er.default.createElement("button", {
+        }), "Water"), React.default.createElement("button", {
             className: "protein" === n ? "active" : "",
             onClick: () => d("protein")
-        }, er.default.createElement(sr, {
+        }, React.default.createElement(Battery, {
             size: 12,
             style: {
                 marginRight: 3,
                 verticalAlign: -2
             }
-        }), "Protein"), er.default.createElement("button", {
+        }), "Protein"), React.default.createElement("button", {
             className: "calories" === n ? "active" : "",
             onClick: () => d("calories")
-        }, er.default.createElement(wr, {
+        }, React.default.createElement(Flame, {
             size: 12,
             style: {
                 marginRight: 3,
                 verticalAlign: -2
             }
-        }), "Cal"), er.default.createElement("button", {
+        }), "Cal"), React.default.createElement("button", {
             className: u ? "active" : "",
             onClick: () => d("combined")
-        }, "All 3"), er.default.createElement("button", {
+        }, "All 3"), React.default.createElement("button", {
             className: "",
             onClick: () => d("subscriptions")
-        }, "Subs")), er.default.createElement("div", {
+        }, "Subs")), React.default.createElement("div", {
             className: "wt-segment"
-        }, !u && er.default.createElement("button", {
+        }, !u && React.default.createElement("button", {
             className: "day" === a ? "active" : "",
             onClick: () => {
                 o("day"), l(new Date)
             }
-        }, "Day"), er.default.createElement("button", {
+        }, "Day"), React.default.createElement("button", {
             className: "week" === a ? "active" : "",
             onClick: () => {
                 o("week"), l(new Date)
             }
-        }, "Week"), er.default.createElement("button", {
+        }, "Week"), React.default.createElement("button", {
             className: "month" === a ? "active" : "",
             onClick: () => {
                 o("month"), l(new Date)
             }
-        }, "Month")), er.default.createElement("div", {
+        }, "Month")), React.default.createElement("div", {
             className: "wt-range-nav"
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             onClick: function() {
                 l("day" === a ? e => VS(e, -1) : "week" === a ? e => VS(e, -7) : e => new Date(e.getFullYear(), e.getMonth() - 1, 1))
             },
             "aria-label": "Previous"
-        }, er.default.createElement(dr, {
+        }, React.default.createElement(ChevronLeft, {
             size: 16
-        })), er.default.createElement("span", {
+        })), React.default.createElement("span", {
             className: "wt-range-label"
-        }, g), er.default.createElement("button", {
+        }, g), React.default.createElement("button", {
             onClick: function() {
                 l("day" === a ? e => VS(e, 1) : "week" === a ? e => VS(e, 7) : e => new Date(e.getFullYear(), e.getMonth() + 1, 1))
             },
             disabled: x,
             "aria-label": "Next"
-        }, er.default.createElement(pr, {
+        }, React.default.createElement(ChevronRight, {
             size: 16
-        }))), u ? er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }))), u ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 10
             }
-        }, "Each bar group shows how close you got to each goal that day, as a percentage — so water, protein, and calories can sit on the same scale even though their units don't match."), er.default.createElement("div", {
+        }, "Each bar group shows how close you got to each goal that day, as a percentage — so water, protein, and calories can sit on the same scale even though their units don't match."), React.default.createElement("div", {
             className: "wt-card",
             style: {
                 paddingBottom: 4
             }
-        }, er.default.createElement(zl, {
+        }, React.default.createElement(ResponsiveContainer, {
             width: "100%",
             height: 220
-        }, er.default.createElement(eS, {
+        }, React.default.createElement(BarChart, {
             data: h,
             margin: {
                 top: 8,
@@ -3223,10 +3220,10 @@ import {
                 left: -18,
                 bottom: 0
             }
-        }, er.default.createElement(rE, {
+        }, React.default.createElement(CartesianGrid, {
             vertical: !1,
             stroke: vS
-        }), er.default.createElement(IE, {
+        }), React.default.createElement(XAxis, {
             dataKey: "label",
             tick: {
                 fontSize: 10,
@@ -3237,7 +3234,7 @@ import {
                 stroke: vS
             },
             tickLine: !1
-        }), er.default.createElement(XE, {
+        }), React.default.createElement(YAxis, {
             domain: [0, P],
             tick: {
                 fontSize: 10,
@@ -3245,51 +3242,51 @@ import {
             },
             axisLine: !1,
             tickLine: !1
-        }), er.default.createElement(Pl, {
+        }), React.default.createElement(Tooltip, {
             formatter: e => [`${e}%`, "of goal"],
             contentStyle: {
                 fontSize: 12,
                 borderRadius: 8,
                 border: `1px solid ${vS}`
             }
-        }), er.default.createElement(Ii, {
+        }), React.default.createElement(Legend, {
             wrapperStyle: {
                 fontSize: 11
             }
-        }), er.default.createElement(zw, {
+        }), React.default.createElement(ReferenceLine, {
             y: 100,
             stroke: dS,
             strokeDasharray: "3 3"
-        }), er.default.createElement(Xb, {
+        }), React.default.createElement(Bar, {
             dataKey: "Water",
             fill: mS,
             radius: [3, 3, 0, 0]
-        }), er.default.createElement(Xb, {
+        }), React.default.createElement(Bar, {
             dataKey: "Protein",
             fill: hS,
             radius: [3, 3, 0, 0]
-        }), er.default.createElement(Xb, {
+        }), React.default.createElement(Bar, {
             dataKey: "Calories",
             fill: gS,
             radius: [3, 3, 0, 0]
-        }))))) : er.default.createElement(er.default.Fragment, null, er.default.createElement("div", {
+        }))))) : React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
             className: "wt-stat-row"
-        }, S.map(e => er.default.createElement("div", {
+        }, S.map(e => React.default.createElement("div", {
             className: "wt-stat",
             key: e.label
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-stat-value"
-        }, e.value), er.default.createElement("div", {
+        }, e.value), React.default.createElement("div", {
             className: "wt-stat-label"
-        }, e.label)))), er.default.createElement("div", {
+        }, e.label)))), React.default.createElement("div", {
             className: "wt-card",
             style: {
                 paddingBottom: 4
             }
-        }, er.default.createElement(zl, {
+        }, React.default.createElement(ResponsiveContainer, {
             width: "100%",
             height: 200
-        }, er.default.createElement(eS, {
+        }, React.default.createElement(BarChart, {
             data: h,
             margin: {
                 top: 8,
@@ -3297,10 +3294,10 @@ import {
                 left: -18,
                 bottom: 0
             }
-        }, er.default.createElement(rE, {
+        }, React.default.createElement(CartesianGrid, {
             vertical: !1,
             stroke: vS
-        }), er.default.createElement(IE, {
+        }), React.default.createElement(XAxis, {
             dataKey: "label",
             tick: {
                 fontSize: 10,
@@ -3311,21 +3308,21 @@ import {
                 stroke: vS
             },
             tickLine: !1
-        }), er.default.createElement(XE, {
+        }), React.default.createElement(YAxis, {
             tick: {
                 fontSize: 10,
                 fill: wS
             },
             axisLine: !1,
             tickLine: !1
-        }), er.default.createElement(Pl, {
+        }), React.default.createElement(Tooltip, {
             formatter: e => [`${e}${s}`, "Logged"],
             contentStyle: {
                 fontSize: 12,
                 borderRadius: 8,
                 border: `1px solid ${vS}`
             }
-        }), "day" !== a && c > 0 && er.default.createElement(zw, {
+        }), "day" !== a && c > 0 && React.default.createElement(ReferenceLine, {
             y: c,
             stroke: hS,
             strokeDasharray: "4 4",
@@ -3335,25 +3332,25 @@ import {
                 fontSize: 10,
                 fill: wS
             }
-        }), er.default.createElement(Xb, {
+        }), React.default.createElement(Bar, {
             dataKey: "amount",
             radius: [4, 4, 0, 0]
-        }, h.map((e, t) => er.default.createElement(Il, {
+        }, h.map((e, t) => React.default.createElement(Cell, {
             key: t,
             fill: "day" !== a && c > 0 && e.amount >= c ? hS : O,
             opacity: e.isFuture ? .25 : 1
-        }))))))), er.default.createElement("div", {
+        }))))))), React.default.createElement("div", {
             className: "wt-divider"
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"
-        }, "Weight Over Time"), 0 === p.length ? er.default.createElement("p", {
+        }, "Weight Over Time"), 0 === p.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, 'No weight logged yet — use "Log Weight" on the Log page to start a trend.') : er.default.createElement("div", {
+        }, 'No weight logged yet — use "Log Weight" on the Log page to start a trend.') : React.default.createElement("div", {
             style: {
                 width: "100%",
                 height: 180
             }
-        }, er.default.createElement(zl, null, er.default.createElement(Jk, {
+        }, React.default.createElement(ResponsiveContainer, null, React.default.createElement(LineChart, {
             data: p,
             margin: {
                 top: 8,
@@ -3361,11 +3358,11 @@ import {
                 left: -12,
                 bottom: 0
             }
-        }, er.default.createElement(rE, {
+        }, React.default.createElement(CartesianGrid, {
             strokeDasharray: "3 3",
             stroke: vS,
             vertical: !1
-        }), er.default.createElement(IE, {
+        }), React.default.createElement(XAxis, {
             dataKey: "date",
             tick: {
                 fontSize: 10,
@@ -3375,7 +3372,7 @@ import {
                 stroke: vS
             },
             tickLine: !1
-        }), er.default.createElement(XE, {
+        }), React.default.createElement(YAxis, {
             domain: ["dataMin - 2", "dataMax + 2"],
             tick: {
                 fontSize: 10,
@@ -3383,14 +3380,14 @@ import {
             },
             axisLine: !1,
             tickLine: !1
-        }), er.default.createElement(Pl, {
+        }), React.default.createElement(Tooltip, {
             formatter: e => [`${e}lbs`, "Weight"],
             contentStyle: {
                 fontSize: 12,
                 borderRadius: 8,
                 border: `1px solid ${vS}`
             }
-        }), er.default.createElement(SE, {
+        }), React.default.createElement(Line, {
             type: "monotone",
             dataKey: "weight",
             stroke: yS,
@@ -3399,18 +3396,18 @@ import {
                 r: 3,
                 fill: yS
             }
-        })))), er.default.createElement("div", {
+        })))), React.default.createElement("div", {
             className: "wt-divider"
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"
-        }, "Sleep Over Time"), 0 === m.length ? er.default.createElement("p", {
+        }, "Sleep Over Time"), 0 === m.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "No sleep logged yet — log a night's sleep on the Log page to start a trend.") : er.default.createElement("div", {
+        }, "No sleep logged yet — log a night's sleep on the Log page to start a trend.") : React.default.createElement("div", {
             style: {
                 width: "100%",
                 height: 180
             }
-        }, er.default.createElement(zl, null, er.default.createElement(Jk, {
+        }, React.default.createElement(ResponsiveContainer, null, React.default.createElement(LineChart, {
             data: m,
             margin: {
                 top: 8,
@@ -3418,11 +3415,11 @@ import {
                 left: -12,
                 bottom: 0
             }
-        }, er.default.createElement(rE, {
+        }, React.default.createElement(CartesianGrid, {
             strokeDasharray: "3 3",
             stroke: vS,
             vertical: !1
-        }), er.default.createElement(IE, {
+        }), React.default.createElement(XAxis, {
             dataKey: "date",
             tick: {
                 fontSize: 10,
@@ -3432,7 +3429,7 @@ import {
                 stroke: vS
             },
             tickLine: !1
-        }), er.default.createElement(XE, {
+        }), React.default.createElement(YAxis, {
             domain: [0, "dataMax + 1"],
             tick: {
                 fontSize: 10,
@@ -3440,14 +3437,14 @@ import {
             },
             axisLine: !1,
             tickLine: !1
-        }), er.default.createElement(Pl, {
+        }), React.default.createElement(Tooltip, {
             formatter: e => [`${e}hrs`, "Sleep"],
             contentStyle: {
                 fontSize: 12,
                 borderRadius: 8,
                 border: `1px solid ${vS}`
             }
-        }), e.settings.goalSleepHours > 0 && er.default.createElement(zw, {
+        }), e.settings.goalSleepHours > 0 && React.default.createElement(ReferenceLine, {
             y: e.settings.goalSleepHours,
             stroke: hS,
             strokeDasharray: "4 4",
@@ -3457,7 +3454,7 @@ import {
                 fontSize: 10,
                 fill: wS
             }
-        }), er.default.createElement(SE, {
+        }), React.default.createElement(Line, {
             type: "monotone",
             dataKey: "hours",
             stroke: yS,
@@ -3466,22 +3463,22 @@ import {
                 r: 3,
                 fill: yS
             }
-        })))), er.default.createElement("div", {
+        })))), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Health Summary"), er.default.createElement("div", {
+        }, "Health Summary"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 12
             }
-        }, "A clean summary of your goals, weight trend, supplements, and treatments — ready to print or save as a PDF to bring to a doctor or health advisor."), er.default.createElement("button", {
+        }, "A clean summary of your goals, weight trend, supplements, and treatments — ready to print or save as a PDF to bring to a doctor or health advisor."), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%"
             },
             onClick: t
-        }, er.default.createElement(mr, {
+        }, React.default.createElement(ClipboardList, {
             size: 16
         }), " Share with your doctor")))
     }
@@ -3510,252 +3507,252 @@ import {
             b = e.settings.reminders.supplementReminder,
             w = e.settings.reminders.treatmentReminder,
             x = typeof window < "u" && "serviceWorker" in navigator && "PushManager" in window;
-        return er.default.createElement("div", null, er.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(hr, {
+        }, React.default.createElement(Clock, {
             size: 15
-        }), " Reminder schedule"), er.default.createElement("p", {
+        }), " Reminder schedule"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Used by both push notifications and the calendar backup below."), er.default.createElement("div", {
+        }, "Used by both push notifications and the calendar backup below."), React.default.createElement("div", {
             className: "wt-field-row"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Start time", er.default.createElement("input", {
+        }, "Start time", React.default.createElement("input", {
             type: "time",
             value: g.startTime,
             onChange: e => i("startTime", e.target.value)
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
-        }, "End time", er.default.createElement("input", {
+        }, "End time", React.default.createElement("input", {
             type: "time",
             value: g.endTime,
             onChange: e => i("endTime", e.target.value)
-        }))), er.default.createElement("label", {
+        }))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Every", er.default.createElement("select", {
+        }, "Every", React.default.createElement("select", {
             value: g.intervalHours,
             onChange: e => i("intervalHours", Number(e.target.value))
-        }, er.default.createElement("option", {
+        }, React.default.createElement("option", {
             value: 1
-        }, "1 hour"), er.default.createElement("option", {
+        }, "1 hour"), React.default.createElement("option", {
             value: 1.5
-        }, "1.5 hours"), er.default.createElement("option", {
+        }, "1.5 hours"), React.default.createElement("option", {
             value: 2
-        }, "2 hours"), er.default.createElement("option", {
+        }, "2 hours"), React.default.createElement("option", {
             value: 3
-        }, "3 hours"), er.default.createElement("option", {
+        }, "3 hours"), React.default.createElement("option", {
             value: 4
-        }, "4 hours")))), er.default.createElement("div", {
+        }, "4 hours")))), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(fr, {
+        }, React.default.createElement(Bell, {
             size: 15
-        }), " Push notifications (recommended)"), er.default.createElement("p", {
+        }), " Push notifications (recommended)"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Real notifications from your own server, on the schedule above — arrive even with this closed. Requires the push server (see README) to be deployed and ", er.default.createElement("code", null, "config.js"), " pointed at it."), x ? er.default.createElement(er.default.Fragment, null, er.default.createElement("div", {
+        }, "Real notifications from your own server, on the schedule above — arrive even with this closed. Requires the push server (see README) to be deployed and ", React.default.createElement("code", null, "config.js"), " pointed at it."), x ? React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
             className: "wt-toggle-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, y.subscribed ? "Enabled on this device" : "Enabled"), er.default.createElement("button", {
+        }, y.subscribed ? "Enabled on this device" : "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (y.subscribed ? "on" : ""),
             onClick: u,
             disabled: c,
             "aria-label": "Toggle push notifications"
-        }, er.default.createElement("span", null))), y.subscribed && er.default.createElement("button", {
+        }, React.default.createElement("span", null))), y.subscribed && React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%"
             },
             onClick: s,
             disabled: c
-        }, "Send test push"), f && er.default.createElement("p", {
+        }, "Send test push"), f && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, f)) : er.default.createElement("p", {
+        }, f)) : React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "Push isn't supported in this browser/context. On iPhone, add this app to your home screen first (Share → Add to Home Screen), then open it from there.")), er.default.createElement("div", {
+        }, "Push isn't supported in this browser/context. On iPhone, add this app to your home screen first (Share → Add to Home Screen), then open it from there.")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(Er, {
+        }, React.default.createElement(Moon, {
             size: 15
-        }), " Bedtime reminder"), er.default.createElement("p", {
+        }), " Bedtime reminder"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "A separate push notification at whatever time you want to start winding down — independent of the schedule above, and only sent once a day."), er.default.createElement("div", {
+        }, "A separate push notification at whatever time you want to start winding down — independent of the schedule above, and only sent once a day."), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: v.enabled ? 14 : 0
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Enabled"), er.default.createElement("button", {
+        }, "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (v.enabled ? "on" : ""),
             onClick: () => d("enabled", !v.enabled),
             "aria-label": "Toggle bedtime reminder"
-        }, er.default.createElement("span", null))), v.enabled && er.default.createElement("label", {
+        }, React.default.createElement("span", null))), v.enabled && React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginBottom: 0
             }
-        }, "Lights Out time", er.default.createElement("input", {
+        }, "Lights Out time", React.default.createElement("input", {
             type: "time",
             value: v.time,
             onChange: e => d("time", e.target.value)
-        })), v.enabled && !y.subscribed && er.default.createElement("p", {
+        })), v.enabled && !y.subscribed && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), er.default.createElement("div", {
+        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(Sr, {
+        }, React.default.createElement(Pill, {
             size: 15
-        }), " Supplement reminder"), er.default.createElement("p", {
+        }), " Supplement reminder"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "A daily push notification reminding you to take your supplements and prescriptions — pick whatever time works, like 10am."), er.default.createElement("div", {
+        }, "A daily push notification reminding you to take your supplements and prescriptions — pick whatever time works, like 10am."), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: b.enabled ? 14 : 0
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Enabled"), er.default.createElement("button", {
+        }, "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (b.enabled ? "on" : ""),
             onClick: () => p("enabled", !b.enabled),
             "aria-label": "Toggle supplement reminder"
-        }, er.default.createElement("span", null))), b.enabled && er.default.createElement("label", {
+        }, React.default.createElement("span", null))), b.enabled && React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginBottom: 0
             }
-        }, "Reminder time", er.default.createElement("input", {
+        }, "Reminder time", React.default.createElement("input", {
             type: "time",
             value: b.time,
             onChange: e => p("time", e.target.value)
-        })), b.enabled && !y.subscribed && er.default.createElement("p", {
+        })), b.enabled && !y.subscribed && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), er.default.createElement("div", {
+        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(jr, {
+        }, React.default.createElement(Syringe, {
             size: 15
-        }), " Treatment reminder"), er.default.createElement("p", {
+        }), " Treatment reminder"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "A daily push notification if anything you're tracking in Treatments is due today or overdue — names which one, so you know what to log."), er.default.createElement("div", {
+        }, "A daily push notification if anything you're tracking in Treatments is due today or overdue — names which one, so you know what to log."), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: w.enabled ? 14 : 0
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Enabled"), er.default.createElement("button", {
+        }, "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (w.enabled ? "on" : ""),
             onClick: () => m("enabled", !w.enabled),
             "aria-label": "Toggle treatment reminder"
-        }, er.default.createElement("span", null))), w.enabled && er.default.createElement("label", {
+        }, React.default.createElement("span", null))), w.enabled && React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginBottom: 0
             }
-        }, "Reminder time", er.default.createElement("input", {
+        }, "Reminder time", React.default.createElement("input", {
             type: "time",
             value: w.time,
             onChange: e => m("time", e.target.value)
-        })), w.enabled && !y.subscribed && er.default.createElement("p", {
+        })), w.enabled && !y.subscribed && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), er.default.createElement("div", {
+        }, "Push notifications are off above — turn those on too, or this won't actually send anything.")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(fr, {
+        }, React.default.createElement(Bell, {
             size: 15
-        }), " In-app nudge (bonus)"), er.default.createElement("p", {
+        }), " In-app nudge (bonus)"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "A shorter-interval nudge while this tab is open and the screen is on — separate from the schedule above. Goes quiet the moment you lock your phone or switch apps."), er.default.createElement("div", {
+        }, "A shorter-interval nudge while this tab is open and the screen is on — separate from the schedule above. Goes quiet the moment you lock your phone or switch apps."), React.default.createElement("div", {
             className: "wt-toggle-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Enabled"), er.default.createElement("button", {
+        }, "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (h.enabled ? "on" : ""),
             onClick: () => h.enabled ? r() : n(h.intervalMin),
             "aria-label": "Toggle in-app reminder"
-        }, er.default.createElement("span", null))), er.default.createElement("label", {
+        }, React.default.createElement("span", null))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Remind me every", er.default.createElement("select", {
+        }, "Remind me every", React.default.createElement("select", {
             value: h.intervalMin,
             onChange: e => a(Number(e.target.value))
-        }, er.default.createElement("option", {
+        }, React.default.createElement("option", {
             value: 30
-        }, "30 minutes"), er.default.createElement("option", {
+        }, "30 minutes"), React.default.createElement("option", {
             value: 60
-        }, "1 hour"), er.default.createElement("option", {
+        }, "1 hour"), React.default.createElement("option", {
             value: 90
-        }, "1.5 hours"), er.default.createElement("option", {
+        }, "1.5 hours"), React.default.createElement("option", {
             value: 120
-        }, "2 hours"))), er.default.createElement("button", {
+        }, "2 hours"))), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%"
             },
             onClick: o
-        }, "Send test reminder"), er.default.createElement("p", {
+        }, "Send test reminder"), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 marginTop: 10,
                 marginBottom: 0
             }
-        }, "Browser notifications: ", "granted" === t ? "allowed on this device" : "denied" === t ? "blocked — you'll still see the in-app banner" : "not yet requested")), er.default.createElement("div", {
+        }, "Browser notifications: ", "granted" === t ? "allowed on this device" : "denied" === t ? "blocked — you'll still see the in-app banner" : "not yet requested")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(yr, {
+        }, React.default.createElement(Download, {
             size: 15
-        }), " Calendar backup (.ics)"), er.default.createElement("p", {
+        }), " Calendar backup (.ics)"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "No server required. Generates a file with recurring reminders on the schedule above — import it into your phone's Calendar app once for a zero-maintenance fallback."), er.default.createElement("button", {
+        }, "No server required. Generates a file with recurring reminders on the schedule above — import it into your phone's Calendar app once for a zero-maintenance fallback."), React.default.createElement("button", {
             className: "wt-btn-primary",
             onClick: l
-        }, er.default.createElement(yr, {
+        }, React.default.createElement(Download, {
             size: 16
-        }), " Download calendar reminders"), er.default.createElement("p", {
+        }), " Download calendar reminders"), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
@@ -3792,20 +3789,20 @@ import {
         onEditTreatment: E,
         onDeleteTreatment: k
     }) {
-        let [S, O] = (0, er.useState)(String(e.settings.goalOz || "")), [P, C] = (0, er.useState)(String(e.settings.goalProtein || "")), [j, N] = (0, er.useState)(String(e.settings.goalCalories || "")), [T, A] = (0, er.useState)(String(e.settings.goalSleepHours || "")), [M, _] = (0, er.useState)(!1), [D, z] = (0, er.useState)(null), [I, L] = (0, er.useState)(!1), [R, B] = (0, er.useState)(null), [$, F] = (0, er.useState)(!1), [U, W] = (0, er.useState)(null);
-        (0, er.useEffect)(() => {
+        let [S, O] = (0, React.useState)(String(e.settings.goalOz || "")), [P, C] = (0, React.useState)(String(e.settings.goalProtein || "")), [j, N] = (0, React.useState)(String(e.settings.goalCalories || "")), [T, A] = (0, React.useState)(String(e.settings.goalSleepHours || "")), [M, _] = (0, React.useState)(!1), [D, z] = (0, React.useState)(null), [I, L] = (0, React.useState)(!1), [R, B] = (0, React.useState)(null), [$, F] = (0, React.useState)(!1), [U, W] = (0, React.useState)(null);
+        (0, React.useEffect)(() => {
             O(String(e.settings.goalOz || ""))
-        }, [e.settings.goalOz]), (0, er.useEffect)(() => {
+        }, [e.settings.goalOz]), (0, React.useEffect)(() => {
             C(String(e.settings.goalProtein || ""))
-        }, [e.settings.goalProtein]), (0, er.useEffect)(() => {
+        }, [e.settings.goalProtein]), (0, React.useEffect)(() => {
             N(String(e.settings.goalCalories || ""))
-        }, [e.settings.goalCalories]), (0, er.useEffect)(() => {
+        }, [e.settings.goalCalories]), (0, React.useEffect)(() => {
             A(String(e.settings.goalSleepHours || ""))
         }, [e.settings.goalSleepHours]);
-        let [H, q] = (0, er.useState)(String(e.settings.goalWeight || "")), [V, G] = (0, er.useState)(String(e.settings.goalExerciseMinutes || ""));
-        (0, er.useEffect)(() => {
+        let [H, q] = (0, React.useState)(String(e.settings.goalWeight || "")), [V, G] = (0, React.useState)(String(e.settings.goalExerciseMinutes || ""));
+        (0, React.useEffect)(() => {
             q(String(e.settings.goalWeight || ""))
-        }, [e.settings.goalWeight]), (0, er.useEffect)(() => {
+        }, [e.settings.goalWeight]), (0, React.useEffect)(() => {
             G(String(e.settings.goalExerciseMinutes || ""))
         }, [e.settings.goalExerciseMinutes]);
         let X = !1 !== e.settings.showWater,
@@ -3816,13 +3813,13 @@ import {
             J = !1 !== e.settings.showSupplements,
             ee = !1 !== e.settings.showTreatments,
             te = !1 !== e.settings.showExercise;
-        return er.default.createElement("div", null, er.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Daily goals"), er.default.createElement("div", {
+        }, "Daily goals"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("label", {
+        }, React.default.createElement("label", {
             className: "wt-field"
-        }, "Water — ounces per day", er.default.createElement("input", {
+        }, "Water — ounces per day", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: S,
@@ -3831,23 +3828,23 @@ import {
                 let n = Number(S);
                 n > 0 ? t(n) : O(String(e.settings.goalOz))
             }
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: 16
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 12.5,
                 color: wS
             }
-        }, "Show on Log page"), er.default.createElement("button", {
+        }, "Show on Log page"), React.default.createElement("button", {
             className: "wt-switch " + (X ? "on" : ""),
             onClick: () => l(!X),
             "aria-label": "Toggle water on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("label", {
+        }, React.default.createElement("span", null))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Protein — grams per day", er.default.createElement("input", {
+        }, "Protein — grams per day", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: P,
@@ -3856,23 +3853,23 @@ import {
                 let t = Number(P);
                 t > 0 ? n(t) : C(String(e.settings.goalProtein))
             }
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: 16
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 12.5,
                 color: wS
             }
-        }, "Show on Log page"), er.default.createElement("button", {
+        }, "Show on Log page"), React.default.createElement("button", {
             className: "wt-switch " + (Y ? "on" : ""),
             onClick: () => u(!Y),
             "aria-label": "Toggle protein on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("label", {
+        }, React.default.createElement("span", null))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Calories — per day", er.default.createElement("input", {
+        }, "Calories — per day", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: j,
@@ -3881,23 +3878,23 @@ import {
                 let t = Number(j);
                 t > 0 ? r(t) : N(String(e.settings.goalCalories))
             }
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: 16
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 12.5,
                 color: wS
             }
-        }, "Show on Log page"), er.default.createElement("button", {
+        }, "Show on Log page"), React.default.createElement("button", {
             className: "wt-switch " + (K ? "on" : ""),
             onClick: () => s(!K),
             "aria-label": "Toggle calories on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("label", {
+        }, React.default.createElement("span", null))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Sleep — hours per night", er.default.createElement("input", {
+        }, "Sleep — hours per night", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: T,
@@ -3906,23 +3903,23 @@ import {
                 let t = Number(T);
                 t > 0 ? a(t) : A(String(e.settings.goalSleepHours))
             }
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-toggle-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 12.5,
                 color: wS
             }
-        }, "Show on Log page"), er.default.createElement("button", {
+        }, "Show on Log page"), React.default.createElement("button", {
             className: "wt-switch " + (Q ? "on" : ""),
             onClick: () => c(!Q),
             "aria-label": "Toggle sleep on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("label", {
+        }, React.default.createElement("span", null))), React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginTop: 16
             }
-        }, "Weight — target in lbs", er.default.createElement("input", {
+        }, "Weight — target in lbs", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: H,
@@ -3931,12 +3928,12 @@ import {
                 let t = Number(H);
                 t > 0 ? o(t) : q(String(e.settings.goalWeight))
             }
-        })), er.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginTop: 12
             }
-        }, "Exercise — minutes per day", er.default.createElement("input", {
+        }, "Exercise — minutes per day", React.default.createElement("input", {
             type: "number",
             inputMode: "numeric",
             value: V,
@@ -3945,107 +3942,107 @@ import {
                 let t = Number(V);
                 t > 0 ? i(t) : G(String(e.settings.goalExerciseMinutes))
             }
-        })), er.default.createElement("p", {
+        })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 margin: "12px 0 0"
             }
-        }, "Turning a tracker off here just hides it from the main screen — it's still counted in Reports.")), er.default.createElement("div", {
+        }, "Turning a tracker off here just hides it from the main screen — it's still counted in Reports.")), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Other trackers"), er.default.createElement("div", {
+        }, "Other trackers"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-toggle-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Weight"), er.default.createElement("button", {
+        }, "Weight"), React.default.createElement("button", {
             className: "wt-switch " + (Z ? "on" : ""),
             onClick: () => f(!Z),
             "aria-label": "Toggle weight on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("div", {
+        }, React.default.createElement("span", null))), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginTop: 10
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "RX & Supplements"), er.default.createElement("button", {
+        }, "RX & Supplements"), React.default.createElement("button", {
             className: "wt-switch " + (J ? "on" : ""),
             onClick: () => d(!J),
             "aria-label": "Toggle supplements on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("div", {
+        }, React.default.createElement("span", null))), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginTop: 10
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Treatments"), er.default.createElement("button", {
+        }, "Treatments"), React.default.createElement("button", {
             className: "wt-switch " + (ee ? "on" : ""),
             onClick: () => p(!ee),
             "aria-label": "Toggle treatments on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("div", {
+        }, React.default.createElement("span", null))), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginTop: 10
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Exercise"), er.default.createElement("button", {
+        }, "Exercise"), React.default.createElement("button", {
             className: "wt-switch " + (te ? "on" : ""),
             onClick: () => m(!te),
             "aria-label": "Toggle exercise on Log page"
-        }, er.default.createElement("span", null))), er.default.createElement("p", {
+        }, React.default.createElement("span", null))), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 margin: "12px 0 0"
             }
-        }, "Turning one off here just hides its tile from the Log page.")), er.default.createElement("div", {
+        }, "Turning one off here just hides its tile from the Log page.")), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Presets"), 0 === e.settings.presets.length && er.default.createElement("p", {
+        }, "Presets"), 0 === e.settings.presets.length && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 marginBottom: 10
             }
         }, "No presets yet. Add something you log often — a drink, a shake, a usual snack — with whichever of water, protein, or calories apply."), [...e.settings.presets].sort((e, t) => e.name.localeCompare(t.name)).map(e => {
             let t = [];
-            return e.oz > 0 && t.push(`${e.oz}oz`), e.grams > 0 && t.push(`${e.grams}g`), e.calories > 0 && t.push(`${e.calories}cal`), er.default.createElement("div", {
+            return e.oz > 0 && t.push(`${e.oz}oz`), e.grams > 0 && t.push(`${e.grams}g`), e.calories > 0 && t.push(`${e.calories}cal`), React.default.createElement("div", {
                 key: e.id,
                 className: "wt-preset-row"
-            }, er.default.createElement("span", {
+            }, React.default.createElement("span", {
                 className: "wt-preset-name"
-            }, e.name), er.default.createElement("span", {
+            }, e.name), React.default.createElement("span", {
                 className: "wt-preset-oz"
-            }, t.join(" · ")), er.default.createElement("button", {
+            }, t.join(" · ")), React.default.createElement("button", {
                 className: "wt-icon-btn",
                 onClick: () => {
                     z(e), _(!0)
                 },
                 "aria-label": "Edit preset"
-            }, er.default.createElement(kr, {
+            }, React.default.createElement(Pencil, {
                 size: 14
-            })), er.default.createElement("button", {
+            })), React.default.createElement("button", {
                 className: "wt-icon-btn",
                 onClick: () => y(e.id),
                 "aria-label": "Delete preset"
-            }, er.default.createElement(Nr, {
+            }, React.default.createElement(Trash2, {
                 size: 14
             })))
-        }), er.default.createElement("button", {
+        }), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
@@ -4054,21 +4051,21 @@ import {
             onClick: () => {
                 z(null), _(!0)
             }
-        }, er.default.createElement(Or, {
+        }, React.default.createElement(Plus, {
             size: 15
-        }), " Add preset"), er.default.createElement("div", {
+        }), " Add preset"), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Supplements & Prescriptions"), 0 === e.settings.supplements.length && er.default.createElement("p", {
+        }, "Supplements & Prescriptions"), 0 === e.settings.supplements.length && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 marginBottom: 10
             }
-        }, "Nothing added yet. Add the vitamins, supplements, and medicines you take regularly so they show up as one-tap options in Log Supplements & Prescriptions."), [...e.settings.supplements].sort((e, t) => e.name.localeCompare(t.name)).map(e => er.default.createElement("div", {
+        }, "Nothing added yet. Add the vitamins, supplements, and medicines you take regularly so they show up as one-tap options in Log Supplements & Prescriptions."), [...e.settings.supplements].sort((e, t) => e.name.localeCompare(t.name)).map(e => React.default.createElement("div", {
             key: e.id,
             className: "wt-preset-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-preset-name"
-        }, e.name), QS(e) && er.default.createElement("span", {
+        }, e.name), QS(e) && React.default.createElement("span", {
             style: {
                 fontSize: 11,
                 fontWeight: 700,
@@ -4076,21 +4073,21 @@ import {
                 marginRight: 4,
                 whiteSpace: "nowrap"
             }
-        }, QS(e)), er.default.createElement("button", {
+        }, QS(e)), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => {
                 B(e), L(!0)
             },
             "aria-label": "Edit item"
-        }, er.default.createElement(kr, {
+        }, React.default.createElement(Pencil, {
             size: 14
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => w(e.id),
             "aria-label": "Delete item"
-        }, er.default.createElement(Nr, {
+        }, React.default.createElement(Trash2, {
             size: 14
-        })))), er.default.createElement("button", {
+        })))), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
@@ -4099,21 +4096,21 @@ import {
             onClick: () => {
                 B(null), L(!0)
             }
-        }, er.default.createElement(Or, {
+        }, React.default.createElement(Plus, {
             size: 15
-        }), " Add supplement or medicine"), er.default.createElement("div", {
+        }), " Add supplement or medicine"), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Treatments"), 0 === e.settings.treatments.length && er.default.createElement("p", {
+        }, "Treatments"), 0 === e.settings.treatments.length && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 marginBottom: 10
             }
-        }, "Nothing added yet. Add periodic treatments — drips, shots, PT sessions, anything on a recurring schedule — so you can log them and see when the next one's due."), [...e.settings.treatments].sort((e, t) => e.name.localeCompare(t.name)).map(e => er.default.createElement("div", {
+        }, "Nothing added yet. Add periodic treatments — drips, shots, PT sessions, anything on a recurring schedule — so you can log them and see when the next one's due."), [...e.settings.treatments].sort((e, t) => e.name.localeCompare(t.name)).map(e => React.default.createElement("div", {
             key: e.id,
             className: "wt-preset-row"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-preset-name"
-        }, e.name, e.intervalDays > 0 ? ` · every ${e.intervalDays}d` : " · history only"), QS(e) && er.default.createElement("span", {
+        }, e.name, e.intervalDays > 0 ? ` · every ${e.intervalDays}d` : " · history only"), QS(e) && React.default.createElement("span", {
             style: {
                 fontSize: 11,
                 fontWeight: 700,
@@ -4121,21 +4118,21 @@ import {
                 marginRight: 4,
                 whiteSpace: "nowrap"
             }
-        }, QS(e)), er.default.createElement("button", {
+        }, QS(e)), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => {
                 W(e), F(!0)
             },
             "aria-label": "Edit treatment"
-        }, er.default.createElement(kr, {
+        }, React.default.createElement(Pencil, {
             size: 14
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => k(e.id),
             "aria-label": "Delete treatment"
-        }, er.default.createElement(Nr, {
+        }, React.default.createElement(Trash2, {
             size: 14
-        })))), er.default.createElement("button", {
+        })))), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
@@ -4144,23 +4141,23 @@ import {
             onClick: () => {
                 W(null), F(!0)
             }
-        }, er.default.createElement(Or, {
+        }, React.default.createElement(Plus, {
             size: 15
-        }), " Add a treatment"), er.default.createElement(OO, {
+        }), " Add a treatment"), React.default.createElement(OO, {
             open: M,
             initial: D,
             onClose: () => _(!1),
             onSave: e => {
                 D ? g(D.id, e.name, e.oz, e.grams, e.calories) : h(e.name, e.oz, e.grams, e.calories), _(!1)
             }
-        }), er.default.createElement(CO, {
+        }), React.default.createElement(CO, {
             open: I,
             initial: R,
             onClose: () => L(!1),
             onSave: (e, t, n, r, a) => {
                 R ? b(R.id, e, t, n, r, a) : v(e, t, n, r, a), L(!1)
             }
-        }), er.default.createElement(jO, {
+        }), React.default.createElement(jO, {
             open: $,
             initial: U,
             onClose: () => F(!1),
@@ -4202,58 +4199,58 @@ import {
         onAccountBackupNow: j,
         onOpenDoctorShare: N
     }) {
-        let [T, A] = (0, er.useState)(e.settings.testerName || ""), [M, _] = (0, er.useState)(!1), D = e.settings.cloudBackup || {
+        let [T, A] = (0, React.useState)(e.settings.testerName || ""), [M, _] = (0, React.useState)(!1), D = e.settings.cloudBackup || {
             enabled: !1,
             code: null,
             lastSavedAt: null
         }, z = e.settings.account || {
             email: null,
             sessionToken: null
-        }, [I, L] = (0, er.useState)(""), [R, B] = (0, er.useState)("idle"), [$, F] = (0, er.useState)(""), [U, W] = (0, er.useState)(!1), [H, q] = (0, er.useState)(!1), V = (0, er.useRef)(null);
-        return (0, er.useEffect)(() => {
+        }, [I, L] = (0, React.useState)(""), [R, B] = (0, React.useState)("idle"), [$, F] = (0, React.useState)(""), [U, W] = (0, React.useState)(!1), [H, q] = (0, React.useState)(!1), V = (0, React.useRef)(null);
+        return (0, React.useEffect)(() => {
             A(e.settings.testerName || "")
-        }, [e.settings.testerName]), er.default.createElement("div", null, er.default.createElement("button", {
+        }, [e.settings.testerName]), React.default.createElement("div", null, React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 marginBottom: 12
             },
             onClick: () => q(!0)
-        }, "How to use this"), er.default.createElement("label", {
+        }, "How to use this"), React.default.createElement("label", {
             className: "wt-field",
             style: {
                 marginBottom: 10
             }
-        }, "Your name (so we know who's giving feedback)", er.default.createElement("input", {
+        }, "Your name (so we know who's giving feedback)", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Sarah M.",
             value: T,
             onChange: e => A(e.target.value),
             onBlur: () => l(T)
-        })), er.default.createElement("button", {
+        })), React.default.createElement("button", {
             className: "wt-btn-primary wt-tracker-btn-sleep",
             style: {
                 marginBottom: 18
             },
             onClick: o
-        }, "Give Feedback"), er.default.createElement("div", {
+        }, "Give Feedback"), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: 18,
                 marginTop: -8
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 maxWidth: 260
             }
-        }, "Notify me (push) when new feedback comes in"), er.default.createElement("button", {
+        }, "Notify me (push) when new feedback comes in"), React.default.createElement("button", {
             className: "wt-switch " + (e.settings.feedbackWatching ? "on" : ""),
             onClick: () => i(!e.settings.feedbackWatching),
             "aria-label": "Toggle feedback notifications"
-        }, er.default.createElement("span", null))), er.default.createElement("div", {
+        }, React.default.createElement("span", null))), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Reminders"), er.default.createElement(UO, {
+        }, "Reminders"), React.default.createElement(UO, {
             data: e,
             notifPermission: f,
             onEnableInApp: d,
@@ -4269,58 +4266,58 @@ import {
             onChangeBedtime: E,
             onChangeSupplementReminder: k,
             onChangeTreatmentReminder: S
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Account"), er.default.createElement("div", {
+        }, "Account"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(xr, {
+        }, React.default.createElement(Mail, {
             size: 15
-        }), " Sign in"), z.email ? er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }), " Sign in"), z.email ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Signed in as ", er.default.createElement("b", null, z.email), ". Your data backs up here automatically too — no recovery code needed on a new device, just sign in."), er.default.createElement("button", {
+        }, "Signed in as ", React.default.createElement("b", null, z.email), ". Your data backs up here automatically too — no recovery code needed on a new device, just sign in."), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
                 marginBottom: 8
             },
             onClick: j
-        }, "Back up now"), er.default.createElement("button", {
+        }, "Back up now"), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
                 marginBottom: 8
             },
             onClick: C
-        }, "Restore from my account"), er.default.createElement("button", {
+        }, "Restore from my account"), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%"
             },
             onClick: P
-        }, "Sign out")) : "sent" === R ? er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, "Sign out")) : "sent" === R ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Check ", er.default.createElement("b", null, I), " for a sign-in link — it works for 15 minutes."), er.default.createElement("button", {
+        }, "Check ", React.default.createElement("b", null, I), " for a sign-in link — it works for 15 minutes."), React.default.createElement("button", {
             className: "wt-btn-text",
             onClick: () => B("idle")
-        }, "Use a different email")) : er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, "Use a different email")) : React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Sign in with just your email — no password. This is the first step toward syncing your data across devices; for now, cloud backup below still uses its own separate recovery code."), er.default.createElement("label", {
+        }, "Sign in with just your email — no password. This is the first step toward syncing your data across devices; for now, cloud backup below still uses its own separate recovery code."), React.default.createElement("label", {
             className: "wt-field"
-        }, "Email", er.default.createElement("input", {
+        }, "Email", React.default.createElement("input", {
             type: "email",
             value: I,
             onChange: e => L(e.target.value),
             placeholder: "you@example.com"
-        })), $ && er.default.createElement("p", {
+        })), $ && React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 marginTop: -8,
                 marginBottom: 10
             }
-        }, $), er.default.createElement("button", {
+        }, $), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%"
@@ -4334,87 +4331,87 @@ import {
                     F(e.message || "Could not send a sign-in link."), B("idle")
                 }
             }
-        }, "sending" === R ? "Sending…" : "Send sign-in link"))), er.default.createElement("div", {
+        }, "sending" === R ? "Sending…" : "Send sign-in link"))), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Backup"), er.default.createElement("div", {
+        }, "Backup"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-card-title"
-        }, er.default.createElement(gr, {
+        }, React.default.createElement(Cloud, {
             size: 15
-        }), " Automatic cloud backup"), er.default.createElement("p", {
+        }), " Automatic cloud backup"), React.default.createElement("p", {
             className: "wt-card-note"
-        }, "Keeps a copy of your data on the server so a lost phone or a cleared browser doesn't wipe your history. Saves on its own in the background."), er.default.createElement("div", {
+        }, "Keeps a copy of your data on the server so a lost phone or a cleared browser doesn't wipe your history. Saves on its own in the background."), React.default.createElement("div", {
             className: "wt-toggle-row",
             style: {
                 marginBottom: D.enabled ? 14 : 0
             }
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             style: {
                 fontSize: 13.5,
                 fontWeight: 600
             }
-        }, "Enabled"), er.default.createElement("button", {
+        }, "Enabled"), React.default.createElement("button", {
             className: "wt-switch " + (D.enabled ? "on" : ""),
             onClick: () => u(!D.enabled),
             "aria-label": "Toggle cloud backup"
-        }, er.default.createElement("span", null))), D.enabled && D.code && er.default.createElement(er.default.Fragment, null, er.default.createElement("p", {
+        }, React.default.createElement("span", null))), D.enabled && D.code && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 12,
                 fontWeight: 700,
                 color: dS,
                 margin: "0 0 6px"
             }
-        }, "Your recovery code"), er.default.createElement("div", {
+        }, "Your recovery code"), React.default.createElement("div", {
             className: "wt-recovery-code"
-        }, D.code), er.default.createElement("p", {
+        }, D.code), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: bS,
                 margin: "8px 0 0",
                 lineHeight: 1.5
             }
-        }, "Write this down or screenshot it now. It's the only way to get your data back on a new phone — and if this browser's data is cleared, the code goes with it."), er.default.createElement("p", {
+        }, "Write this down or screenshot it now. It's the only way to get your data back on a new phone — and if this browser's data is cleared, the code goes with it."), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 color: wS,
                 margin: "8px 0 0"
             }
-        }, D.lastSavedAt ? `Last backed up ${new Date(D.lastSavedAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}` : "Not backed up yet"), er.default.createElement("button", {
+        }, D.lastSavedAt ? `Last backed up ${new Date(D.lastSavedAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}` : "Not backed up yet"), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 width: "100%",
                 marginTop: 12
             },
             onClick: s
-        }, "Back up now")), er.default.createElement("button", {
+        }, "Back up now")), React.default.createElement("button", {
             className: "wt-btn-text",
             onClick: () => _(!0)
-        }, "Restore from a recovery code")), er.default.createElement("div", {
+        }, "Restore from a recovery code")), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 12
             }
-        }, "You can also keep your own backup file — useful if you'd rather not rely on the server copy, or want an archive you control."), er.default.createElement("div", {
+        }, "You can also keep your own backup file — useful if you'd rather not rely on the server copy, or want an archive you control."), React.default.createElement("div", {
             style: {
                 display: "flex",
                 gap: 10
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 flex: 1
             },
             onClick: n
-        }, "Export backup"), er.default.createElement("button", {
+        }, "Export backup"), React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 flex: 1
             },
             onClick: () => V.current.click()
-        }, "Import backup")), er.default.createElement("input", {
+        }, "Import backup")), React.default.createElement("input", {
             type: "file",
             accept: "application/json,.json",
             ref: V,
@@ -4427,39 +4424,39 @@ import {
                 let n = new FileReader;
                 n.onload = e => r(e.target.result), n.readAsText(t)
             }
-        })), er.default.createElement(PO, {
+        })), React.default.createElement(PO, {
             open: M,
             onClose: () => _(!1),
             onRestore: c
-        }), er.default.createElement("div", {
+        }), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "Data"), er.default.createElement("div", {
+        }, "Data"), React.default.createElement("div", {
             style: {
                 display: "flex",
                 gap: 10
             }
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "wt-btn-secondary",
             style: {
                 flex: 1
             },
             onClick: t
-        }, "Export CSV"), er.default.createElement("button", {
+        }, "Export CSV"), React.default.createElement("button", {
             className: "wt-btn-secondary wt-btn-danger",
             style: {
                 flex: 1
             },
             onClick: () => W(!0)
-        }, "Reset all data")), er.default.createElement("div", {
+        }, "Reset all data")), React.default.createElement("div", {
             className: "wt-section-label"
-        }, "About"), er.default.createElement("div", {
+        }, "About"), React.default.createElement("div", {
             className: "wt-card"
-        }, er.default.createElement("p", {
+        }, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 12
             }
-        }, "HydroPro Tracker is a personal project currently in trial with a small group of testers. Your data stays on this device — nothing is sent anywhere except push notification scheduling, if you've turned that on. Things may still change as it's refined. Found a bug, or have an idea? Let me know."), er.default.createElement("a", {
+        }, "HydroPro Tracker is a personal project currently in trial with a small group of testers. Your data stays on this device — nothing is sent anywhere except push notification scheduling, if you've turned that on. Things may still change as it's refined. Found a bug, or have an idea? Let me know."), React.default.createElement("a", {
             className: "wt-btn-secondary",
             style: {
                 display: "block",
@@ -4468,21 +4465,21 @@ import {
                 marginBottom: 12
             },
             href: "mailto:rob@bostonpickleballassociation.org?subject=HydroPro%20Tracker%20feedback"
-        }, "Send feedback"), er.default.createElement("p", {
+        }, "Send feedback"), React.default.createElement("p", {
             style: {
                 fontSize: 11,
                 color: wS,
                 margin: 0,
                 textAlign: "center"
             }
-        }, "Version ", xS), er.default.createElement("p", {
+        }, "Version ", xS), React.default.createElement("p", {
             style: {
                 fontSize: 10.5,
                 color: wS,
                 margin: "6px 0 0",
                 textAlign: "center"
             }
-        }, "© 2026 HydroPro Tracker Inc. All Rights Reserved.")), er.default.createElement(vO, {
+        }, "© 2026 HydroPro Tracker Inc. All Rights Reserved.")), React.default.createElement(vO, {
             open: U,
             title: "Reset all data?",
             message: "This clears every logged day, all 4 goals, and all your presets. This can't be undone.",
@@ -4491,16 +4488,16 @@ import {
             onConfirm: () => {
                 a(), W(!1)
             }
-        }), er.default.createElement(yO, {
+        }), React.default.createElement(yO, {
             open: H,
             onClose: () => q(!1)
         }))
-    }(0, Jn.createRoot)(document.getElementById("root")).render(er.default.createElement(function() {
+    }(0, ReactDOM.createRoot)(document.getElementById("root")).render(React.default.createElement(function() {
         let e = typeof window < "u" ? new URLSearchParams(window.location.search).get("share") : null;
-        if (e) return er.default.createElement(zO, {
+        if (e) return React.default.createElement(zO, {
             shareId: e
         });
-        let [t, n] = (0, er.useState)(null), [r, a] = (0, er.useState)("log"), [o, i] = (0, er.useState)(!1), [l, u] = (0, er.useState)(null), [s, c] = (0, er.useState)(null), [f, d] = (0, er.useState)(null), [p, m] = (0, er.useState)(0), [h, g] = (0, er.useState)(!1), [y, v] = (0, er.useState)(0), [b, w] = (0, er.useState)(JS()), [x, E] = (0, er.useState)(null), [k, S] = (0, er.useState)(!1), [O, P] = (0, er.useState)(null), [C, j] = (0, er.useState)(!1), [N, T] = (0, er.useState)(!1), [A, M] = (0, er.useState)(null), [_, D] = (0, er.useState)(!1), [z, I] = (0, er.useState)(null), [L, R] = (0, er.useState)(!1), [B, $] = (0, er.useState)(null), [F, U] = (0, er.useState)(!1), W = (0, er.useRef)(null), H = (0, er.useRef)(null), q = (0, er.useRef)(null), V = (0, er.useRef)(null), G = (0, er.useRef)(!1), X = (0, er.useRef)(null), Y = (0, er.useRef)(null), [K, Q] = (0, er.useState)(null), [Z, J] = (0, er.useState)(null), [ee, te] = (0, er.useState)(typeof Notification < "u" ? Notification.permission : "unsupported"), [ne, re] = (0, er.useState)(!1), [ae, oe] = (0, er.useState)(null), ie = (0, er.useRef)(null), le = (0, er.useRef)(null), ue = (0, er.useRef)(null), se = (0, er.useRef)(!1);
+        let [t, n] = (0, React.useState)(null), [r, a] = (0, React.useState)("log"), [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), [s, c] = (0, React.useState)(null), [f, d] = (0, React.useState)(null), [p, m] = (0, React.useState)(0), [h, g] = (0, React.useState)(!1), [y, v] = (0, React.useState)(0), [b, w] = (0, React.useState)(JS()), [x, E] = (0, React.useState)(null), [k, S] = (0, React.useState)(!1), [O, P] = (0, React.useState)(null), [C, j] = (0, React.useState)(!1), [N, T] = (0, React.useState)(!1), [A, M] = (0, React.useState)(null), [_, D] = (0, React.useState)(!1), [z, I] = (0, React.useState)(null), [L, R] = (0, React.useState)(!1), [B, $] = (0, React.useState)(null), [F, U] = (0, React.useState)(!1), W = (0, React.useRef)(null), H = (0, React.useRef)(null), q = (0, React.useRef)(null), V = (0, React.useRef)(null), G = (0, React.useRef)(!1), X = (0, React.useRef)(null), Y = (0, React.useRef)(null), [K, Q] = (0, React.useState)(null), [Z, J] = (0, React.useState)(null), [ee, te] = (0, React.useState)(typeof Notification < "u" ? Notification.permission : "unsupported"), [ne, re] = (0, React.useState)(!1), [ae, oe] = (0, React.useState)(null), ie = (0, React.useRef)(null), le = (0, React.useRef)(null), ue = (0, React.useRef)(null), se = (0, React.useRef)(!1);
 
         function ce(e, t) {
             clearTimeout(ie.current), Q({
@@ -4793,7 +4790,7 @@ import {
                 };
             n(o), ce("Backup restored.", () => n(a))
         }
-        if ((0, er.useEffect)(() => {
+        if ((0, React.useEffect)(() => {
                 (async function() {
                     try {
                         let e = localStorage.getItem(cS);
@@ -4864,7 +4861,7 @@ import {
                 })().then(e => {
                     n(e), se.current = !0
                 }), nS().catch(() => {})
-            }, []), (0, er.useEffect)(() => {
+            }, []), (0, React.useEffect)(() => {
                 t && se.current && async function(e) {
                     try {
                         localStorage.setItem(cS, JSON.stringify(e))
@@ -4872,7 +4869,7 @@ import {
                         console.error("Failed to save water tracker data", e)
                     }
                 }(t)
-            }, [t]), (0, er.useEffect)(() => (t && t.settings.reminders.inApp.enabled && de(t.settings.reminders.inApp.intervalMin), () => clearInterval(ue.current)), [t && t.settings.reminders.inApp.enabled]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => (t && t.settings.reminders.inApp.enabled && de(t.settings.reminders.inApp.intervalMin), () => clearInterval(ue.current)), [t && t.settings.reminders.inApp.enabled]), (0, React.useEffect)(() => {
                 if (!t || G.current) return;
                 let e = new URLSearchParams(window.location.search).get("login");
                 e && (G.current = !0, async function(e) {
@@ -4899,16 +4896,16 @@ import {
                     let e = new URL(window.location.href);
                     e.searchParams.delete("login"), window.history.replaceState({}, "", e.toString())
                 }))
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 if (t && t.settings.cloudBackup && t.settings.cloudBackup.enabled && t.settings.cloudBackup.code && be(ve()) !== W.current) return clearTimeout(H.current), H.current = setTimeout(() => {
                     we("auto")
                 }, 2e4), () => clearTimeout(H.current)
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 function e() {
                     typeof document > "u" || "hidden" !== document.visibilityState || !t || !t.settings.cloudBackup || !t.settings.cloudBackup.enabled || be(ve()) === W.current || (clearTimeout(H.current), we("auto"))
                 }
                 if (!(typeof document > "u")) return document.addEventListener("visibilitychange", e), () => document.removeEventListener("visibilitychange", e)
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 if (!t || !t.settings.account.sessionToken) return;
                 let e = ve(),
                     n = be(e);
@@ -4917,7 +4914,7 @@ import {
                         X.current = n
                     }).catch(() => {})
                 }, 2e4), () => clearTimeout(Y.current)) : void 0
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 function e() {
                     if (typeof document > "u" || "hidden" !== document.visibilityState || !t || !t.settings.account.sessionToken) return;
                     let e = ve(),
@@ -4927,14 +4924,14 @@ import {
                     }).catch(() => {}))
                 }
                 if (!(typeof document > "u")) return document.addEventListener("visibilitychange", e), () => document.removeEventListener("visibilitychange", e)
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 if (!t || !t.settings.reminders.push.subscribed || !t.settings.reminders.push.id) return;
                 let e = ye(),
                     n = JSON.stringify(e);
                 return n !== q.current ? (clearTimeout(V.current), V.current = setTimeout(() => {
                     uS(t.settings.reminders.push.id, e), q.current = n
                 }, 2e4), () => clearTimeout(V.current)) : void 0
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 function e() {
                     if (typeof document > "u" || "hidden" !== document.visibilityState || !t || !t.settings.reminders.push.subscribed || !t.settings.reminders.push.id) return;
                     let e = ye(),
@@ -4942,11 +4939,11 @@ import {
                     n !== q.current && (clearTimeout(V.current), uS(t.settings.reminders.push.id, e), q.current = n)
                 }
                 if (!(typeof document > "u")) return document.addEventListener("visibilitychange", e), () => document.removeEventListener("visibilitychange", e)
-            }, [t]), (0, er.useEffect)(() => {
+            }, [t]), (0, React.useEffect)(() => {
                 wtActivityPing()
-            }, []), !t) return er.default.createElement("div", {
+            }, []), !t) return React.default.createElement("div", {
             className: "wt-root"
-        }, er.default.createElement("style", null, iO), er.default.createElement("div", {
+        }, React.default.createElement("style", null, iO), React.default.createElement("div", {
             className: "wt-loading"
         }, "Loading your tracker…"));
         let Ee = HS(new Date);
@@ -4961,42 +4958,42 @@ import {
             }
             return n
         }
-        return er.default.createElement("div", {
+        return React.default.createElement("div", {
             className: "wt-root"
-        }, er.default.createElement("style", null, iO), er.default.createElement("div", {
+        }, React.default.createElement("style", null, iO), React.default.createElement("div", {
             className: "wt-topbanner"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-topbanner-inner"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-topbanner-badge"
-        }, er.default.createElement("img", {
+        }, React.default.createElement("img", {
             src: "gauges/main-logo.png",
             alt: ""
-        })), er.default.createElement("div", {
+        })), React.default.createElement("div", {
             className: "wt-topbanner-text"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-topbanner-title"
-        }, "HydroPro Tracker"))), er.default.createElement("svg", {
+        }, "HydroPro Tracker"))), React.default.createElement("svg", {
             className: "wt-topbanner-wave",
             viewBox: "0 0 400 24",
             preserveAspectRatio: "none"
-        }, er.default.createElement("path", {
+        }, React.default.createElement("path", {
             d: "M0,14 C33,4 67,24 100,14 C133,4 167,24 200,14 C233,4 267,24 300,14 C333,4 367,24 400,14 L400,24 L0,24 Z"
-        }))), er.default.createElement("div", {
+        }))), React.default.createElement("div", {
             className: "wt-frame"
-        }, er.default.createElement("div", {
+        }, React.default.createElement("div", {
             className: "wt-header"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-date"
-        }, er.default.createElement("span", {
+        }, React.default.createElement("span", {
             className: "wt-date-label"
-        }, "today" === r ? "Day Planner:" : "reports" === r ? "TO DATE STATS:" : "setup" === r ? "Setup for:" : "settings" === r ? "Settings" : "Day Tracker:"), "settings" !== r && er.default.createElement(er.default.Fragment, null, " ", function(e) {
+        }, "today" === r ? "Day Planner:" : "reports" === r ? "TO DATE STATS:" : "setup" === r ? "Setup for:" : "settings" === r ? "Settings" : "Day Tracker:"), "settings" !== r && React.default.createElement(React.default.Fragment, null, " ", function(e) {
             return e.toLocaleDateString(void 0, {
                 weekday: "long",
                 month: "short",
                 day: "numeric"
             })
-        }(new Date)))), "log" === r && er.default.createElement(MO, {
+        }(new Date)))), "log" === r && React.default.createElement(MO, {
             data: t,
             todayKey: Ee,
             onOpenQuickDial: function(e) {
@@ -5017,7 +5014,7 @@ import {
             onOpenExerciseSheet: () => {
                 M(null), T(!0)
             }
-        }), "today" === r && er.default.createElement(RO, {
+        }), "today" === r && React.default.createElement(RO, {
             data: t,
             todayKey: Ee,
             onDeleteLog: function(e) {
@@ -5042,10 +5039,10 @@ import {
                     }
                 }))
             }
-        }), "reports" === r && er.default.createElement(FO, {
+        }), "reports" === r && React.default.createElement(FO, {
             data: t,
             onDrShare: () => D(!0)
-        }), "setup" === r && er.default.createElement(WO, {
+        }), "setup" === r && React.default.createElement(WO, {
             data: t,
             onUpdateGoal: function(e) {
                 n(t => ({
@@ -5300,7 +5297,7 @@ import {
                     }
                 }))
             }
-        }), "settings" === r && er.default.createElement(HO, {
+        }), "settings" === r && React.default.createElement(HO, {
             data: t,
             onExportCSV: function() {
                 let e = function(e) {
@@ -5733,7 +5730,7 @@ import {
                 }
             },
             onOpenDoctorShare: () => D(!0)
-        })), er.default.createElement(xO, {
+        })), React.default.createElement(xO, {
             open: o,
             initial: l,
             quickFill: s,
@@ -5778,7 +5775,7 @@ import {
                     }, e.name)
                 })(e), i(!1), u(null), c(null)
             }
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: "oz" === f,
             title: "Water",
             unit: "oz",
@@ -5789,7 +5786,7 @@ import {
             onClose: he,
             onLogNow: ge,
             onDismiss: () => d(null)
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: "grams" === f,
             title: "Protein",
             unit: "g",
@@ -5800,7 +5797,7 @@ import {
             onClose: he,
             onLogNow: ge,
             onDismiss: () => d(null)
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: "calories" === f,
             title: "Calories",
             unit: "cal",
@@ -5811,7 +5808,7 @@ import {
             onClose: he,
             onLogNow: ge,
             onDismiss: () => d(null)
-        }), er.default.createElement(wO, {
+        }), React.default.createElement(wO, {
             open: h,
             title: x ? "Edit Weight" : "Log Weight",
             unit: "lbs",
@@ -5857,7 +5854,7 @@ import {
             allowDecimal: !0,
             time: b,
             onTimeChange: w
-        }), er.default.createElement(NO, {
+        }), React.default.createElement(NO, {
             open: k,
             supplements: t.settings.supplements,
             initial: O,
@@ -5921,7 +5918,7 @@ import {
             onGoToSettings: () => {
                 S(!1), a("setup")
             }
-        }), er.default.createElement(AO, {
+        }), React.default.createElement(AO, {
             open: C,
             treatments: t.settings.treatments,
             initial: z,
@@ -5968,7 +5965,7 @@ import {
             onGoToSettings: () => {
                 j(!1), a("setup")
             }
-        }), er.default.createElement(TO, {
+        }), React.default.createElement(TO, {
             open: N,
             initial: A,
             onClose: () => {
@@ -5996,11 +5993,11 @@ import {
                     }
                 })), T(!1), M(null), i ? ce("Entry updated.") : ce(`Logged ${t} min of ${e}`, () => me(l, u.id))
             }
-        }), er.default.createElement(_O, {
+        }), React.default.createElement(_O, {
             open: _,
             data: t,
             onClose: () => D(!1)
-        }), er.default.createElement(SO, {
+        }), React.default.createElement(SO, {
             open: L,
             initial: B,
             activeSession: t.activeSleepSession,
@@ -6092,7 +6089,7 @@ import {
                     activeSleepSession: null
                 })), R(!1), ce("Sleep session canceled.")
             }
-        }), er.default.createElement(kO, {
+        }), React.default.createElement(kO, {
             open: F,
             testerName: t.settings.testerName,
             onClose: () => U(!1),
@@ -6118,37 +6115,37 @@ import {
             onGoToSettings: () => {
                 U(!1), a("settings")
             }
-        }), er.default.createElement(gO, {
+        }), React.default.createElement(gO, {
             toast: K,
             onDismiss: () => Q(null)
-        }), Z && er.default.createElement("div", {
+        }), Z && React.default.createElement("div", {
             className: "wt-banner"
-        }, Z), er.default.createElement("nav", {
+        }, Z), React.default.createElement("nav", {
             className: "wt-nav"
-        }, er.default.createElement("button", {
+        }, React.default.createElement("button", {
             className: "wt-nav-btn " + ("log" === r ? "active" : ""),
             onClick: () => a("log")
-        }, er.default.createElement(vr, {
+        }, React.default.createElement(Droplet, {
             size: 18
-        }), " Log It!"), er.default.createElement("button", {
+        }), " Log It!"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("today" === r ? "active" : ""),
             onClick: () => a("today")
-        }, er.default.createElement(mr, {
+        }, React.default.createElement(ClipboardList, {
             size: 18
-        }), " Today"), er.default.createElement("button", {
+        }), " Today"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("reports" === r ? "active" : ""),
             onClick: () => a("reports")
-        }, er.default.createElement(ur, {
+        }, React.default.createElement(BarChart3, {
             size: 18
-        }), " Stats"), er.default.createElement("button", {
+        }), " Stats"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("setup" === r ? "active" : ""),
             onClick: () => a("setup")
-        }, er.default.createElement(Cr, {
+        }, React.default.createElement(SlidersVertical, {
             size: 18
-        }), " Setup"), er.default.createElement("button", {
+        }), " Setup"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("settings" === r ? "active" : ""),
             onClick: () => a("settings")
-        }, er.default.createElement(Pr, {
+        }, React.default.createElement(Settings, {
             size: 18
         }), " Settings")))
     }))
