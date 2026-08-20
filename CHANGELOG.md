@@ -20,6 +20,37 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.18.0] — 2026-08-20
+
+Bundle coverage fix (3b) for `ARCH-OPEN-06` retention analytics — closes the known gap called out
+in 3.17.0: `/api/progress` previously only recorded a `user_activity` row for push-subscribed
+users, since the client only ever called it from the existing push-gated ping. The Worker side
+already handled any `id` unconditionally, so no Worker changes were needed for this fix.
+
+### Added — Device-id activity ping, additive to the existing push ping
+- `wtDeviceId()` — reads or creates a UUID (`crypto.randomUUID()`) stored under `localStorage`
+  key `wt-device-id`; returns `null` if `localStorage` throws.
+- `wtActivityPing()` — POSTs `{id}` only (no health payload) to `${rS()}/api/progress`, guarded on
+  both `rS()` and `wtDeviceId()` returning a value, `.catch(()=>{})`. Fires once per app mount via
+  a new `useEffect` with an empty dependency array, wired into the same effect chain as the
+  existing push-ping effects in the main data component.
+- The pre-existing push-gated ping (`uS`, sending the full health payload) is untouched and keeps
+  firing on its own schedule for push subscribers — this is purely additive coverage for everyone
+  else.
+
+### Testing
+Verified against the exact minified `site/app/bundle.js` being shipped: `node -c` syntax check
+passed; `npm run lint:bundle` reported the same 11 pre-existing `no-undef` errors (no new one
+introduced); `node tools/harness.js site/app/bundle.js` booted the app with all 8 tiles present
+and all nav clicks succeeding with zero runtime errors; an end-state byte-diff against the
+pre-edit file confirmed the only changes were the two intended insertions, with `uS` and
+everything else byte-identical. **Not yet verified in a real browser or on a real device** — Rob
+still needs to confirm on-device that `wt-device-id` appears in `localStorage`, that one
+`POST /api/progress` with body `{"id":"<uuid>"}` fires on load, and that it doesn't interfere with
+the existing push-gated ping for subscribers.
+
+---
+
 ## [3.17.0] — 2026-08-19
 
 Worker source reconciliation: the committed `worker/src/worker.js` had drifted badly behind
