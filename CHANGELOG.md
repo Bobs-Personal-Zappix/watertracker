@@ -20,6 +20,53 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.19.0] — 2026-08-20
+
+`ARCH-OPEN-01` continued: recharts version pin and full identifier renaming in the extracted
+`src/app.js`. **No change to `site/app/bundle.js` — the deployed app is unaffected by this
+release.** This is source-reconciliation/dev-tooling work only.
+
+### Changed — recharts pinned to match the deployed bundle
+- `package.json` — `recharts` changed from `"latest"` (resolved to 3.10.1) to an exact pin at
+  `2.15.4`. No version string survives minification in `site/app/bundle.js`, so the version was
+  inferred from a structural fingerprint (the deployed bundle's `Legend` still uses static
+  `defaultProps`, a recharts v2-only pattern) confirmed against recharts' `2.x` source, then
+  verified by rebuild: the no-undef delta against the deployed bundle's 11-error baseline closed
+  from +14 (recharts v3's `@reduxjs/toolkit`/`reselect` transitive deps) to +2 — and those 2 are
+  dead-code artifacts of the unminified diagnostic build, not real errors.
+- `package-lock.json` regenerated; `@reduxjs/toolkit` and `reselect` dropped out of the tree
+  entirely.
+- `eslint.config.js` — extended `files` to also cover `site/app/bundle.build.js` so the diagnostic
+  build output can be linted going forward.
+
+### Changed — all 38 vendor identifiers renamed to real names in `src/app.js`
+- React (`er`→`React`) and ReactDOM (`Jn`→`ReactDOM`) namespace imports, plus all 12 recharts and
+  24 lucide-react import aliases, renamed from mangled bundle-derived short names to their real
+  exported names throughout the file (e.g. `rE`→`CartesianGrid`, `Xb`→`Bar`, `kr`→`Pencil`).
+- One deliberate exception: the lucide `X` (close) icon, mangled as `Ar`, was aliased to `XIcon`
+  rather than renamed to bare `X` — the file already uses `X` as an unrelated local variable in two
+  other scopes (a settings toggle, a debounce-timer ref), and a blind rename would have silently
+  shadowed those.
+- Renamed in 7 batches; rebuilt and ran the jsdom harness after every batch, confirmed clean each
+  time. End-state audit confirmed zero occurrences of any of the 38 original mangled tokens remain
+  anywhere in the file.
+
+### Testing
+Verified against `site/app/bundle.build.js`, the diagnostic build output of `node esbuild.config.js`
+(gitignored, never deployed) — **not** the deployed `site/app/bundle.js`, which this release does
+not touch. `npx eslint site/app/bundle.build.js` no-undef count: 13, unchanged after the rename
+batches (expected — pure rename, no semantic change). `node tools/harness.js
+site/app/bundle.build.js` booted clean with all 8 tiles present and nav to every tab (Today, Stats,
+Setup, Log It!) succeeding with zero runtime errors, confirmed after the recharts pin and after
+every subsequent rename batch. jsdom has no layout engine, so chart rendering on the Stats tab has
+not been visually verified — that still needs a real browser or Rob's eyes.
+
+Remaining for `ARCH-OPEN-01`: verifying the build output matches production behavior in a real
+browser before the bundle can be considered reconciled. The rule in `CLAUDE.md` declaring
+`site/app/bundle.js` the sole source of truth stays in force until then.
+
+---
+
 ## [3.18.0] — 2026-08-20
 
 Bundle coverage fix (3b) for `ARCH-OPEN-06` retention analytics — closes the known gap called out
