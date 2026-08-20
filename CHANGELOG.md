@@ -20,6 +20,47 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.24.0] — 2026-08-20
+
+`UX-OPEN-01` Phase 1b follow-up — three UX fixes to the My Plan page, built in `src/app.js` and
+deployed to `site/app/bundle.js` the same day via the build pipeline.
+
+### Changed — section headers now visually tie their content together
+- New `.wt-plan-section-label` class (16px, bold, `--ink`, 3px `--teal` left border, 12px left
+  padding), scoped to My Plan only — the global `.wt-section-label` used everywhere else is
+  untouched. Applied to "What I'm Tracking" and "My Regimen".
+
+### Changed — Self-Managed and Quick Presets open as bottom sheets, not inline expansion
+- New `PlanSheet` component (title, close button, children) follows the same
+  `.wt-backdrop`/`.wt-sheet` pattern as the tracker bottom sheet from v3.23.0. Tapping either
+  `RegimenSummaryCard` now opens a sheet containing the exact same list/add-button markup that used
+  to render inline — content unchanged, only the container changed, so the card header and its
+  items read as parent/child instead of peers.
+- `expandedList` state is unchanged in shape and purpose; only what it drives changed (sheet
+  visibility instead of an inline conditional render).
+
+### Added — "Add Partner +" placeholder card and sheet
+- Dashed-border card (`--teal` border and text, `Plus` icon, 56px min-height) between the Austin
+  Drip Lounge clinic card and the Self-Managed card. Opens a `PlanSheet` with five inert fields
+  (partner name, protocol code, provider contact, session count, next-appointment date) and an
+  inert "Request Partnership" button — no save logic, no data model changes, explicitly marked in
+  code as a design-review-only placeholder.
+
+### Testing
+Full six-step pipeline run clean: `node esbuild.config.js` (707.1KB) → harness + lint (11 no-undef)
+on `bundle.build.js` → copied to `site/app/bundle.js` (724,066 bytes, byte-identical to the build
+output) → harness + lint re-run against the exact deployed file, same 11 no-undef. Beyond that: a
+scratchpad-only harness variant (deleted after use, never committed) confirmed both section headers
+use the new class (and not the old one), that Self-Managed and Quick Presets open real sheets with
+correct titles and content rather than expanding inline, and that the Add Partner sheet opens with
+all five fields and the button present.
+
+**Not yet verified:** real-browser visual check — this release is entirely visual/interaction
+behavior (sheet open/close, header treatment, dashed-card styling) that jsdom cannot confirm reads
+correctly.
+
+---
+
 ## [3.23.0] — 2026-08-20
 
 `UX-OPEN-01` Phase 1b — My Plan visual redesign, built in `src/app.js` and deployed to
