@@ -20,6 +20,41 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.17.0] — 2026-08-19
+
+Worker source reconciliation: the committed `worker/src/worker.js` had drifted badly behind
+production — 215 lines covering push notifications only, missing auth, sharing, and backup
+entirely. Replaced it with the real deployed source and merged in the new retention write.
+
+### Changed — Worker source reconciled with production
+- `worker/src/worker.js` replaced with the actual deployed source (728 lines, up from 215).
+  Restores auth (`/api/auth/*` magic-link sign-in and session handling), doctor-share links
+  (`/api/share`, `/share/:id`), account backup (`/api/account/backup`), and recovery-code backup
+  (`/api/backup`) to the repo — all of it was already live in production but had never been
+  committed anywhere.
+- CORS now allows the `Authorization` header, required by the auth/share/backup routes.
+
+### Added — Full D1 schema migration
+- `worker/migrations/schema-001-full.sql` — all 6 tables the Worker code depends on: `users`,
+  `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`. Supersedes and
+  replaces the narrower `schema-001-user-activity.sql`.
+
+### Added — Retention write merged into `/api/progress`
+- `/api/progress` now writes `user_id + date` to D1 `user_activity` for every caller, in addition
+  to its existing KV progress save for push subscribers. Previously this route only recorded
+  retention data (discarding everything else) with no KV write at all — the two behaviors had
+  never coexisted in the same file. Fire-and-forget: a D1 failure doesn't affect the KV save or
+  the response.
+- Known limitation: the client only calls `/api/progress` when a push subscription id exists, so
+  `user_activity` currently only captures users who've enabled push notifications, not the full
+  user base. Tracked as an open item, not fixed in this release.
+
+### Fixed — VAPID config
+- `wrangler.toml` had placeholder values for `VAPID_PUBLIC_KEY` and `VAPID_CONTACT_EMAIL`. Now
+  set to the real public key and `mailto:rob@hydroprotracker.com`.
+
+---
+
 ## [3.16.0] — 2026-08-17
 
 Six small-but-real fixes: moved Health Summary to the Stats page, reordered a Log tab tile, gave three tabs proper titles, and fixed a real logic bug in the Treatments tile.
