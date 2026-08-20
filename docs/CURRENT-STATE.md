@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 20, 2026 · Deployed version: 3.21.0*
+*As of: August 20, 2026 · Deployed version: 3.21.0 (app) · v3.22.0 is src/app.js only, not yet deployed*
 
 ---
 
@@ -16,7 +16,8 @@
 **Tracked metrics (8 tiles, all with percentage progress rings)**
 Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Supplements — in that order on the Log It! page.
 
-**Tabs:** Log It! · Today · Stats · Setup · Settings
+**Tabs (deployed):** Log It! · Today · Stats · Setup · Settings
+**Tabs (src/app.js, not yet deployed):** Log It! · Today · Stats · My Plan · Settings
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -99,6 +100,7 @@ Bundle is ~702KB minified, ~180KB gzipped.
 - **Retention analytics fully live** (`ARCH-OPEN-06`, v3.17–3.18) — `POST /api/progress` merged: writes opaque id + server date to `user_activity` (D1) for every caller. Coverage fix (3b) shipped in v3.18.0: `wtDeviceId()` + `wtActivityPing()` mount effect fires unconditionally on app open regardless of push status. Both push-subscribed and non-push users confirmed producing `user_activity` rows. Retention clock running, full coverage, from Aug 20.
 - **jsdom harness runnable** (`OPS-08`) — `node tools/harness.js site/app/bundle.js` boots clean; `npm run lint:bundle` baseline: 11 pre-existing no-undef errors.
 - **Source reconciliation complete** (`ARCH-OPEN-01`, Aug 20, v3.19.0) — `src/app.js` extracted (6,104 lines), all 38 vendor identifiers renamed, recharts pinned to 2.15.4, Stats tab real-device verified. `src/app.js` + `esbuild.config.js` are now the source of truth for future edits.
+- **My Plan page redesigned** (`UX-OPEN-01` Phase 1, Aug 20, v3.22.0) — Setup renamed to My Plan, unified tracker rows with hide/show, CRUD lists collapsed to summary rows. In `src/app.js` only — not yet deployed to `bundle.js`. Real-browser visual check pending before deploy.
 - **Versioned schema live** (`ARCH-OPEN-05`, Aug 20, v3.20.0/3.21.0) — `migrate()` + `deepMergeDefaults` replace three hand-maintained field whitelists. Export inverted to denylist. `goalWeight`/`goalExerciseMinutes` silent-drop bug fixed in `src/app.js` (v3.20.0) and deployed `bundle.js` (v3.21.0, real-device verified).
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
 - **`env.RESEND_FROM_EMAIL`** — optional undocumented var; falls back to `HydroPro Tracker <login@hydroprotracker.com>` if unset.
@@ -109,7 +111,7 @@ Bundle is ~702KB minified, ~180KB gzipped.
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-Working sequence (updated Aug 20): server as source of truth (`ARCH-OPEN-04`) → Config & Onboarding redesign (`UX-OPEN-01`) plus entry-flow UX improvements → clinic-side build (`ARCH-OPEN-02`). `ARCH-OPEN-01` and `ARCH-OPEN-05` fully closed.
+Working sequence (updated Aug 20): deploy v3.22.0 My Plan redesign to bundle.js (after real-browser visual check) → fix "Add in Setup" stale copy → UX-OPEN-01 Phase 2 (Settings consolidation) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build (`ARCH-OPEN-02`). `ARCH-OPEN-01` and `ARCH-OPEN-05` fully closed.
 
 Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — the most time-sensitive open item), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 

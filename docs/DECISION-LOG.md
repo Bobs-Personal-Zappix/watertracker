@@ -151,7 +151,7 @@ Goal counts treatments actually due today; done counts those actually logged tod
 
 **UX-06 — Navigation and titles.**
 Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STATS:" + date, "Setup for:" + date, "Settings" (no date).
-*Status:* **Locked** · Aug 17, 2026 — *note: `UX-OPEN-01` proposes renaming Setup → "My Plan" with a matching header change. If that proposal is accepted, this entry is amended, not discarded; nav order and the other two titles stand.*
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.*
 
 **UX-07 — Tile order on Log It!**
 Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
@@ -244,8 +244,16 @@ A tester or clinic asked for health-platform integration; the literal ask was ne
 Full spec in `HydroPro-Config-Onboarding-Redesign.md` (project knowledge). Proposes: rename Setup → "My Plan"; merge the 8 tracker toggles and 6 goal inputs into one row per tracker; collapse the three unbounded CRUD lists to summary rows; consolidate Settings to six status rows; rebuild "Your data" as a single backed-up/not-backed-up status with ranked options behind it; group Reminders by intent; promote the tutorial and fire it on first run; add two onboarding ramps (clinic protocol code / self-serve) both ending in a first logged entry.
 *Dependencies:* `ARCH-OPEN-01` (source reconciliation) should land first — this relocates large JSX blocks, which is the worst kind of change to attempt on a minified bundle. Analytics should land before the onboarding half ships, or its effect on time-to-first-log and D7 is unmeasurable. `ARCH-OPEN-05` (versioned schema) should land before protocol provenance.
 *Update (Aug 18):* items 8–10 of the spec's §7 were gated on `STRAT-OPEN-01`. `STRAT-10` resolves that gate, and clinic-first **promotes** them — the protocol code is the clinic's distribution mechanism and light white-labeling is cheap and persuasive in a sales conversation. Note the spec cites the versioned-schema prerequisite as `ARCH-OPEN-02`; that is a mis-reference, and the correct ID is `ARCH-OPEN-05`.
-*Amends:* `UX-06` (Setup → My Plan, header text) if accepted.
-*Also carries five open questions* in the spec's §8 — off-tracker visibility, the caregiver case, where the appointment date lives, whether the clinic-code prompt shows to everyone, and whether "My Plan" is the right name. **Not yet decided.**
+*Phase 1 complete (Aug 20, v3.22.0):* My Plan page redesigned in `src/app.js`. Unified tracker rows — one row per tracker with toggle + goal inline. Off-trackers hideable entirely via per-row toggle; "Show all trackers" affordance reveals hidden rows. Three CRUD lists collapsed to summary rows with live counts. WO component: 403 → 310 lines. Not yet deployed to `site/app/bundle.js` — deploy is a separate decision after real-browser visual verification.
+
+*Two of five §8 open questions resolved (Aug 20):* (1) "My Plan" confirmed as the name — amends UX-06. (2) Off-trackers hideable entirely — collapsed rows, "Show all trackers" link.
+
+*Remaining open questions:* caregiver case (probably "not yet"), appointment date location, clinic-code prompt scope (everyone vs. QR deep-link only).
+
+*Small outstanding from Phase 1:* "Add in Setup" stale copy on two Log It! tiles (Treatments/Supplements empty-state CTA) — quick fix, not yet addressed.
+
+*Phase 2 (not started):* Settings consolidation — six status rows, "Your data" backed-up/not status, Reminders grouped by intent, tutorial on first run.
+*Phase 3 (not started):* Clinic onboarding ramp.
 
 **ARCH-OPEN-01 — Source reconciliation: extraction complete, build pipeline established.**
 Chosen approach: extract from live bundle. Executed Aug 20, 2026.
@@ -291,4 +299,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 closed, ARCH-OPEN-05 closed)*
+*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 closed, ARCH-OPEN-05 closed, UX-OPEN-01 Phase 1 complete)*
