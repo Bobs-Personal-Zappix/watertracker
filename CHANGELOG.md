@@ -44,10 +44,9 @@ passed; `npm run lint:bundle` reported the same 11 pre-existing `no-undef` error
 introduced); `node tools/harness.js site/app/bundle.js` booted the app with all 8 tiles present
 and all nav clicks succeeding with zero runtime errors; an end-state byte-diff against the
 pre-edit file confirmed the only changes were the two intended insertions, with `uS` and
-everything else byte-identical. **Not yet verified in a real browser or on a real device** — Rob
-still needs to confirm on-device that `wt-device-id` appears in `localStorage`, that one
-`POST /api/progress` with body `{"id":"<uuid>"}` fires on load, and that it doesn't interfere with
-the existing push-gated ping for subscribers.
+everything else byte-identical. **Real-device verification (Gate C) complete, 2026-08-20:** Rob
+confirmed both push-subscribed and non-push users now produce rows in `user_activity`, closing the
+coverage gap this release targeted.
 
 ---
 
