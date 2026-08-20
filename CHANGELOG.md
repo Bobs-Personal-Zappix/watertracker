@@ -20,6 +20,57 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.22.0] — 2026-08-20
+
+`UX-OPEN-01` Phase 1 — "My Plan" page redesign, in `src/app.js` only. **`site/app/bundle.js` is not
+updated by this release — the deployed app is unaffected.** Deploying this redesign is a separate
+decision, same pattern as `ARCH-OPEN-01` and `ARCH-OPEN-05` before it.
+
+### Changed — Setup renamed to "My Plan" throughout
+- Bottom-nav tab label: "Setup" → "My Plan".
+- Page header: "Setup for:" → "My Plan for:". Nav order and the other tab titles are unchanged.
+- Internal router state key (`"setup"`) and component name (`WO`) are untouched — this is a
+  display-only rename, not a routing change.
+
+### Changed — six goal inputs and eight tracker toggles merged into one row per tracker
+- New `TrackerRow` component (39 lines): one row per tracker — toggle, label, and (for the six
+  trackers that have one) an inline goal input — replacing the old "Daily goals" and "Other
+  trackers" cards, which had goal inputs and toggles split inconsistently across two separate cards
+  (water/protein/calories/sleep already had them adjacent; weight/exercise did not).
+- **Off trackers are hidden entirely, not dimmed** — an off tracker's row doesn't render at all by
+  default. A "Show all trackers" link at the bottom of the tracker list reveals every row
+  (including off ones) so any tracker can be switched back on; the link becomes "Hide off trackers"
+  once expanded.
+- Turning a tracker off in My Plan already cascaded to hiding its Log It! dashboard tile before this
+  change (pre-existing `&&`-gated rendering) — confirmed still true, unchanged by this release.
+
+### Changed — Presets, Supplements, and Treatments collapsed to summary rows
+- New `CrudSummaryRow` component (23 lines): each of the three CRUD lists is now a single row
+  showing a live count (e.g. "Presets (4)") that expands in place on tap to reveal the existing
+  list and "Add" button — unchanged markup, just newly conditional on expand state.
+- The three add/edit modals (`OO`/`CO`/`jO`) are untouched — only what triggers them changed.
+
+### Net effect on `WO` (the My Plan component)
+355 lines touched across `src/app.js` (155 insertions / 187 deletions). `WO` itself shrank from 403
+to 310 lines; combined with the two new components its total footprint (372 lines) is still smaller
+than the original single component, despite the two additions — the CRUD-list collapsing saved more
+than the unified tracker rows added.
+
+### Testing
+`node esbuild.config.js`: clean. `npx eslint site/app/bundle.build.js` no-undef count: 13,
+unchanged. `node tools/harness.js site/app/bundle.build.js`: exit 0, 8 tiles, all nav clean
+(including the renamed "My Plan" tab — `tools/harness.js`'s default nav check was updated from
+`"Setup"` to `"My Plan"` since this is a permanent rename, not scratch content). Beyond the standard
+harness: a scratchpad-only variant (deleted after use, never committed) seeded one off tracker and
+one preset, then drove the real UI — confirmed the header text, hide-by-default/reveal-via-link
+behavior, live CRUD counts, and expand-on-tap all work end-to-end, not just in source.
+
+**Not yet verified:** real-browser visual check (row spacing, goal-input width, chevron rotation) —
+jsdom has no layout engine. `docs/DECISION-LOG.md` amendment for the "My Plan" naming and
+hide-entirely decisions is drafted but not yet applied to the log.
+
+---
+
 ## [3.21.0] — 2026-08-20
 
 Production bundle patch: fixes `goalWeight`/`goalExerciseMinutes` silently dropping from backup
