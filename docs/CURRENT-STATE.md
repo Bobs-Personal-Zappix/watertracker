@@ -46,7 +46,6 @@ Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX 
 | Database | Cloudflare D1 — `account_backups`, `shares`, plus auth/session tables |
 | KV | Push subscriptions, feedback entries (`feedback:` prefix), recovery-code backups |
 | Email | Resend, via `env.RESEND_API_KEY` (secret, never committed) |
-| | Optional `env.RESEND_FROM_EMAIL` override for the sender address — currently unset, falls back to `HydroPro Tracker <login@hydroprotracker.com>` |
 | Push | Web Push + VAPID |
 
 Bundle is ~702KB minified, ~180KB gzipped.
