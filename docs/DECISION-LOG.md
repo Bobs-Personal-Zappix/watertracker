@@ -247,11 +247,16 @@ Full spec in `HydroPro-Config-Onboarding-Redesign.md` (project knowledge). Propo
 *Amends:* `UX-06` (Setup → My Plan, header text) if accepted.
 *Also carries five open questions* in the spec's §8 — off-tracker visibility, the caregiver case, where the appointment date lives, whether the clinic-code prompt shows to everyone, and whether "My Plan" is the right name. **Not yet decided.**
 
-**ARCH-OPEN-01 — Source reconciliation approach: extract from live bundle.**
-Chosen approach: extract the ~6,500 lines of app code from the deployed `site/app/bundle.js`, wire real npm imports, commit as source. Identifiers stay mangled initially; the test suite becomes meaningful immediately. Alternative (reconstruct from stale `src/App.jsx`) rejected — starting from months-behind source with unmapped divergence carries higher risk of silent omissions.
-*Why:* extracting from the deployed bundle means the committed source matches what users actually run. Nothing can revert months of shipped work. Explicit call by Rob.
-*Worker side resolved (Aug 20):* the real deployed `worker.js` (728 lines) is now committed, `wrangler.toml` has real values, first `wrangler deploy` from this clone succeeded (`OPS-09`).
-*Status:* **Locked** (approach decided) — execution follows bundle coverage fix (3b) · Aug 20, 2026
+**ARCH-OPEN-01 — Source reconciliation: extraction complete, build pipeline established.**
+Chosen approach: extract from live bundle. Executed Aug 20, 2026.
+- `src/app.js` — 6,104 lines extracted from `site/app/bundle.js` (beautified lines 25859–31962). Parses cleanly. All 37 vendor short-names mapped and wired as proper ES imports (React, ReactDOM, recharts, 24 lucide-react icons).
+- `esbuild.config.js` — build pipeline authored from scratch (none existed). Output: `site/app/bundle.build.js` (gitignored, never deployed). `NODE_ENV=production` set; harness-verified clean boot.
+- `site/app/bundle.js` and `src/App.jsx` — untouched throughout. The deployed bundle remains the source of truth until the build output is verified to match production behavior.
+*Worker side resolved (Aug 20):* the real deployed `worker.js` (728 lines) is committed, `wrangler.toml` has real values, first `wrangler deploy` succeeded (`OPS-09`).
+*Remaining — two steps:*
+1. **Recharts version pin** — installed v3.10.1 (latest) differs from the older major in the deployed bundle; `@reduxjs/toolkit/reselect` adds 14 extra lint errors. Pin to the version the original bundle used. *Claude Code can do this alone.*
+2. **Identifier renaming** — mangled names (`er`, `Jn`, `zl`, etc.) work correctly but are unreadable. Rename in tested batches after recharts is pinned.
+*Status:* **In progress** — source extracted and build pipeline live · Aug 20, 2026
 
 **ARCH-OPEN-02 — Data model: when to move off the single-blob store.**
 Currently one JSON blob in `account_backups.data`. Cannot answer "which patients are lapsing" or "what's D30 retention" — i.e. the entire B2B product. Proposed: keep the blob for sync, add normalized `log_entries` + `user_activity` rows.
@@ -278,4 +283,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-06 fully closed, ARCH-OPEN-01 approach locked)*
+*Last updated: August 20, 2026 (ARCH-OPEN-06 fully closed, ARCH-OPEN-01 source extracted)*

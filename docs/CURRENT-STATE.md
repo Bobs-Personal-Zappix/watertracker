@@ -98,6 +98,7 @@ Bundle is ~702KB minified, ~180KB gzipped.
 - **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`. Auth and sharing now have a real database backing them.
 - **Retention analytics fully live** (`ARCH-OPEN-06`, v3.17–3.18) — `POST /api/progress` merged: writes opaque id + server date to `user_activity` (D1) for every caller. Coverage fix (3b) shipped in v3.18.0: `wtDeviceId()` + `wtActivityPing()` mount effect fires unconditionally on app open regardless of push status. Both push-subscribed and non-push users confirmed producing `user_activity` rows. Retention clock running, full coverage, from Aug 20.
 - **jsdom harness runnable** (`OPS-08`) — `node tools/harness.js site/app/bundle.js` boots clean; `npm run lint:bundle` baseline: 11 pre-existing no-undef errors.
+- **Source extraction underway** (`ARCH-OPEN-01`, Aug 20) — `src/app.js` extracted (6,104 lines), all 37 vendor identifiers mapped and wired as real ES imports, `esbuild.config.js` build pipeline established. Harness-verified clean boot from built output. Remaining: recharts version pin and identifier renaming. `site/app/bundle.js` still the deployed source of truth.
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
 - **`env.RESEND_FROM_EMAIL`** — optional undocumented var; falls back to `HydroPro Tracker <login@hydroprotracker.com>` if unset.
 
