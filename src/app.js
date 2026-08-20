@@ -218,6 +218,7 @@ import {
         bS = "#C1523E",
         wS = "#5C7085",
         xS = "3.13.0",
+        SCHEMA_VERSION = 2,
         ES = {
             logs: {},
             activeSleepSession: null,
@@ -430,6 +431,48 @@ import {
             qtyRemaining: e.qtyRemaining || 0,
             expirationDate: e.expirationDate || null
         }))
+    }
+
+    function normalizeTreatments(e) {
+        return (Array.isArray(e) ? e : []).map(e => ({
+            id: e.id,
+            name: e.name,
+            intervalDays: "number" == typeof e.intervalDays ? e.intervalDays : 1,
+            lastTakenDate: e.lastTakenDate || null,
+            nextDueOverride: e.nextDueOverride || null,
+            trackInventory: !!e.trackInventory,
+            qtyRemaining: e.qtyRemaining || 0,
+            expirationDate: e.expirationDate || null
+        }))
+    }
+
+    function migrateSettingsShape(e) {
+        return {
+            ...e,
+            presets: FS(e),
+            supplements: US(e),
+            treatments: normalizeTreatments(e && e.treatments)
+        }
+    }
+
+    function deepMergeDefaults(e, t) {
+        if (Array.isArray(e)) return Array.isArray(t) ? t : e;
+        if (null !== e && "object" == typeof e) {
+            let n = {};
+            for (let r of Object.keys(e)) n[r] = deepMergeDefaults(e[r], t && "object" == typeof t ? t[r] : void 0);
+            return n
+        }
+        return "number" == typeof e ? "number" == typeof t && t ? t : e : "boolean" == typeof e ? "boolean" == typeof t ? t : e : "string" == typeof e ? "string" == typeof t ? t : e : void 0 !== t ? t : e
+    }
+
+    function migrate(e) {
+        if (!e || "object" != typeof e) return JSON.parse(JSON.stringify(ES));
+        let t = migrateSettingsShape(e.settings || {});
+        return {
+            logs: $S(e.logs || {}),
+            activeSleepSession: e.activeSleepSession || null,
+            settings: deepMergeDefaults(ES.settings, t)
+        }
     }
     var WS = e => String(e).padStart(2, "0");
 
@@ -4680,33 +4723,26 @@ import {
         }
 
         function ve() {
+            let e = {
+                ...t.settings
+            };
+            delete e.feedbackWatching, delete e.cloudBackup, delete e.account;
+            let {
+                push: r,
+                bedtime: a,
+                supplementReminder: o,
+                treatmentReminder: i,
+                ...l
+            } = e.reminders;
             return {
                 app: "HydroPro Tracker",
                 exportedAt: (new Date).toISOString(),
-                version: 2,
+                version: SCHEMA_VERSION,
                 logs: t.logs,
                 activeSleepSession: t.activeSleepSession,
                 settings: {
-                    goalOz: t.settings.goalOz,
-                    goalProtein: t.settings.goalProtein,
-                    goalCalories: t.settings.goalCalories,
-                    goalSleepHours: t.settings.goalSleepHours,
-                    showWater: t.settings.showWater,
-                    showProtein: t.settings.showProtein,
-                    showCalories: t.settings.showCalories,
-                    showSleep: t.settings.showSleep,
-                    showWeight: t.settings.showWeight,
-                    showSupplements: t.settings.showSupplements,
-                    showTreatments: t.settings.showTreatments,
-                    showExercise: t.settings.showExercise,
-                    testerName: t.settings.testerName,
-                    presets: t.settings.presets,
-                    supplements: t.settings.supplements,
-                    treatments: t.settings.treatments,
-                    reminders: {
-                        inApp: t.settings.reminders.inApp,
-                        calendar: t.settings.reminders.calendar
-                    }
+                    ...e,
+                    reminders: l
                 }
             }
         }
@@ -4749,45 +4785,20 @@ import {
             }
             if (!r || "object" != typeof r || !r.logs || !r.settings) return void ce("That file doesn't look like a HydroPro backup.");
             let a = t,
-                o = {
-                    logs: $S(r.logs || {}),
-                    activeSleepSession: r.activeSleepSession || null,
-                    settings: {
-                        goalOz: r.settings.goalOz || ES.settings.goalOz,
-                        goalProtein: r.settings.goalProtein || ES.settings.goalProtein,
-                        goalCalories: r.settings.goalCalories || ES.settings.goalCalories,
-                        goalSleepHours: r.settings.goalSleepHours || ES.settings.goalSleepHours,
-                        showWater: "boolean" == typeof r.settings.showWater ? r.settings.showWater : ES.settings.showWater,
-                        showProtein: "boolean" == typeof r.settings.showProtein ? r.settings.showProtein : ES.settings.showProtein,
-                        showCalories: "boolean" == typeof r.settings.showCalories ? r.settings.showCalories : ES.settings.showCalories,
-                        showSleep: "boolean" == typeof r.settings.showSleep ? r.settings.showSleep : ES.settings.showSleep,
-                        showWeight: "boolean" == typeof r.settings.showWeight ? r.settings.showWeight : ES.settings.showWeight,
-                        showSupplements: "boolean" == typeof r.settings.showSupplements ? r.settings.showSupplements : ES.settings.showSupplements,
-                        showTreatments: "boolean" == typeof r.settings.showTreatments ? r.settings.showTreatments : ES.settings.showTreatments,
-                        showExercise: "boolean" == typeof r.settings.showExercise ? r.settings.showExercise : ES.settings.showExercise,
-                        testerName: "string" == typeof r.settings.testerName ? r.settings.testerName : ES.settings.testerName,
-                        presets: FS(r.settings),
-                        supplements: US(r.settings),
-                        treatments: Array.isArray(r.settings.treatments) ? r.settings.treatments : ES.settings.treatments,
-                        feedbackWatching: t.settings.feedbackWatching,
-                        cloudBackup: t.settings.cloudBackup,
-                        account: t.settings.account,
-                        reminders: {
-                            inApp: {
-                                ...ES.settings.reminders.inApp,
-                                ...r.settings.reminders && r.settings.reminders.inApp || {}
-                            },
-                            calendar: {
-                                ...ES.settings.reminders.calendar,
-                                ...r.settings.reminders && r.settings.reminders.calendar || {}
-                            },
-                            push: t.settings.reminders.push,
-                            bedtime: t.settings.reminders.bedtime,
-                            supplementReminder: t.settings.reminders.supplementReminder,
-                            treatmentReminder: t.settings.reminders.treatmentReminder
-                        }
-                    }
-                };
+                o = migrate(r);
+            o.settings = {
+                ...o.settings,
+                feedbackWatching: t.settings.feedbackWatching,
+                cloudBackup: t.settings.cloudBackup,
+                account: t.settings.account,
+                reminders: {
+                    ...o.settings.reminders,
+                    push: t.settings.reminders.push,
+                    bedtime: t.settings.reminders.bedtime,
+                    supplementReminder: t.settings.reminders.supplementReminder,
+                    treatmentReminder: t.settings.reminders.treatmentReminder
+                }
+            };
             n(o), ce("Backup restored.", () => n(a))
         }
         if ((0, React.useEffect)(() => {
@@ -4796,65 +4807,7 @@ import {
                         let e = localStorage.getItem(cS);
                         if (e) {
                             let t = JSON.parse(e);
-                            return {
-                                logs: $S(t.logs || {}),
-                                activeSleepSession: t.activeSleepSession || null,
-                                settings: {
-                                    goalOz: t.settings && t.settings.goalOz ? t.settings.goalOz : ES.settings.goalOz,
-                                    goalProtein: t.settings && t.settings.goalProtein ? t.settings.goalProtein : ES.settings.goalProtein,
-                                    goalCalories: t.settings && t.settings.goalCalories ? t.settings.goalCalories : ES.settings.goalCalories,
-                                    goalSleepHours: t.settings && t.settings.goalSleepHours ? t.settings.goalSleepHours : ES.settings.goalSleepHours,
-                                    goalWeight: t.settings && t.settings.goalWeight ? t.settings.goalWeight : ES.settings.goalWeight,
-                                    goalExerciseMinutes: t.settings && t.settings.goalExerciseMinutes ? t.settings.goalExerciseMinutes : ES.settings.goalExerciseMinutes,
-                                    showWater: t.settings && "boolean" == typeof t.settings.showWater ? t.settings.showWater : ES.settings.showWater,
-                                    showProtein: t.settings && "boolean" == typeof t.settings.showProtein ? t.settings.showProtein : ES.settings.showProtein,
-                                    showCalories: t.settings && "boolean" == typeof t.settings.showCalories ? t.settings.showCalories : ES.settings.showCalories,
-                                    showSleep: t.settings && "boolean" == typeof t.settings.showSleep ? t.settings.showSleep : ES.settings.showSleep,
-                                    showWeight: t.settings && "boolean" == typeof t.settings.showWeight ? t.settings.showWeight : ES.settings.showWeight,
-                                    showSupplements: t.settings && "boolean" == typeof t.settings.showSupplements ? t.settings.showSupplements : ES.settings.showSupplements,
-                                    showTreatments: t.settings && "boolean" == typeof t.settings.showTreatments ? t.settings.showTreatments : ES.settings.showTreatments,
-                                    showExercise: t.settings && "boolean" == typeof t.settings.showExercise ? t.settings.showExercise : ES.settings.showExercise,
-                                    feedbackWatching: t.settings && "boolean" == typeof t.settings.feedbackWatching ? t.settings.feedbackWatching : ES.settings.feedbackWatching,
-                                    testerName: t.settings && "string" == typeof t.settings.testerName ? t.settings.testerName : ES.settings.testerName,
-                                    cloudBackup: {
-                                        ...ES.settings.cloudBackup,
-                                        ...t.settings && t.settings.cloudBackup || {}
-                                    },
-                                    account: {
-                                        ...ES.settings.account,
-                                        ...t.settings && t.settings.account || {}
-                                    },
-                                    presets: FS(t.settings),
-                                    supplements: US(t.settings),
-                                    treatments: t.settings && Array.isArray(t.settings.treatments) ? t.settings.treatments : ES.settings.treatments,
-                                    reminders: {
-                                        inApp: {
-                                            ...ES.settings.reminders.inApp,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.inApp || {}
-                                        },
-                                        calendar: {
-                                            ...ES.settings.reminders.calendar,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.calendar || {}
-                                        },
-                                        push: {
-                                            ...ES.settings.reminders.push,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.push || {}
-                                        },
-                                        bedtime: {
-                                            ...ES.settings.reminders.bedtime,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.bedtime || {}
-                                        },
-                                        supplementReminder: {
-                                            ...ES.settings.reminders.supplementReminder,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.supplementReminder || {}
-                                        },
-                                        treatmentReminder: {
-                                            ...ES.settings.reminders.treatmentReminder,
-                                            ...t.settings && t.settings.reminders && t.settings.reminders.treatmentReminder || {}
-                                        }
-                                    }
-                                }
-                            }
+                            return migrate(t)
                         }
                     } catch {}
                     return JSON.parse(JSON.stringify(ES))
