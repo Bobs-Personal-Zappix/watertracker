@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 17, 2026 · Deployed version: 3.16.0*
+*As of: August 20, 2026 · Deployed version: 3.18.0*
 
 ---
 
@@ -65,6 +65,8 @@ Bundle is ~702KB minified, ~180KB gzipped.
 
 **Deploy:** `bundle.js` → `site/app/bundle.js`, `CHANGELOG.md` → repo root, via GitHub web UI. Worker changes need a separate `wrangler deploy`. D1 migrations run separately via `wrangler d1 execute`.
 
+**Development environment:** WSL2 + Claude Code (`OPS-04`, `OPS-05`) — fully operational as of Aug 19. Front-end deploy: commit `site/app/bundle.js` + `CHANGELOG.md`, `git push`; Cloudflare Pages serves from the repo. Worker deploy: `wrangler deploy` from `worker/` — separate step, first successful deploy from this clone Aug 20 (`OPS-09`). D1 migrations: `wrangler d1 execute hydropro-db --remote --file=<migration>` from `worker/`; run by Rob, never by Claude Code.
+
 **Service worker is network-first** (deliberate — an earlier cache-first version stranded users on stale builds). `_headers` forces no-cache on `/app/*`.
 
 ---
@@ -86,7 +88,28 @@ Bundle is ~702KB minified, ~180KB gzipped.
 5. **Single-blob data model.** History is one JSON blob in `account_backups.data`. Cannot answer any aggregate or per-clinic question, which is the entire B2B proposition. → `ARCH-OPEN-02`
 6. **Schema fragility.** The load path rebuilds settings field-by-field from hardcoded whitelists; a new field must be added in ~4 places or it silently vanishes on reload. Has already caused one real bug.
 7. **Legal/compliance unaddressed.** FTC Health Breach Notification Rule and state consumer-health-privacy laws apply to consumer health apps; the clinic path may trigger HIPAA obligations. → `LEGAL-OPEN-01`
-8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate.
+8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
+
+---
+
+## What shipped Aug 19–20, 2026 (v3.17.0)
+
+- **Worker source reconciled** — real deployed `worker.js` (728 lines: auth, share, backup, feedback, push, cron) committed for the first time. `wrangler.toml` has real values; no more sanitized placeholders. `ARCH-OPEN-01` Worker side resolved.
+- **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`. Auth and sharing now have a real database backing them.
+- **Retention analytics fully live** (`ARCH-OPEN-06`, v3.17–3.18) — `POST /api/progress` merged: writes opaque id + server date to `user_activity` (D1) for every caller. Coverage fix (3b) shipped in v3.18.0: `wtDeviceId()` + `wtActivityPing()` mount effect fires unconditionally on app open regardless of push status. Both push-subscribed and non-push users confirmed producing `user_activity` rows. Retention clock running, full coverage, from Aug 20.
+- **jsdom harness runnable** (`OPS-08`) — `node tools/harness.js site/app/bundle.js` boots clean; `npm run lint:bundle` baseline: 11 pre-existing no-undef errors.
+- **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
+- **`env.RESEND_FROM_EMAIL`** — optional undocumented var; falls back to `HydroPro Tracker <login@hydroprotracker.com>` if unset.
+
+---
+
+## Current direction (Aug 18, 2026)
+
+**Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
+
+Working sequence (updated Aug 20): bundle coverage fix (3b, `wtDeviceId`/`wtActivityPing`) → front-end source reconciliation (`ARCH-OPEN-01` front-end, then `ARCH-OPEN-05` versioned schema) → server as source of truth (`ARCH-OPEN-04`) → Config & Onboarding redesign (`UX-OPEN-01`) → clinic-side build (`ARCH-OPEN-02` normalized model, dashboard, multi-tenancy, billing).
+
+Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — the most time-sensitive open item), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 
 ---
 

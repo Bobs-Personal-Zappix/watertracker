@@ -269,8 +269,8 @@ Replace the hand-maintained field whitelists in the load path (`One()`, `vj()`, 
 
 **ARCH-OPEN-06 — Retention analytics via the Worker.**
 `POST /api/progress` merged: D1 retention write (opaque id + server-assigned UTC date to `user_activity`) runs for every caller before the KV progress save, which is preserved intact for push subscribers and the cron job. Full D1 schema migrated: 6 tables (`users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`). Deployed Aug 20, 2026 — first row recorded same day.
-*Coverage gap (known, accepted):* non-push users not yet counted — the client only calls `/api/progress` when `push.id` is set. Requires bundle coverage fix (3b): `wtDeviceId` + `wtActivityPing` mount effect, deferred to next session. The Worker route already handles any id unconditionally, so when the bundle fix ships no further Worker changes are needed.
-*Status:* **Deployed (Worker side)** · retention clock running from Aug 20, 2026
+*Coverage gap closed (Aug 20, 2026):* bundle coverage fix (3b) shipped as v3.18.0 — `wtDeviceId()` + `wtActivityPing()` + mount-only effect added to `site/app/bundle.js`. All users, push-subscribed or not, now generate a `user_activity` row via a `{id}`-only `POST /api/progress` on app mount. Verified on real device: both push-subscribed and non-push users confirmed producing rows in `user_activity`.
+*Status:* **Fully deployed and verified** · Aug 20, 2026
 
 **LEGAL-OPEN-01 — Compliance path, including whether to accept HIPAA obligations.**
 The clinic path may make HydroPro a Business Associate. Separately, the FTC Health Breach Notification Rule and Washington's My Health My Data Act apply to consumer health apps outside HIPAA. Needs a digital-health attorney, not a decision made in-app.
@@ -278,4 +278,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-01 approach locked)*
+*Last updated: August 20, 2026 (ARCH-OPEN-06 fully closed, ARCH-OPEN-01 approach locked)*
