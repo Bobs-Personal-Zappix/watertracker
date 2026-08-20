@@ -10,7 +10,7 @@
 
 **Status values:** `Locked` (settled, don't revisit without cause) · `Provisional` (working assumption, expected to firm up) · `Open` (needs a call) · `Superseded`
 
-**ID prefixes:** `STRAT` strategy/positioning · `ARCH` architecture · `PROD` product scope · `UX` interface · `OPS` process/tooling
+**ID prefixes:** `STRAT` strategy/positioning · `ARCH` architecture · `PROD` product scope · `UX` interface · `OPS` process/tooling · `LEGAL` legal/compliance
 
 ---
 
@@ -62,6 +62,11 @@ Considered having each user export weekly from their device/account and send it 
 *Why:* (1) it does not change compliance posture — BA status turns on processing PHI for a paying clinic, not on the transport, so a forwarded ZIP is the same exposure as an API call; (2) engineering is *worse* than the API — five undocumented, silently-drifting archive formats with no contract, versus versioned APIs with changelogs; (3) it violates the locked UX doctrine (under-5-second interaction, grandmother test, anti-guilt) — a recurring weekly chore is the exact abandonment pattern the design avoids. Platform specifics: Health Connect's scheduled export is an encrypted ZIP for its own re-import, unreadable by third parties; Apple Health export is manual, unfiltered lifetime XML; Oura PATs are deprecated, so user-supplied tokens are no longer possible.
 *Exception retained:* Apple Shortcuts can read HealthKit on a schedule and POST to a URL without a native wrapper. Not a product feature (iOS-only, fragile, per-user setup), but usable as a cheap pilot instrument to test whether a clinic acts on wearable data before committing to real integration.
 *Status:* **Locked** · Aug 17, 2026
+
+**STRAT-10 — Clinic-first sequencing.**
+Clinic distribution (B2B2C) gets priority for attention and roadmap sequencing; consumer continues as a downstream byproduct. Does not narrow `STRAT-05` — both acquisition ramps remain in scope. Resolves `STRAT-OPEN-01`.
+*Why:* clinic conversations are perishable — an operator in an active conversation may commit elsewhere if nothing materializes. Current consumer testers are friendly users who tolerate waiting. Where one opportunity decays and the other doesn't, sequence toward the decaying one. Market logic (near-zero CAC, clear clinic ROI, crowded consumer category) points the same direction. Explicit call by Rob.
+*Status:* **Locked** · Aug 18, 2026
 
 ---
 
@@ -146,7 +151,7 @@ Goal counts treatments actually due today; done counts those actually logged tod
 
 **UX-06 — Navigation and titles.**
 Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STATS:" + date, "Setup for:" + date, "Settings" (no date).
-*Status:* **Locked** · Aug 17, 2026
+*Status:* **Locked** · Aug 17, 2026 — *note: `UX-OPEN-01` proposes renaming Setup → "My Plan" with a matching header change. If that proposal is accepted, this entry is amended, not discarded; nav order and the other two titles stand.*
 
 **UX-07 — Tile order on Log It!**
 Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
@@ -161,6 +166,15 @@ Moved off Settings.
 Today's Log guaranteed ≥50% of viewport; To Do Today scrolls internally when long.
 *Why:* To Do Today must stay visible while scrolling the day's log.
 *Status:* **Locked** · Aug 17, 2026
+
+---
+
+## Legal & compliance
+
+**LEGAL-01 — Zappix has no claim on HydroPro.**
+HydroPro is developed on Rob's personal PC, under his personal GitHub account (`Bobs-Personal-Zappix`, created personally), and his personal Claude Pro account (`OPS-04`). Its origin as a Zappix Claude Enterprise exercise does not create a claim: personal use of that workspace was permitted, and HydroPro is unrelated to Zappix's business line. Resolves `LEGAL-OPEN-02`.
+*Why:* both prongs are answered — authorized use of the workspace, and no overlap with the employer's line of business. Explicit call by Rob.
+*Status:* **Locked** · Aug 18, 2026
 
 ---
 
@@ -185,17 +199,40 @@ HydroPro's Claude Project and ongoing development move off the Zappix Enterprise
 *Why:* the project outgrew its origin as a Zappix Claude-learning exercise and now has independent product ambitions — it should be owned and resourced outside company infrastructure, avoiding quota conflict and ownership ambiguity. Claude Code also brings real repo access, git history, and proper test-suite runs (the kind that would have surfaced the source drift immediately).
 *Status:* **Locked** (decided) / execution in progress · Aug 18, 2026
 
+**OPS-05 — The repo carries its own continuity docs and enforced guardrails.**
+`CLAUDE.md` at the repo root holds the working rules; `docs/` holds DECISION-LOG.md, CURRENT-STATE.md, and ROADMAP-v2.md; `tools/harness.js` holds the jsdom harness; `.claude/settings.json` denies `npm run build*` and production `wrangler d1 execute`, and asks on `git push` / `wrangler deploy`.
+*Why:* Claude Code reads the repo, not Project knowledge — continuity docs only travel if they live in the repo. And `CLAUDE.md` is context, not an enforcement layer, so the two commands that could destroy shipped work are blocked at the permissions layer instead of merely discouraged.
+*Status:* **Locked** · Aug 18, 2026
+
+**OPS-06 — Design proposals get an `Open` entry when proposed, not when decided.**
+A proposal that isn't yet a decision still goes in the Open section as `UX-OPEN-nn` / `PROD-OPEN-nn`, one or two lines pointing at the full spec, following the existing `STRAT-OPEN` pattern.
+*Why:* the Configuration & Onboarding redesign was worked out in a session and nearly lost — it fit neither the "log decisions only" rule nor the knowledge files. The Open section is already the live agenda; proposals belong on it.
+*Status:* **Locked** · Aug 18, 2026
+
+**OPS-07 — Document updates are delivered as complete replacement files, never paste-in fragments.**
+When any knowledge file changes, the whole updated file is produced for Rob to save over the old one. No "add this entry," no "paste this in," no hand-editing.
+*Why:* explicit call by Rob. Hand-merging fragments across a growing set of documents is error-prone, and a missed paste silently corrupts the continuity mechanism the whole project depends on (`OPS-02`).
+*Status:* **Locked** · Aug 18, 2026
+
+**OPS-08 — jsdom harness is now runnable.**
+`tools/harness.js` fixed for jsdom 25 (`getInternalVMContext`); a minimal root `package.json` + `eslint.config.js` added. `node tools/harness.js site/app/bundle.js` boots the real bundle clean; `npm run lint:bundle` runs a no-undef sweep (baseline: 11 pre-existing vendor-guard errors).
+*Why:* the verification steps CLAUDE.md assumes were not actually runnable before this. Bundle edits can now be booted and lint-checked, not just static-checked.
+*Status:* **Locked** · Aug 19, 2026
+
+**OPS-09 — Worker deploy path established from the WSL2 clone.**
+First successful `wrangler deploy` from the local clone, Aug 20, 2026. `worker/` has its own `package.json` with `@pushforge/builder` and wrangler 3. `worker/package-lock.json` committed. Note: wrangler 4 is available — upgrade before the next Worker deploy (`npm install --save-dev wrangler@4` in `worker/`).
+*Why:* prior to this session, the committed `worker.js` and `wrangler.toml` were sanitized templates; the Worker had never been deployed from this clone.
+*Status:* **Locked** · Aug 20, 2026
+
 ---
 
 ## Open — needs a decision
 
 These are recommendations or forks, **not** decisions. They double as the agenda for the strategy sessions.
 
-**STRAT-OPEN-01 — Clinic-first (B2B2C) or consumer-first?**
-Recommendation on the table: clinic-first, with consumer as a downstream byproduct. Rationale: DripBar operators asked unprompted for a feature that solves a revenue problem, distribution comes via the clinic at near-zero CAC, and consumer health tracking is brutally crowded. **Not yet decided.**
-
-**STRAT-OPEN-02 — Business model and pricing.**
+**STRAT-OPEN-02 — Business model and pricing.** — *now the most time-sensitive open item.*
 Proposed shape: clinic subscription per location, consumer free as distribution, consumer premium only after retention proves out. Explicitly ruled out: data monetization.
+*Urgency (Aug 18):* `STRAT-10` makes clinic conversations the active track, and those conversations produce the question "what does this cost." There is no answer on file. Needed **before the next clinic meeting**, not after — walking in without a price frame either stalls the conversation or anchors it somewhere unchosen.
 
 **STRAT-OPEN-03 — Validation plan before building clinic infrastructure.**
 Proposed: 2–3 clinics, ~10 patients each, current app as-is; measure retention and share-link generation. **Not yet agreed.**
@@ -203,11 +240,22 @@ Proposed: 2–3 clinics, ~10 patients each, current app as-is; measure retention
 **STRAT-OPEN-04 — Characterize the wearable-integration request before scoping it.**
 A tester or clinic asked for health-platform integration; the literal ask was never recorded and exists only in recall or the feedback KV. Recover it, then determine: (a) tester or clinic — different signal weight entirely, since the DripBar signal counted because it was unprompted and tied to clinic revenue; (b) which specific metric they want to stop typing — sleep/weight implies entry friction (on-thesis, and possibly a scope signal that those two tiles compete with hardware), steps/HR implies a dashboard request (off-thesis per roadmap §5); (c) if a clinic, whether they want to receive the data or just enable the patient. Bring to the STRAT-OPEN-03 clinic conversations rather than as separate outreach. **No effort estimate is meaningful until this is answered.**
 
-**ARCH-OPEN-01 — Source reconciliation approach.**
-Proposed staged path: (1) extract the ~6,500 lines of app code from the bundle, wire real npm imports, commit as source — kills the drift risk immediately; (2) rename identifiers in tested batches; (3) convert to JSX gradually or never. Alternative: reconstruct from the 3,294-line stale source and port features forward.
+**UX-OPEN-01 — Configuration & Onboarding redesign: approve, amend, or defer.**
+Full spec in `HydroPro-Config-Onboarding-Redesign.md` (project knowledge). Proposes: rename Setup → "My Plan"; merge the 8 tracker toggles and 6 goal inputs into one row per tracker; collapse the three unbounded CRUD lists to summary rows; consolidate Settings to six status rows; rebuild "Your data" as a single backed-up/not-backed-up status with ranked options behind it; group Reminders by intent; promote the tutorial and fire it on first run; add two onboarding ramps (clinic protocol code / self-serve) both ending in a first logged entry.
+*Dependencies:* `ARCH-OPEN-01` (source reconciliation) should land first — this relocates large JSX blocks, which is the worst kind of change to attempt on a minified bundle. Analytics should land before the onboarding half ships, or its effect on time-to-first-log and D7 is unmeasurable. `ARCH-OPEN-05` (versioned schema) should land before protocol provenance.
+*Update (Aug 18):* items 8–10 of the spec's §7 were gated on `STRAT-OPEN-01`. `STRAT-10` resolves that gate, and clinic-first **promotes** them — the protocol code is the clinic's distribution mechanism and light white-labeling is cheap and persuasive in a sales conversation. Note the spec cites the versioned-schema prerequisite as `ARCH-OPEN-02`; that is a mis-reference, and the correct ID is `ARCH-OPEN-05`.
+*Amends:* `UX-06` (Setup → My Plan, header text) if accepted.
+*Also carries five open questions* in the spec's §8 — off-tracker visibility, the caregiver case, where the appointment date lives, whether the clinic-code prompt shows to everyone, and whether "My Plan" is the right name. **Not yet decided.**
+
+**ARCH-OPEN-01 — Source reconciliation approach: extract from live bundle.**
+Chosen approach: extract the ~6,500 lines of app code from the deployed `site/app/bundle.js`, wire real npm imports, commit as source. Identifiers stay mangled initially; the test suite becomes meaningful immediately. Alternative (reconstruct from stale `src/App.jsx`) rejected — starting from months-behind source with unmapped divergence carries higher risk of silent omissions.
+*Why:* extracting from the deployed bundle means the committed source matches what users actually run. Nothing can revert months of shipped work. Explicit call by Rob.
+*Worker side resolved (Aug 20):* the real deployed `worker.js` (728 lines) is now committed, `wrangler.toml` has real values, first `wrangler deploy` from this clone succeeded (`OPS-09`).
+*Status:* **Locked** (approach decided) — execution follows bundle coverage fix (3b) · Aug 20, 2026
 
 **ARCH-OPEN-02 — Data model: when to move off the single-blob store.**
 Currently one JSON blob in `account_backups.data`. Cannot answer "which patients are lapsing" or "what's D30 retention" — i.e. the entire B2B product. Proposed: keep the blob for sync, add normalized `log_entries` + `user_activity` rows.
+*Update (Aug 20, 2026):* `user_activity` shipped as part of `ARCH-OPEN-06` (retention analytics). The broader normalized model (`log_entries`, lapsing-patient queries) remains open — that's the clinic dashboard prerequisite and the next engineering priority after the bundle coverage fix.
 
 **ARCH-OPEN-03 (revised) — Health-platform integration: scope and sequencing.**
 Widened from "native wrapper for HealthKit / Health Connect?" to the full question. Forks: (a) drop the ambition entirely; (b) Capacitor wrapper, push-first to HealthKit + Health Connect — collapses Samsung and most Android into one integration, but forces ARCH-OPEN-04 (Access removal), LEGAL-OPEN-01, and provenance work in ARCH-OPEN-02; (c) cloud pull only (Oura ± Google Health) — cheapest, but off-thesis per roadmap §5; (d) aggregator (Terra/Thryve/Validic/Rook) — one integration, holds the Garmin partnership, but a third party in the middle of health data. Notes: Garmin's partner program is closed to new applicants; Google restricted health scopes require CASA assessment; the legacy Fitbit Web API decommissions Sept 2026.
@@ -215,13 +263,19 @@ Widened from "native wrapper for HealthKit / Health Connect?" to the full questi
 **ARCH-OPEN-04 — Server as source of truth, and removing Cloudflare Access.**
 Standing data-loss exposure: history lives in one browser's storage. Access also can't scale past an invited list.
 
+**ARCH-OPEN-05 — Versioned schema and deep-merge migrations.**
+Replace the hand-maintained field whitelists in the load path (`One()`, `vj()`, `yj()`) with a versioned schema, deep-merge-against-defaults, and an explicit migration chain. Roughly 100 lines; retires the silent-field-loss bug class rather than fixing it once more. Cheap in real source, miserable in a minified bundle — so it belongs immediately after `ARCH-OPEN-01`. Prerequisite for protocol provenance in `UX-OPEN-01`.
+*Created Aug 18, 2026 — this work previously had no ID and was cited incorrectly as `ARCH-OPEN-02` in the redesign spec.*
+
+**ARCH-OPEN-06 — Retention analytics via the Worker.**
+`POST /api/progress` merged: D1 retention write (opaque id + server-assigned UTC date to `user_activity`) runs for every caller before the KV progress save, which is preserved intact for push subscribers and the cron job. Full D1 schema migrated: 6 tables (`users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`). Deployed Aug 20, 2026 — first row recorded same day.
+*Coverage gap (known, accepted):* non-push users not yet counted — the client only calls `/api/progress` when `push.id` is set. Requires bundle coverage fix (3b): `wtDeviceId` + `wtActivityPing` mount effect, deferred to next session. The Worker route already handles any id unconditionally, so when the bundle fix ships no further Worker changes are needed.
+*Status:* **Deployed (Worker side)** · retention clock running from Aug 20, 2026
+
 **LEGAL-OPEN-01 — Compliance path, including whether to accept HIPAA obligations.**
 The clinic path may make HydroPro a Business Associate. Separately, the FTC Health Breach Notification Rule and Washington's My Health My Data Act apply to consumer health apps outside HIPAA. Needs a digital-health attorney, not a decision made in-app.
 *Addendum (Aug 17, 2026):* Two additional independent triggers identified. (1) App-store distribution, required for any native health-platform integration, brings its own privacy-policy, data-deletion, and health-data-declaration obligations. (2) If a clinic wants to *receive* patient wearable data rather than the patient merely using it, that is materially closer to Business Associate territory than patient-entered adherence data shared via a snapshot link — in that case, legal consultation must precede the build, not follow it.
 
-**LEGAL-OPEN-02 — IP ownership: does Zappix have any claim on HydroPro?**
-HydroPro began as a Zappix "learn Claude / product management" exercise before growing into an independent product, and has now been moved to Rob's personal account. Whether any work-product, IP-assignment, or use-of-company-resources questions attach is worth clarifying so it can't surface later during clinic-partner or investor diligence. Can likely be raised in the same digital-health attorney engagement as LEGAL-OPEN-01. **Not a blocker — flag so it doesn't drift.**
-
 ---
 
-*Last updated: August 18, 2026*
+*Last updated: August 20, 2026 (ARCH-OPEN-01 approach locked)*
