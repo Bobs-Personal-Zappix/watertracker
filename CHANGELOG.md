@@ -22,9 +22,8 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ## [3.22.0] — 2026-08-20
 
-`UX-OPEN-01` Phase 1 — "My Plan" page redesign, in `src/app.js` only. **`site/app/bundle.js` is not
-updated by this release — the deployed app is unaffected.** Deploying this redesign is a separate
-decision, same pattern as `ARCH-OPEN-01` and `ARCH-OPEN-05` before it.
+`UX-OPEN-01` Phase 1 — "My Plan" page redesign, built in `src/app.js`. **Deployed to
+`site/app/bundle.js` the same day** — see "Deploy" below.
 
 ### Changed — Setup renamed to "My Plan" throughout
 - Bottom-nav tab label: "Setup" → "My Plan".
@@ -68,6 +67,21 @@ behavior, live CRUD counts, and expand-on-tap all work end-to-end, not just in s
 **Not yet verified:** real-browser visual check (row spacing, goal-input width, chevron rotation) —
 jsdom has no layout engine. `docs/DECISION-LOG.md` amendment for the "My Plan" naming and
 hide-entirely decisions is drafted but not yet applied to the log.
+
+### Deploy — first build-pipeline deploy to `site/app/bundle.js`
+`ARCH-OPEN-01`'s closure made `src/app.js` + `esbuild.config.js` the source of truth (see
+`CLAUDE.md`'s updated "Source of truth" section); this is the first time `site/app/bundle.js` was
+produced by that pipeline rather than hand-edited. Prerequisite fix caught before deploying:
+`esbuild.config.js` still had `minify:false` from its Gate B diagnostic origin — building with it
+as-is would have shipped an unminified, ~2x-larger bundle and never converged on the deployed
+lint baseline. Fixed to `minify:true` first (separate commit), then the full six-step sequence run
+clean: build → harness+lint on `bundle.build.js` → copy to `bundle.js` → harness+lint on the exact
+deployed file. Final: `bundle.build.js` and `bundle.js` both at **11** no-undef errors (matching
+baseline — the old 13-vs-11 split no longer applies now that the build itself minifies), harness
+clean on both, and the full My Plan behavior check (header text, hide-entirely default, "Show all
+trackers" reveal, CRUD summary counts, expand-on-tap) re-verified against the exact deployed
+`bundle.js`, not just the build output. Real-browser check is still the open item — jsdom can't see
+layout.
 
 ---
 
