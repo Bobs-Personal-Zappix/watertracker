@@ -253,10 +253,13 @@ Chosen approach: extract from live bundle. Executed Aug 20, 2026.
 - `esbuild.config.js` — build pipeline authored from scratch (none existed). Output: `site/app/bundle.build.js` (gitignored, never deployed). `NODE_ENV=production` set; harness-verified clean boot.
 - `site/app/bundle.js` and `src/App.jsx` — untouched throughout. The deployed bundle remains the source of truth until the build output is verified to match production behavior.
 *Worker side resolved (Aug 20):* the real deployed `worker.js` (728 lines) is committed, `wrangler.toml` has real values, first `wrangler deploy` succeeded (`OPS-09`).
-*Remaining — two steps:*
-1. **Recharts version pin** — installed v3.10.1 (latest) differs from the older major in the deployed bundle; `@reduxjs/toolkit/reselect` adds 14 extra lint errors. Pin to the version the original bundle used. *Claude Code can do this alone.*
-2. **Identifier renaming** — mangled names (`er`, `Jn`, `zl`, etc.) work correctly but are unreadable. Rename in tested batches after recharts is pinned.
-*Status:* **In progress** — source extracted and build pipeline live · Aug 20, 2026
+*All gates passed (Aug 20, 2026):*
+- Source extracted: `src/app.js`, 6,104 lines, build pipeline via `esbuild.config.js`
+- Recharts pinned to 2.15.4 (v2 fingerprint matched from deployed bundle; `@reduxjs/toolkit`/`reselect` eliminated)
+- All 38 vendor identifiers renamed to real names across 7 batches; `XIcon` used instead of `X` to avoid a real local-variable collision
+- Harness clean after every batch; real-browser Stats verification confirmed by Rob on device
+- `site/app/bundle.js` remains the deployed artifact; `src/app.js` + `esbuild.config.js` now the source of truth for future edits
+*Status:* **Locked — complete** · Aug 20, 2026
 
 **ARCH-OPEN-02 — Data model: when to move off the single-blob store.**
 Currently one JSON blob in `account_backups.data`. Cannot answer "which patients are lapsing" or "what's D30 retention" — i.e. the entire B2B product. Proposed: keep the blob for sync, add normalized `log_entries` + `user_activity` rows.
@@ -283,4 +286,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-06 fully closed, ARCH-OPEN-01 source extracted)*
+*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 fully closed)*
