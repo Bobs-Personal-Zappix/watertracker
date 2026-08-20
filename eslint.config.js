@@ -4,7 +4,7 @@ const globals = require("globals");
 // See CLAUDE.md: never regenerate site/app/bundle.js from src/; this only checks it.
 module.exports = [
   {
-    files: ["site/app/bundle.js"],
+    files: ["site/app/bundle.js", "site/app/bundle.build.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "script",
