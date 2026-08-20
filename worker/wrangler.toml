@@ -21,5 +21,5 @@ database_id = "476d5b17-f469-4a88-bdfe-50dff6dba624"
 # Public key and contact email are not secret - safe to commit.
 # VAPID_PRIVATE_KEY is the one real secret - set with `wrangler secret put`, see README.
 [vars]
-VAPID_PUBLIC_KEY = "REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY"
-VAPID_CONTACT_EMAIL = "mailto:you@example.com"
+VAPID_PUBLIC_KEY = "BP6tTbRxaHf0AHevCIdKZp187h1kiPMNBiH2Wvvv_iqtbdUsc6Em7XwVnSXZxmQYbo9bLCSXmQ5XneSUtBXICKo"
+VAPID_CONTACT_EMAIL = "mailto:rob@hydroprotracker.com"

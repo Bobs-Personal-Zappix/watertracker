@@ -29,7 +29,7 @@ is a hard rule, not a preference.
 site/app/bundle.js     the real deployed artifact — edit this
 site/app/              config.js, index.html, manifest.json, service-worker.js, icons
 src/App.jsx            STALE. Reference only. Do not build from it.
-worker/src/worker.js   Cloudflare Worker: push, auth, shares, account backup, 5-min cron
+worker/src/worker.js   Cloudflare Worker: push, auth, shares, account backup, 15-min cron
 tools/harness.js       jsdom smoke-test harness — boots the real bundle and drives the UI
 docs/                  DECISION-LOG.md, CURRENT-STATE.md, ROADMAP-v2.md
 CHANGELOG.md
