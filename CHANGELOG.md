@@ -20,6 +20,36 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.26.0] — 2026-08-20
+
+`UX-OPEN-01` follow-up — three targeted fixes on top of Phase 1c's tile sizing, built in
+`src/app.js` and deployed to `site/app/bundle.js` via the full build/harness/lint pipeline.
+
+### Changed — Log It! tracker tiles enlarged
+`.wt-tracker-col` min-height 132px → 160px, padding 12px → 16px; label 16px → 18px, value
+22px → 24px; the gauge ring inside each tile 82px → 103px; all eight lucide tracker icons
+16 → 22px.
+
+### Changed — My Plan card icon container enlarged 25%
+`.wt-plan-card-icon` (the circular icon background behind each `TrackerRow` icon) 40px → 50px,
+matching the same tile-enlargement pass.
+
+### Fixed — My Plan grid horizontal overflow
+`.wt-plan-grid` and `.wt-plan-card` gained explicit `width:100%`/`min-width:0` plus
+`box-sizing:border-box`, and the My Plan tab's root now wraps in a `div` with
+`overflowX:hidden`, so the larger cards can no longer push the page wider than the viewport.
+
+### Changed — bottom-sheet stacking and sizing
+`.wt-nav` z-index 40 → 200, `.wt-backdrop` 50 → 150, `.wt-sheet` gains an explicit z-index:160.
+`.wt-sheet` also gains `max-height:75vh; overflow-y:auto` and switches `max-width` from a
+hardcoded 420px to `100%` (plus `box-sizing:border-box`) so long sheet content scrolls instead
+of overflowing. **Note for Rob's real-device check:** `.wt-sheet` is shared by every bottom
+sheet in the app (not just My Plan's `TrackerSheet`), so this affects all of them. Also worth
+double-checking on a real device: nav (200) now stacks *above* backdrop (150) and sheet (160) —
+inverted from the previous ordering where the backdrop (50) covered the nav (40). If any sheet
+is meant to fully obscure the bottom nav while open, this ordering will look wrong even though
+it was built exactly as specified.
+
 ## [3.25.0] — 2026-08-20
 
 `UX-OPEN-01` Phase 1c — six targeted visual polish changes across My Plan, Log It!, Today, and
