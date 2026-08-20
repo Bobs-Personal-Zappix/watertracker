@@ -20,6 +20,82 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.25.0] — 2026-08-20
+
+`UX-OPEN-01` Phase 1c — six targeted visual polish changes across My Plan, Log It!, Today, and
+Stats, built in `src/app.js` and deployed to `site/app/bundle.js` the same day via the build
+pipeline. Also corrects the Settings-footer version string, stale at `"3.13.0"` since before this
+session's work began — now reads the real version.
+
+### Changed — tracker cards use Log It!'s own icons, now in color
+Investigated first, per instructions: Log It!'s tile icons (including Weight/Exercise/Treatments/
+Supplements) were never custom image assets — all eight are the same `lucide-react` components
+already used by My Plan's `TrackerRow`. No icon-source work was needed; only added a per-tracker
+background-tint + icon-color pair via inline style on `.wt-plan-card-icon`, one color set per
+tracker as specified.
+
+### Changed — toggle moved to the tracker card itself; sheet now goal-only
+The on/off toggle now lives top-right on each `TrackerRow` card and fires `onToggle` directly via
+`e.stopPropagation()`, without opening the bottom sheet. `TrackerSheet` dropped its "Show on Log
+It!" row entirely — title, close, goal input (if applicable), Save only.
+
+**Bug caught during this change, before it shipped anywhere:** the toggle `<button>` was originally
+nested inside the card's own `<button>` — invalid HTML that jsdom/browsers silently restructure,
+breaking click targeting unpredictably (confirmed empirically: a scratchpad test showed tapping the
+card body stopped working after the toggle was used). Fixed by making the card a `<div>` with
+`onClick` (matching the existing `.wt-tracker-col-clickable` pattern already used for Log It!
+tiles) instead of a nested interactive element.
+
+**Separately caught:** an unbalanced extra `)` in the rewritten `TrackerSheet` that `node --check`
+did not flag but `esbuild` correctly rejected outright — a reminder that a Node syntax check alone
+isn't sufficient for this file; the actual build is the real gate.
+
+### Changed — goal input in the bottom sheet is now much larger
+New `.wt-plan-goal-input` (28px/700/centered, 64px min-height) and `.wt-plan-goal-unit` (16px
+secondary-color label below the input, e.g. "oz / day") replace the default `.wt-field` input
+styling inside `TrackerSheet` only — the global `.wt-field` is untouched. Save button gets
+`.wt-plan-save-btn` (56px min-height, 17px/700).
+
+### Changed — Quick Presets and Self-Managed cards get colored icons
+`RegimenSummaryCard` gained `iconBg`/`iconColor` props, applied via inline style on a new
+`.wt-plan-card-icon`-styled container (reused from the tracker cards, sized down). Presets: `Zap`,
+`#F9A825`/`#FFFDE7`. Self-Managed: new `Users` icon (added to the `lucide-react` import block,
+already an installed dependency), `#00695C`/`#E0F2F1`.
+
+### Changed — Log It! tiles bigger, more defined border
+Investigated first: no `.wt-tile` class exists — the real class is `.wt-tracker-col`, and it had
+**no explicit `min-height` at all**, so "increase by ~20%" had no baseline to compute from. Added
+`min-height:132px` as a deliberate choice rather than an unmeasurable percentage (jsdom can't
+measure real rendered height either — same layout-engine limit as every visual change this
+session). Border: `1px solid var(--line)` → `2px solid rgba(11,32,56,.15)`. Padding: `8px 4px` →
+`12px 8px`. No font-size changes, per instruction.
+
+### Changed — Today and Stats section headers, bolder
+New `.wt-section-label-strong` (`font-size:14px; font-weight:700; color:var(--ink);
+letter-spacing:.01em;`) appended alongside the existing `.wt-section-label` class at the two
+`.wt-section-label` call sites in `RO` (Today) and the one in `FO` (Stats) — component names
+corrected from the brief's assumed `GO`/`DO`. Global `.wt-section-label` and My Plan's separate
+`.wt-plan-section-label` both untouched.
+
+### Testing
+Full six-step pipeline clean: build (708.7KB) → harness + lint (11 no-undef) on `bundle.build.js` →
+copied to `site/app/bundle.js` (725,708 bytes, byte-identical) → harness + lint re-run against the
+deployed file, same 11. Beyond that: a scratchpad-only harness variant (deleted after use, never
+committed) drove real interactions — confirmed icon colors are actually applied inline, tapping a
+toggle does not open the sheet while tapping elsewhere on the card does, the sheet's full rendered
+HTML shows the goal input/unit label/Save button with the right classes, and toggling a tracker off
+still correctly hides its card (unrelated confirmation that the Phase 1 hide-entirely behavior
+still works). One section-label instance (a "Subscriptions" sub-view nested inside `RO`, reachable
+only through additional in-page navigation not exercised by this harness) was verified by direct
+source read instead of at runtime — low risk for a plain className string addition, but flagged as
+the one check that isn't fully end-to-end.
+
+**Not yet verified:** real-browser visual check — icon color contrast, the top-right toggle's exact
+position, the enlarged goal input's proportions, and tile sizing all need eyes, not just DOM
+assertions.
+
+---
+
 ## [3.24.0] — 2026-08-20
 
 `UX-OPEN-01` Phase 1b follow-up — three UX fixes to the My Plan page, built in `src/app.js` and
