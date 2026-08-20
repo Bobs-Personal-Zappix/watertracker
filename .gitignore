@@ -1,5 +1,6 @@
 node_modules/
 .wrangler/
+site/app/bundle.build.js
 .dev.vars
 .env
 .env.*
