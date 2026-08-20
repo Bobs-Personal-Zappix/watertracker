@@ -275,6 +275,11 @@ Standing data-loss exposure: history lives in one browser's storage. Access also
 Replace the hand-maintained field whitelists in the load path (`One()`, `vj()`, `yj()`) with a versioned schema, deep-merge-against-defaults, and an explicit migration chain. Roughly 100 lines; retires the silent-field-loss bug class rather than fixing it once more. Cheap in real source, miserable in a minified bundle — so it belongs immediately after `ARCH-OPEN-01`. Prerequisite for protocol provenance in `UX-OPEN-01`.
 *Created Aug 18, 2026 — this work previously had no ID and was cited incorrectly as `ARCH-OPEN-02` in the redesign spec.*
 
+**ARCH-OPEN-05 — Versioned schema and deep-merge migrations.**
+Replaced three hand-maintained field whitelists in the load path with a single `migrate(stored)` function using `deepMergeDefaults` against `defaultSettings`. Export inverted from allowlist to denylist. `SCHEMA_VERSION=2` stamped with a migration-chain hook for future breaking changes. Fixes `goalWeight`/`goalExerciseMinutes` silent-drop bug in `src/app.js` (shipped v3.20.0); same bug patched in deployed `site/app/bundle.js` separately (v3.21.0, real-device verified Aug 20).
+*Why:* the silent-field-loss bug had already bitten sleep, weight, and supplements. The fix retires the whole bug class rather than patching it once more.
+*Status:* **Locked — complete** · Aug 20, 2026
+
 **ARCH-OPEN-06 — Retention analytics via the Worker.**
 `POST /api/progress` merged: D1 retention write (opaque id + server-assigned UTC date to `user_activity`) runs for every caller before the KV progress save, which is preserved intact for push subscribers and the cron job. Full D1 schema migrated: 6 tables (`users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`). Deployed Aug 20, 2026 — first row recorded same day.
 *Coverage gap closed (Aug 20, 2026):* bundle coverage fix (3b) shipped as v3.18.0 — `wtDeviceId()` + `wtActivityPing()` + mount-only effect added to `site/app/bundle.js`. All users, push-subscribed or not, now generate a `user_activity` row via a `{id}`-only `POST /api/progress` on app mount. Verified on real device: both push-subscribed and non-push users confirmed producing rows in `user_activity`.
@@ -286,4 +291,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 fully closed)*
+*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 closed, ARCH-OPEN-05 closed)*

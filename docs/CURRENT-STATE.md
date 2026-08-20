@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 20, 2026 · Deployed version: 3.18.0 (app) · 3.19.0 is dev-tooling only, no app change*
+*As of: August 20, 2026 · Deployed version: 3.21.0*
 
 ---
 
@@ -98,7 +98,8 @@ Bundle is ~702KB minified, ~180KB gzipped.
 - **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`. Auth and sharing now have a real database backing them.
 - **Retention analytics fully live** (`ARCH-OPEN-06`, v3.17–3.18) — `POST /api/progress` merged: writes opaque id + server date to `user_activity` (D1) for every caller. Coverage fix (3b) shipped in v3.18.0: `wtDeviceId()` + `wtActivityPing()` mount effect fires unconditionally on app open regardless of push status. Both push-subscribed and non-push users confirmed producing `user_activity` rows. Retention clock running, full coverage, from Aug 20.
 - **jsdom harness runnable** (`OPS-08`) — `node tools/harness.js site/app/bundle.js` boots clean; `npm run lint:bundle` baseline: 11 pre-existing no-undef errors.
-- **Source reconciliation nearly complete** (`ARCH-OPEN-01`, Aug 20, v3.19.0) — `src/app.js` extracted (6,104 lines), all 38 vendor identifiers renamed to real names (`React`, `ReactDOM`, 12 recharts, 24 lucide-react), recharts pinned to 2.15.4, build pipeline verified clean. One gate remaining: real-browser Stats verification. `site/app/bundle.js` remains the deployed source of truth until that gate is confirmed.
+- **Source reconciliation complete** (`ARCH-OPEN-01`, Aug 20, v3.19.0) — `src/app.js` extracted (6,104 lines), all 38 vendor identifiers renamed, recharts pinned to 2.15.4, Stats tab real-device verified. `src/app.js` + `esbuild.config.js` are now the source of truth for future edits.
+- **Versioned schema live** (`ARCH-OPEN-05`, Aug 20, v3.20.0/3.21.0) — `migrate()` + `deepMergeDefaults` replace three hand-maintained field whitelists. Export inverted to denylist. `goalWeight`/`goalExerciseMinutes` silent-drop bug fixed in `src/app.js` (v3.20.0) and deployed `bundle.js` (v3.21.0, real-device verified).
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
 - **`env.RESEND_FROM_EMAIL`** — optional undocumented var; falls back to `HydroPro Tracker <login@hydroprotracker.com>` if unset.
 
@@ -108,7 +109,7 @@ Bundle is ~702KB minified, ~180KB gzipped.
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-Working sequence (updated Aug 20): real-browser Stats verification (close `ARCH-OPEN-01`) → versioned schema (`ARCH-OPEN-05`) → server as source of truth (`ARCH-OPEN-04`) → Config & Onboarding redesign (`UX-OPEN-01`) plus entry-flow UX improvements → clinic-side build (`ARCH-OPEN-02`).
+Working sequence (updated Aug 20): server as source of truth (`ARCH-OPEN-04`) → Config & Onboarding redesign (`UX-OPEN-01`) plus entry-flow UX improvements → clinic-side build (`ARCH-OPEN-02`). `ARCH-OPEN-01` and `ARCH-OPEN-05` fully closed.
 
 Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — the most time-sensitive open item), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 
