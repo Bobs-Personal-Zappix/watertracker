@@ -20,6 +20,66 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.20.0] — 2026-08-20
+
+`ARCH-OPEN-05` — versioned schema and deep-merge migrations, in the extracted `src/app.js`.
+**No change to `site/app/bundle.js` — the deployed app is unaffected by this release.** This is
+source-reconciliation/dev-tooling work only, same as `ARCH-OPEN-01`.
+
+### Changed — hand-maintained field whitelists replaced with a versioned schema
+- `SCHEMA_VERSION = 2` — matches the version number `ve()` (backup export) already stamped on
+  every export, previously written but never read on import. Now a real constant, threaded through
+  `migrate()` as a hook for future version-specific migrations (none needed yet).
+- `deepMergeDefaults(defaults, stored)` — new generic, type-driven recursive merge. For each key in
+  `defaultSettings`: booleans and strings are accepted from `stored` via `typeof` check (so a falsy
+  `false`/`""` survives instead of being treated as "missing"); numbers keep the pre-existing
+  truthy-fallback guard (a stored `0` still falls back to default — this defends against div-by-zero
+  in goal-percentage tiles, and was deliberate in the original hand-rolled checks, so it's preserved
+  rather than "fixed" as an inconsistency); plain objects recurse; arrays are taken wholesale via
+  `Array.isArray`, then reshaped separately.
+- `migrateSettingsShape()` + `normalizeTreatments()` — structural migrations that can't be expressed
+  as "fill in a missing key," reusing the existing `FS()` (presets) and `US()` (supplements)
+  normalizers as-is; `normalizeTreatments()` is new, mirroring `US()`'s shape (treatments and
+  supplements share the same adherence-schedule fields) since treatments previously had no
+  equivalent normalizer.
+- `migrate(stored)` — single entry point combining the above, now used by both the localStorage load
+  path and backup import. Replaces ~60 and ~50 lines of hand-maintained field-by-field merging,
+  respectively, with one call plus (for import only) an explicit re-pin of the handful of
+  device-local fields that must never come from an imported file regardless of whether the file has
+  them (`account`, `cloudBackup`, `feedbackWatching`, and the `push`/`bedtime`/`supplementReminder`/
+  `treatmentReminder` reminder subscriptions) — that pin-back is a deliberate business rule, not a
+  defaults problem, so it stays explicit rather than folding into the generic merge.
+- Backup export (`ve()`) inverted from a ~19-line allowlist to a denylist of the same device-local
+  field set above. New settings fields are included in exports by default from now on, instead of
+  requiring every future addition to be remembered in an allow-list — the failure direction that
+  used to silently drop fields now silently *over-includes* at worst, which is the safer default.
+
+### Fixed — `goalWeight` and `goalExerciseMinutes` silently dropped by backup export/import
+Found while tracing the three whitelists against each other: the localStorage load path included
+`goalWeight` and `goalExerciseMinutes`, but both `ve()` (export) and the old backup-import merge
+omitted them entirely. Exporting a backup and restoring it silently reset a user's weight and
+exercise goals to defaults. Fixed as a consequence of the generic merge (both fields are ordinary
+entries in `defaultSettings`, so they're covered automatically now) rather than patched individually.
+**This same bug still exists in the deployed `site/app/bundle.js` — this release does not fix
+production.** A separate, standalone bundle.js patch is needed to fix it for real users; tracked as
+an open item, not yet started.
+
+### Testing
+`node esbuild.config.js`: clean. `npx eslint site/app/bundle.build.js` no-undef count: 13, unchanged.
+`node tools/harness.js site/app/bundle.build.js`: exit 0, 8 tiles, all nav clean, zero runtime
+errors — but that smoke test only exercises the empty-storage default path. Additionally verified
+`migrate()` directly against a deliberately partial/legacy stored blob (missing most settings
+fields, the old split preset format, and a non-default falsy boolean) via a one-off harness variant,
+scratchpad-only, never committed: 16 assertions, all passing, including confirmation that `logs`
+data survives migration byte-identical. That check caught a real implementation mistake before it
+shipped anywhere — an early version of `migrate()` ran the generic merge over the *entire* default
+state including `logs`, whose default is `{}`; since deep-merge only fills in keys present in the
+defaults object, and `{}` has none, that would have silently wiped every stored log entry on first
+load. Fixed before verification by scoping the generic merge to the `settings` subtree only, leaving
+`logs` and `activeSleepSession` handled directly as before.
+
+---
+
 ## [3.19.0] — 2026-08-20
 
 `ARCH-OPEN-01` continued: recharts version pin and full identifier renaming in the extracted
