@@ -20,6 +20,99 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.33.0] — 2026-08-21
+
+Two changes, same root cause: the "OO" (add/edit preset) modal nested-position bug, plus a new
+"Enter Missed Items" backfill feature that reuses the fix pattern established fixing it. Built in
+`src/app.js`, deployed to `site/app/bundle.js` via the full build/harness/lint pipeline (build
+clean, harness clean — 39 new assertions added across both parts, see below — lint 11, identical
+no-undef count before/after and matching the currently-deployed baseline).
+
+### Fixed — OO (add/edit preset) modal rendered nested, same bug class as the My Presets sheet
+`OO` is invoked from two places, both several sheets deep: inside the "My Presets" sub-sheet on
+Log It! (itself nested inside the main Log sheet), and inside My Plan's "Self-Managed" sheet.
+Unlike the My Presets fix in v3.31.0 (a `position:fixed` + escalating `z-index` override on the
+nested sheet), this time the fix is structural: `OO` now renders via `createPortal` (imported from
+`react-dom`) straight to `document.body`, with an explicit `zIndex:180` on its own backdrop —
+so its DOM position no longer depends on which sheet happens to be its ancestor, at any nesting
+depth, from either call site. This is the pattern the task asked to establish here and reuse in
+Part B below, rather than adding yet another z-index patch that would need bumping again the next
+time something nests one level deeper.
+
+One behavioral note surfaced by testing, not introduced by this fix: because React portals bubble
+events through the *React* tree rather than the DOM tree, and `OO` is declared as a sibling of the
+"My Presets" block (a direct child of the Log sheet's own outer backdrop) rather than a descendant
+of it, clicking OO's backdrop to dismiss it also closes the whole Log sheet in one action — the
+same backdrop-click cascade the non-portaled "My Presets" backdrop already has today (neither
+backdrop's `onClick` calls `stopPropagation`). Flagging this now rather than letting it go
+unnoticed; not fixed here since it's pre-existing and outside this task's scope.
+
+### Added — "Enter Missed Items" (backfill past-day entries)
+Today → calendar icon → All Past Days → tap a day → the previously read-only past-day view now has
+an "Enter Missed Items" button at the top. It opens a new sheet — `BackfillSheet`, portaled to
+`document.body` the same way as `OO` above, so it can't repeat this bug class a third time — with:
+
+- An editable **Date** field, pre-filled with the day being viewed but changeable to *any* date
+  (no lower bound), which is how a user reaches a day with zero existing entries — those don't
+  show up in All Past Days at all.
+- One control per **enabled** tracker only (respects the same My Plan on/off toggles Log It! reads):
+  Water/Protein/Calories as independent amount + optional description fields, Sleep as a plain
+  numeric hours field (no start/finish session — that flow is a real-time mechanism and meaningless
+  retroactively), Weight as a single value, Exercise as minutes, and RX & Vitamins as a tap-to-select
+  chip list (same interaction as the live supplement logger) with quantity defaulting to `"1"`.
+  **Treatments are excluded entirely in v1** — no control, disabled or otherwise.
+- One **Save** button that writes whichever fields were filled in as separate log entries on the
+  chosen date, all timestamped `12:00 PM` / `timeMinutes:720` (no time-of-day field in v1).
+
+Every backfilled entry gets `backfilled: true` and `enteredAt` (the actual wall-clock save time,
+distinct from the entry's log date) — added as plain fields on the entry object at creation, which
+survive reload untouched because they flow through the existing versioned entry-migration path
+(`BS`/`$S`, called from `migrate()`) rather than needing a hand-maintained field list: entries with
+an explicit `type` (sleep/weight/supplement/exercise) already pass through that migration
+unmodified, and the water/protein/calories combo shape already matches the "return as-is" branch
+since it always sets `oz`/`grams`/`calories` (never `undefined`). Backup export/import needed no
+changes either — both serialize `logs` wholesale with no per-field allowlist.
+
+Business rules, verified end-to-end in the harness:
+1. **Inventory**: a backfilled RX & Vitamins dose decrements the same way a live dose does, via the
+   existing `KS` inventory-adjustment helper, clamped at 0.
+2. **Schedule**: backfilling deliberately skips the `lastTakenDate`/`nextDueOverride` update that
+   live supplement logging performs — the forward due-date schedule is untouched by design.
+3. **Today's state**: entries land in `logs[<chosen date>]`, never in today's log key (unless a
+   user explicitly picks today), so Today's "To Do Today" list and the Log It! RX & Vitamins tile's
+   "taken today" ring are provably unaffected by a backfill to a past date.
+4. **No celebrations**: the save path is a new `saveBackfill` function, entirely separate from the
+   live water/protein/calorie logger's goal-hit toast logic — backfilling never fires a 🎉 toast,
+   only a plain confirmation.
+5. **Delete/edit parity**: past-day entries (backfilled or not) are now deletable from the past-day
+   view — `IO`, the shared log-row renderer, gained a decoupled `canDelete` parameter (defaulting to
+   the existing `canEdit` flag, so the "Today's log" call site is unchanged) so past-day rows can
+   offer delete without also exposing edit, which still assumes "today" throughout the rest of the
+   app. Deleting a backfilled dose goes through the same `me()` delete function live entries use,
+   which already restores inventory generically off `entry.type`/`entry.items` — no backfilled-only
+   branch was needed, and none was added.
+
+### Verification
+`tools/harness.js` seeded with a tracked supplement and one log entry on a prior date. New steps:
+open `OO` from the My Presets flow and assert its backdrop's `parentElement` is `document.body`
+directly (not nested) with `zIndex:180`; open `BackfillSheet` from a past day, assert the same
+portal placement; set a date ten days back (not already in the seed) plus protein, calories, sleep,
+and one RX & Vitamins item, save, and assert: the entries landed on the new date (not today) with
+`backfilled:true`/`enteredAt` set and `12:00 PM`/`720` timestamps; today's log length and the RX
+tile's "taken today" count are unchanged; the supplement's inventory dropped 10→9 while
+`lastTakenDate`/`nextDueOverride` stayed `null`; the supplement still shows as due in Today's To Do
+list (proving it wasn't silently marked done); the newly-backfilled day now appears in All Past
+Days; its entries render with a delete button and no edit button; and deleting the backfilled
+supplement dose removes it and restores inventory 9→10. All pass against both the working build and
+the exact shipped `site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only), including the
+full inventory-decrement-then-restore round trip. **Not yet verified:** on a real device — Rob
+should check that the OO and BackfillSheet portals render/position correctly in a real browser (not
+just "not nested in the DOM," which jsdom can confirm, but actually visually centered/bottom-sheeted
+and above everything else), and should decide whether the backdrop-click-cascade behavior noted
+above is worth fixing separately.
+
 ## [3.32.1] — 2026-08-21
 
 Spacing-only fix on top of v3.32.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the

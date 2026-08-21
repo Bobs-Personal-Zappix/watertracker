@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import { createPortal } from "react-dom";
 
 // recharts is pinned to 2.15.4 (see docs/DECISION-LOG.md ARCH-OPEN-01) to
 // match the version vendored in the deployed bundle.
@@ -219,7 +220,7 @@ import {
         vS = "#D5E1EC",
         bS = "#C1523E",
         wS = "#5C7085",
-        xS = "3.32.1",
+        xS = "3.33.0",
         SCHEMA_VERSION = 2,
         ES = {
             logs: {},
@@ -1613,8 +1614,11 @@ import {
             p = Number(u) || 0,
             m = Number(c) || 0,
             h = a.trim().length > 0 && (d > 0 || p > 0 || m > 0);
-        return React.default.createElement("div", {
+        return createPortal(React.default.createElement("div", {
             className: "wt-backdrop wt-center",
+            style: {
+                zIndex: 180
+            },
             onClick: n
         }, React.default.createElement("div", {
             className: "wt-modal",
@@ -1676,7 +1680,7 @@ import {
                 grams: p,
                 calories: m
             })
-        }, "Save preset")))
+        }, "Save preset"))), document.body)
     }
 
     function PO({
@@ -2738,7 +2742,7 @@ import {
         })))
     }
 
-    function IO(e, t, n, r) {
+    function IO(e, t, n, r, a = t) {
         return React.default.createElement("li", {
             key: e.id,
             className: "wt-log-row"
@@ -2848,7 +2852,7 @@ import {
             "aria-label": "Edit entry"
         }, React.default.createElement(Pencil, {
             size: 14
-        })), t && React.default.createElement("button", {
+        })), a && React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => r(e.id),
             "aria-label": "Delete entry"
@@ -2864,7 +2868,9 @@ import {
         entriesForDate: r,
         onClose: a,
         onSelectDate: o,
-        onBack: i
+        onBack: i,
+        onEnterMissed: l,
+        onDeleteEntry: u
     }) {
         return e ? React.default.createElement("div", {
             className: "wt-backdrop",
@@ -2881,6 +2887,13 @@ import {
         }, React.default.createElement(XIcon, {
             size: 18
         }))), t ? React.default.createElement(React.default.Fragment, null, React.default.createElement("button", {
+            className: "wt-btn-primary",
+            style: {
+                width: "100%",
+                marginBottom: 14
+            },
+            onClick: () => l(t)
+        }, "Enter Missed Items"), React.default.createElement("button", {
             className: "wt-btn-text",
             style: {
                 textAlign: "left",
@@ -2891,7 +2904,7 @@ import {
             className: "wt-empty-note"
         }, "No entries logged that day.") : React.default.createElement("ul", {
             className: "wt-log-list"
-        }, r.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !1, null, null)))) : 0 === n.length ? React.default.createElement("p", {
+        }, r.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !1, null, u, !0)))) : 0 === n.length ? React.default.createElement("p", {
             className: "wt-empty-note"
         }, "No past days logged yet.") : React.default.createElement("div", null, n.map(e => React.default.createElement("button", {
             key: e,
@@ -2908,14 +2921,238 @@ import {
         }, YS(MS(e)))))))) : null
     }
 
+    function BackfillSheet({
+        open: e,
+        initialDate: t,
+        data: n,
+        onClose: r,
+        onSave: a
+    }) {
+        let [o, i] = (0, React.useState)(t || HS(new Date)),
+            [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""),
+            [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""),
+            [h, g] = (0, React.useState)(""), [y, v] = (0, React.useState)(""),
+            [b, w] = (0, React.useState)(""), [x, E] = (0, React.useState)(""),
+            [k, S] = (0, React.useState)(""), [O, P] = (0, React.useState)([]);
+        if ((0, React.useEffect)(() => {
+                e && (i(t || HS(new Date)), u(""), c(""), d(""), m(""), g(""), v(""), w(""), E(""), S(""), P([]))
+            }, [e, t]), !e) return null;
+        let C = !1 !== n.settings.showWater,
+            j = !1 !== n.settings.showProtein,
+            N = !1 !== n.settings.showCalories,
+            T = !1 !== n.settings.showSleep,
+            A = !1 !== n.settings.showWeight,
+            M = !1 !== n.settings.showExercise,
+            _ = !1 !== n.settings.showSupplements,
+            D = n.settings.supplements,
+            z = Number(l) > 0 || Number(f) > 0 || Number(h) > 0 || Number(b) > 0 || Number(x) > 0 || Number(k) > 0 || O.length > 0,
+            I = o && z;
+
+        function L(e) {
+            P(t => t.some(t => t.name === e) ? t.filter(t => t.name !== e) : [...t, {
+                name: e,
+                qty: "1"
+            }])
+        }
+
+        function R(e, t) {
+            P(n => n.map(n => n.name === e ? {
+                ...n,
+                qty: t
+            } : n))
+        }
+        return createPortal(React.default.createElement("div", {
+            className: "wt-backdrop",
+            style: {
+                zIndex: 190
+            },
+            onClick: r
+        }, React.default.createElement("div", {
+            className: "wt-sheet wt-sheet-tall",
+            style: {
+                position: "fixed",
+                zIndex: 191,
+                bottom: 0,
+                left: 0,
+                width: "100%"
+            },
+            onClick: e => e.stopPropagation()
+        }, React.default.createElement("div", {
+            className: "wt-sheet-header"
+        }, React.default.createElement("h3", null, "Enter Missed Items"), React.default.createElement("button", {
+            className: "wt-icon-btn",
+            onClick: r,
+            "aria-label": "Close"
+        }, React.default.createElement(XIcon, {
+            size: 18
+        }))), React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: wS,
+                marginTop: -6,
+                marginBottom: 16
+            }
+        }, "Backfilled entries are timestamped 12:00 PM on the date below and marked as entered after the fact — they don't trigger today's goal toasts, and RX & Vitamins doses still adjust inventory but never change the upcoming schedule."), React.default.createElement("label", {
+            className: "wt-field"
+        }, "Date", React.default.createElement("input", {
+            type: "date",
+            value: o,
+            onChange: e => i(e.target.value),
+            "aria-label": "Backfill entry date"
+        })), C && React.default.createElement("div", {
+            className: "wt-field-row"
+        }, React.default.createElement("label", {
+            className: "wt-field"
+        }, "Water (oz)", React.default.createElement("input", {
+            type: "number",
+            inputMode: "numeric",
+            placeholder: "0",
+            value: l,
+            onChange: e => u(e.target.value),
+            "aria-label": "Backfill water amount"
+        })), React.default.createElement("label", {
+            className: "wt-field"
+        }, "Description (optional)", React.default.createElement("input", {
+            type: "text",
+            placeholder: "e.g. Water bottle",
+            value: s,
+            onChange: e => c(e.target.value)
+        }))), j && React.default.createElement("div", {
+            className: "wt-field-row"
+        }, React.default.createElement("label", {
+            className: "wt-field"
+        }, "Protein (g)", React.default.createElement("input", {
+            type: "number",
+            inputMode: "numeric",
+            placeholder: "0",
+            value: f,
+            onChange: e => d(e.target.value),
+            "aria-label": "Backfill protein amount"
+        })), React.default.createElement("label", {
+            className: "wt-field"
+        }, "Description (optional)", React.default.createElement("input", {
+            type: "text",
+            placeholder: "e.g. Protein shake",
+            value: p,
+            onChange: e => m(e.target.value)
+        }))), N && React.default.createElement("div", {
+            className: "wt-field-row"
+        }, React.default.createElement("label", {
+            className: "wt-field"
+        }, "Calories", React.default.createElement("input", {
+            type: "number",
+            inputMode: "numeric",
+            placeholder: "0",
+            value: h,
+            onChange: e => g(e.target.value),
+            "aria-label": "Backfill calories amount"
+        })), React.default.createElement("label", {
+            className: "wt-field"
+        }, "Description (optional)", React.default.createElement("input", {
+            type: "text",
+            placeholder: "e.g. Lunch",
+            value: y,
+            onChange: e => v(e.target.value)
+        }))), T && React.default.createElement("label", {
+            className: "wt-field"
+        }, "Sleep (hours)", React.default.createElement("input", {
+            type: "number",
+            inputMode: "decimal",
+            placeholder: "0",
+            value: b,
+            onChange: e => w(e.target.value),
+            "aria-label": "Backfill sleep hours"
+        })), A && React.default.createElement("label", {
+            className: "wt-field"
+        }, "Weight (lbs)", React.default.createElement("input", {
+            type: "number",
+            inputMode: "decimal",
+            placeholder: "0",
+            value: x,
+            onChange: e => E(e.target.value),
+            "aria-label": "Backfill weight amount"
+        })), M && React.default.createElement("label", {
+            className: "wt-field"
+        }, "Exercise (minutes)", React.default.createElement("input", {
+            type: "number",
+            inputMode: "numeric",
+            placeholder: "0",
+            value: k,
+            onChange: e => S(e.target.value),
+            "aria-label": "Backfill exercise minutes"
+        })), _ && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: wS,
+                textTransform: "uppercase",
+                letterSpacing: ".04em",
+                marginBottom: 8
+            }
+        }, "RX & Vitamins — tap everything taken"), 0 === D.length ? React.default.createElement("p", {
+            className: "wt-empty-note",
+            style: {
+                marginBottom: 14
+            }
+        }, "Nothing set up yet. Add supplements and prescriptions in My Plan first.") : React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
+            className: "wt-chip-row",
+            style: {
+                marginBottom: O.length > 0 ? 14 : 18
+            }
+        }, D.map(e => React.default.createElement("button", {
+            key: e.id,
+            type: "button",
+            className: "wt-chip " + (O.some(t => t.name === e.name) ? "active" : ""),
+            onClick: () => L(e.name)
+        }, e.name))), O.length > 0 && React.default.createElement("div", {
+            style: {
+                marginBottom: 16
+            }
+        }, O.map(e => React.default.createElement("div", {
+            key: e.name,
+            className: "wt-qty-row"
+        }, React.default.createElement("span", {
+            className: "wt-qty-name"
+        }, e.name), React.default.createElement("input", {
+            type: "text",
+            className: "wt-qty-input",
+            placeholder: "Qty (e.g. 1 or 10mg)",
+            value: e.qty,
+            onChange: t => R(e.name, t.target.value)
+        })))))), React.default.createElement("button", {
+            className: "wt-btn-primary",
+            style: {
+                width: "100%",
+                marginTop: 6
+            },
+            disabled: !I,
+            onClick: () => {
+                a(o, {
+                    oz: Number(l) || 0,
+                    ozDescription: s.trim(),
+                    grams: Number(f) || 0,
+                    gramsDescription: p.trim(),
+                    calories: Number(h) || 0,
+                    caloriesDescription: y.trim(),
+                    sleepHours: Number(b) || 0,
+                    weight: Number(x) || 0,
+                    exerciseMinutes: Number(k) || 0,
+                    supplements: O.filter(e => e.name)
+                }), r()
+            }
+        }, "Save"))), document.body)
+    }
+
     function RO({
         data: e,
         todayKey: t,
         onDeleteLog: n,
         onEditLogEntry: r,
-        onEditNextDue: a
+        onEditNextDue: a,
+        onDeleteLogForDate: onDeleteLogForDate,
+        onSaveBackfill: onSaveBackfill
     }) {
-        let [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), s = Object.keys(e.logs).filter(n => n !== t && (e.logs[n] || []).length > 0).sort().reverse(), c = e.logs[t] || [], f = new Set;
+        let [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), [backfillOpen, setBackfillOpen] = (0, React.useState)(!1), s = Object.keys(e.logs).filter(n => n !== t && (e.logs[n] || []).length > 0).sort().reverse(), c = e.logs[t] || [], f = new Set;
         c.forEach(e => {
             NS(e) && (e.items || []).forEach(e => f.add("string" == typeof e ? e : e.name))
         });
@@ -2995,7 +3232,15 @@ import {
             entriesForDate: l && e.logs[l] || [],
             onClose: () => i(!1),
             onSelectDate: e => u(e),
-            onBack: () => u(null)
+            onBack: () => u(null),
+            onEnterMissed: () => setBackfillOpen(!0),
+            onDeleteEntry: t => onDeleteLogForDate(l, t)
+        }), React.default.createElement(BackfillSheet, {
+            open: backfillOpen,
+            initialDate: l || t,
+            data: e,
+            onClose: () => setBackfillOpen(!1),
+            onSave: onSaveBackfill
         }))
     }
 
@@ -4943,6 +5188,102 @@ import {
             })
         }
 
+        function saveBackfill(e, r) {
+            function a() {
+                return `${Date.now()}-${Math.random().toString(36).slice(2,7)}`
+            }
+            let o = (new Date).toISOString(),
+                i = [];
+            r.oz > 0 && i.push({
+                id: a(),
+                time: "12:00 PM",
+                timeMinutes: 720,
+                label: r.ozDescription || "Water",
+                oz: r.oz,
+                grams: 0,
+                calories: 0,
+                backfilled: !0,
+                enteredAt: o
+            }), r.grams > 0 && i.push({
+                id: a(),
+                time: "12:00 PM",
+                timeMinutes: 720,
+                label: r.gramsDescription || "Protein",
+                oz: 0,
+                grams: r.grams,
+                calories: 0,
+                backfilled: !0,
+                enteredAt: o
+            }), r.calories > 0 && i.push({
+                id: a(),
+                time: "12:00 PM",
+                timeMinutes: 720,
+                label: r.caloriesDescription || "Calories",
+                oz: 0,
+                grams: 0,
+                calories: r.calories,
+                backfilled: !0,
+                enteredAt: o
+            }), r.sleepHours > 0 && function() {
+                let e = 720,
+                    t = (720 - Math.round(60 * r.sleepHours) + 1440) % 1440;
+                i.push({
+                    id: a(),
+                    type: "sleep",
+                    label: "Sleep",
+                    time: "12:00 PM",
+                    timeMinutes: 720,
+                    lightsOutMinutes: t,
+                    wokeUpMinutes: e,
+                    hours: r.sleepHours,
+                    backfilled: !0,
+                    enteredAt: o
+                })
+            }(), r.weight > 0 && i.push({
+                id: a(),
+                type: "weight",
+                label: "Weight",
+                time: "12:00 PM",
+                timeMinutes: 720,
+                value: r.weight,
+                backfilled: !0,
+                enteredAt: o
+            }), r.exerciseMinutes > 0 && i.push({
+                id: a(),
+                type: "exercise",
+                label: "Exercise",
+                exerciseType: "Exercise",
+                minutes: r.exerciseMinutes,
+                description: "",
+                time: "12:00 PM",
+                timeMinutes: 720,
+                backfilled: !0,
+                enteredAt: o
+            });
+            let l = (r.supplements || []).filter(e => e.name);
+            if (l.length > 0 && i.push({
+                    id: a(),
+                    type: "supplement",
+                    label: `Took: ${l.map(e=>e.qty?`${e.name} (${e.qty})`:e.name).join(", ")}`,
+                    items: l,
+                    time: "12:00 PM",
+                    timeMinutes: 720,
+                    backfilled: !0,
+                    enteredAt: o
+                }), 0 === i.length) return;
+            n(t => ({
+                ...t,
+                logs: {
+                    ...t.logs,
+                    [e]: [...t.logs[e] || [], ...i]
+                },
+                settings: l.length > 0 ? {
+                    ...t.settings,
+                    supplements: KS(t.settings.supplements, [], l)
+                } : t.settings
+            })), ce(`Backfilled ${i.length} item${1===i.length?"":"s"} to ${YS(MS(e))}.`)
+        }
+
         function he() {
             c({
                 field: f,
@@ -5300,7 +5641,9 @@ import {
                         } : e)
                     }
                 }))
-            }
+            },
+            onDeleteLogForDate: me,
+            onSaveBackfill: saveBackfill
         }), "reports" === r && React.default.createElement(FO, {
             data: t,
             onDrShare: () => D(!0)

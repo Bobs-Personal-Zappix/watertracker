@@ -85,7 +85,17 @@ const { window } = dom;
 // GOTCHA 1: seed the real localStorage; do not replace it.
 const SEED = makeSeed({
   // ── edit per session ──
-  settings: { showWater: false, showTreatments: false },
+  logs: {
+    [DAYS_AGO(3)]: [
+      { id: "old1", time: "9:00 AM", timeMinutes: 540, label: "Old entry", oz: 20, grams: 0, calories: 0 },
+    ],
+  },
+  settings: {
+    showWater: false, showTreatments: false,
+    supplements: [{ id: "s1", name: "TestVit", intervalDays: 1, lastTakenDate: null,
+                    nextDueOverride: null, trackInventory: true, qtyRemaining: 10,
+                    expirationDate: null }],
+  },
 });
 if (SEED) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
 
@@ -145,6 +155,13 @@ function clickByAria(label) {
 }
 function setInput(placeholder, value) {
   const el = window.document.querySelector(`input[placeholder="${placeholder}"]`);
+  if (!el) return false;
+  Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, value);
+  el.dispatchEvent(new window.Event("input", { bubbles: true }));
+  return true;
+}
+function setInputByAria(label, value) {
+  const el = window.document.querySelector(`[aria-label="${label}"]`);
   if (!el) return false;
   Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, value);
   el.dispatchEvent(new window.Event("input", { bubbles: true }));
@@ -303,6 +320,114 @@ const STEPS = [
     const cssText = window.document.querySelector("style").textContent;
     const rule = cssText.match(/\.wt-action-btns\s*\{[^}]*\}/);
     check("wt-action-btns has margin-top:16px (matches existing 16px spacing scale)", rule ? rule[0].includes("margin-top:16px") : null, "true");
+  },
+
+  // ── v3.33.0 Part A: OO (add/edit preset) modal must portal to document.body ──
+  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Your Presets or Log a Meal")),
+  () => check("open My Presets sheet (for OO portal check)", clickByText("✏ Edit Presets")),
+  () => check("click Add Preset (opens OO modal)", clickByText("Add Preset")),
+  () => {
+    const h3 = [...window.document.querySelectorAll(".wt-modal-header h3")].find((h) => h.textContent === "Add preset");
+    check("OO Add preset modal opened", !!h3);
+    const backdrop = h3 ? h3.closest(".wt-backdrop") : null;
+    check("OO modal's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
+    check("OO modal backdrop z-index above every nested sheet level", backdrop ? backdrop.style.zIndex : null, "180");
+    if (backdrop) fire(backdrop); // close it (onClick = onClose)
+  },
+  () => {
+    const stillOpen = [...window.document.querySelectorAll(".wt-modal-header h3")].some((h) => h.textContent === "Add preset");
+    check("OO modal closed after backdrop click", !stillOpen, "true");
+    // React portals bubble through the REACT tree, not the DOM tree: OO is declared as a
+    // direct child of xO's own outer backdrop (a sibling of the "My Presets" block, not
+    // nested inside it), so a click on OO's portaled backdrop also reaches xO's own
+    // backdrop onClick and closes the whole Log sheet in one action — the same cascade
+    // the pre-existing (non-portaled) "My Presets" backdrop already has, not a regression.
+    const logSheetGone = ![...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Log");
+    const myPresetsGone = ![...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "My Presets");
+    check("clicking OO's backdrop also closes the Log sheet (pre-existing backdrop-bubbling behavior, unchanged by the portal)", logSheetGone, "true");
+    check("My Presets sheet unmounted along with it", myPresetsGone, "true");
+  },
+
+  // ── v3.33.0 Part B: Enter Missed Items (backfill) ──────────────────────────────
+  () => check("nav to Today (for backfill test)", nav("Today")),
+  () => {
+    const preLen = logsToday().length;
+    check("today's log starts empty before any backfill", preLen, 0);
+  },
+  () => check("open All Past Days", clickByAria("View past days")),
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")];
+    check("seeded past day appears in All Past Days list", rows.length, 1);
+    if (rows[0]) fire(rows[0]);
+  },
+  () => check("Enter Missed Items button present on past-day view", clickByText("Enter Missed Items")),
+  () => {
+    const h3 = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Enter Missed Items");
+    check("BackfillSheet opened", !!h3);
+    const backdrop = h3 ? h3.closest(".wt-backdrop") : null;
+    check("BackfillSheet's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
+  },
+  () => check("set backfill date to a day with zero existing entries", setInputByAria("Backfill entry date", DAYS_AGO(10))),
+  () => check("set backfill protein amount", setInputByAria("Backfill protein amount", "25")),
+  () => check("set backfill calories amount", setInputByAria("Backfill calories amount", "300")),
+  () => check("set backfill sleep hours", setInputByAria("Backfill sleep hours", "7.5")),
+  () => check("select TestVit supplement chip", clickByText("TestVit")),
+  () => {
+    const row = [...window.document.querySelectorAll(".wt-qty-row")].find((r) => r.textContent.includes("TestVit"));
+    const qtyInput = row ? row.querySelector(".wt-qty-input") : null;
+    check("TestVit qty defaults to 1", qtyInput ? qtyInput.value : null, "1");
+  },
+  () => check("save backfill", clickByText("Save")),
+  () => {
+    const entries = stored().logs[DAYS_AGO(10)] || [];
+    check("backfill landed on the selected (new) date with 4 entries", entries.length, 4);
+    check("all backfilled entries flagged backfilled:true", entries.every((e) => e.backfilled === true), "true");
+    check("all backfilled entries have enteredAt timestamp", entries.every((e) => typeof e.enteredAt === "string" && e.enteredAt.length > 0), "true");
+    check("all backfilled entries timestamped 12:00 PM / 720 minutes", entries.every((e) => e.time === "12:00 PM" && e.timeMinutes === 720), "true");
+  },
+  () => {
+    check("today's log is still empty after backfilling a past date (rule 3)", logsToday().length, 0);
+    const s = supp("TestVit");
+    check("TestVit inventory decremented by backfilled dose (10 → 9)", s ? s.qtyRemaining : null, 9);
+    check("TestVit lastTakenDate untouched by backfill (rule 2: schedule never recalculates)", s ? s.lastTakenDate : "MISSING", null);
+    check("TestVit nextDueOverride untouched by backfill (rule 2)", s ? s.nextDueOverride : "MISSING", null);
+    const stillDueToday = [...window.document.querySelectorAll(".wt-treatment-name")].some((el) => el.textContent === "TestVit");
+    check("TestVit still shows as due in To Do Today (rule 3: not marked done by backfill)", stillDueToday, "true");
+  },
+  () => check("nav to Log It! (verify today's RX tile ring unaffected)", nav("Log It!")),
+  () => {
+    const rxTile = tiles().find((t) => t.startsWith("RX & Vitamins"));
+    check("today's RX & Vitamins tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0Taken") : null, "true");
+  },
+  () => check("nav back to Today (to delete the backfilled dose)", nav("Today")),
+  () => check("re-open All Past Days", clickByAria("View past days")),
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")];
+    check("newly backfilled day now appears in All Past Days list", rows.length, 2);
+  },
+  () => {
+    // Click whichever past-day row is NOT the originally-seeded one (3 days ago); the backfilled
+    // day (10 days ago) sorts after it since the list is date-descending.
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")];
+    const seededLabel = new Date(DAYS_AGO(3) + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const backfilledRow = rows.find((r) => !r.textContent.includes(seededLabel));
+    check("found the backfilled day's row", !!backfilledRow);
+    if (backfilledRow) fire(backfilledRow);
+  },
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-log-row")];
+    check("backfilled day shows all 4 entries", rows.length, 4);
+    const suppRow = rows.find((r) => r.textContent.includes("TestVit"));
+    check("backfilled supplement entry has a delete button (delete/edit parity)", suppRow ? !!suppRow.querySelector('[aria-label="Delete entry"]') : null, "true");
+    check("backfilled supplement entry has NO edit button (past-day view stays read-only for edit)", suppRow ? !suppRow.querySelector('[aria-label="Edit entry"]') : null, "true");
+    const delBtn = suppRow ? suppRow.querySelector('[aria-label="Delete entry"]') : null;
+    if (delBtn) fire(delBtn);
+  },
+  () => {
+    const entries = stored().logs[DAYS_AGO(10)] || [];
+    check("backfilled supplement entry removed after delete", entries.some((e) => e.type === "supplement"), "false");
+    const s = supp("TestVit");
+    check("TestVit inventory restored after deleting backfilled dose (9 → 10)", s ? s.qtyRemaining : null, 10);
   },
 ];
 

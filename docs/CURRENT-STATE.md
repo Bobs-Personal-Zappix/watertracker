@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.32.0*
+*As of: August 21, 2026 · Deployed version: 3.33.0*
 
 ---
 
@@ -99,13 +99,14 @@ Bundle is ~702KB minified, ~180KB gzipped.
 - **Retention analytics fully live** (`ARCH-OPEN-06`, v3.17–3.18) — `POST /api/progress` merged: writes opaque id + server date to `user_activity` (D1) for every caller. Coverage fix (3b) shipped in v3.18.0: `wtDeviceId()` + `wtActivityPing()` mount effect fires unconditionally on app open regardless of push status. Both push-subscribed and non-push users confirmed producing `user_activity` rows. Retention clock running, full coverage, from Aug 20.
 - **jsdom harness runnable** (`OPS-08`) — `node tools/harness.js site/app/bundle.js` boots clean; `npm run lint:bundle` baseline: 11 pre-existing no-undef errors.
 - **Source reconciliation complete** (`ARCH-OPEN-01`, Aug 20, v3.19.0) — `src/app.js` extracted (6,104 lines), all 38 vendor identifiers renamed, recharts pinned to 2.15.4, Stats tab real-device verified. `src/app.js` + `esbuild.config.js` are now the source of truth for future edits.
-- **My Plan + Log It! redesigned and deployed** (`UX-OPEN-01` Phase 1a–1d, Aug 20–21, v3.22.0–3.32.0):
+- **My Plan + Log It! redesigned and deployed** (`UX-OPEN-01` Phase 1a–1d, Aug 20–21, v3.22.0–3.33.0):
   - 2-column tracker card grid, per-tracker color icons, top-right toggle with "Track" label, always-visible dimmed off-trackers (v3.22.0–3.26.0; regressed to unmounting off cards on toggle in the 2-column rework and fixed again for real in v3.32.0 — all 8 cards now render unconditionally, only the `on` prop/dimming changes)
-  - App header background is full black (`var(--page-bg)`), matching the page body; no gradient banner (v3.32.0)
+  - App header background is full black (`var(--page-bg)`), matching the page body; no gradient banner (v3.32.0). Log It! spacing between the tile grid and the presets/meal button widened to 16px (v3.32.1)
   - Provider-grouped "My Treatments" section, hardcoded Austin Drip Lounge clinic demo card, "Add Treatment Provider" placeholder sheet (v3.23.0–3.28.0)
   - Log It!: "Use Your Presets or Log a Meal" full-width action button, inline "My Presets" sheet with edit/delete/add (v3.27.0–3.31.0)
   - "RX & Vitamins" rename throughout, black page background, all sheet z-index/positioning fixes (v3.27.0–3.31.0)
-  - Known outstanding: OO preset add/edit modal nested-position bug (same class as fixed My Presets sheet — not yet fixed)
+  - OO preset add/edit modal nested-position bug fixed (v3.33.0) — now renders via `createPortal` to `document.body` instead of a z-index patch, since it's invoked from two different deeply-nested sheets. Established pattern reused for the new backfill sheet below.
+- **"Enter Missed Items" backfill (v3.33.0)** — Today → calendar icon → All Past Days → a day → new button opens a `document.body`-portaled sheet with an editable date field (reaches any day, including ones with no existing entries) and one control per enabled tracker (Treatments excluded in v1). Entries save with `backfilled:true`/`enteredAt` provenance fields, timestamped 12:00 PM, decrement RX & Vitamins inventory without touching the forward due-date schedule, never touch today's log/To-Do state, and never fire goal-hit toasts. Past-day entries (backfilled or not) are now deletable — restores inventory through the same delete path live entries use.
 - **Versioned schema live** (`ARCH-OPEN-05`, Aug 20, v3.20.0/3.21.0) — `migrate()` + `deepMergeDefaults` replace three hand-maintained field whitelists. Export inverted to denylist. `goalWeight`/`goalExerciseMinutes` silent-drop bug fixed in `src/app.js` (v3.20.0) and deployed `bundle.js` (v3.21.0, real-device verified).
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
 - **`env.RESEND_FROM_EMAIL`** — optional undocumented var; falls back to `HydroPro Tracker <login@hydroprotracker.com>` if unset.
