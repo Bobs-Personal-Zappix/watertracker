@@ -152,7 +152,7 @@ Rejects an earlier recommendation to center values inside the icons.
 **UX-02 — "Uniform tiles" means uniform formatting, not space savings.**
 All 8 tiles follow one structure: label → goal → status → ring → number → bottom label.
 *Why:* consistency was the goal; freeing up screen space was not.
-*Status:* **Locked** · Aug 17, 2026
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: Log It! tile layout changed to horizontal (v3.35.0). Left column: category chip (36×36) + title, then Goal/To-go/Logged stats stacked. Right column: existing gem illustration + progress ring. 4px left accent border in category color. Single-column full-width stack replacing the prior vertical format. My Plan 2-column grid is unchanged. Explicit call by Rob.*
 
 **UX-03 — All 8 tiles use true percentage progress rings.**
 Including Weight, Exercise, Supplements, and Treatments (previously binary done/not-done).
