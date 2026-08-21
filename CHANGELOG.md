@@ -20,6 +20,63 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.28.0] — 2026-08-21
+
+Follow-up on v3.27.0 based on Rob's real-device feedback. Built in `src/app.js`, deployed to
+`site/app/bundle.js` via the full build/harness/lint pipeline.
+
+### Fixed — sheet/popup content hidden behind bottom nav bar
+`.wt-sheet` bottom padding 26px → 88px, clearing the nav bar height (~56px) plus safe area on
+every bottom sheet in the app. `.wt-backdrop` gained `padding-bottom:env(safe-area-inset-bottom,
+0px)` for the iPhone home-indicator inset.
+
+### Removed — "Log a Meal" button and sheet
+Reverted from v3.27.0 — button, its bottom sheet, and all five pieces of related state
+(`showMealSheet`, `mealName`, `mealWater`, `mealProtein`, `mealCalories`) removed from `MO`. The
+now-unused `UtensilsCrossed` import and the `onLogMeal` prop/wiring were removed with it.
+
+### Changed — "Use Your Presets" renamed and made full width
+Now reads "Use Your Presets or Log a Meal" and spans the full tile-grid width. `.wt-action-btns`
+changed from `display:flex; gap:12px; padding:0 16px 16px` to `display:block; padding:0 0 16px`
+— **the horizontal padding was dropped, not just the display mode**, because the tile grid above
+it has no horizontal padding of its own (it inherits `.wt-frame`'s 18px inset directly); keeping
+`16px` here would have left the button sitting 16px further in than the grid on both sides,
+directly contradicting the "align left/right edges with the tile grid exactly" requirement. Also
+dropped the now-dead `.wt-action-btn.meal` gradient rule.
+
+### Added — "✏ Edit Presets" link in the preset/log sheet
+Small centered teal text button in `xO` (the shared preset-and-manual-entry sheet), shown
+whenever the sheet isn't editing an existing log entry. Closes the sheet and navigates to the
+My Plan tab (`onEditPresets` → `a("setup")`, the same tab-switch state the rest of the app uses).
+**Worth Rob's attention:** this button currently has nowhere useful to land — see the My Regimen
+→ My Treatments entry below, which removes the only preset-management UI that existed.
+
+### Removed — Quick Presets card from My Plan → My Regimen
+The `RegimenSummaryCard` for presets, the `"presets" === expandedList` branch, and its expanded
+`PlanSheet` (preset list, edit/delete buttons, "Add preset" button) are gone, along with the now-
+unused `presetPreview` computation. **Flagging a real conflict, not just a note:** this was the
+only place in the app to add, edit, or delete a preset. The "✏ Edit Presets" link added in this
+same release now navigates to a page with no preset-management UI left on it — a dead end. The
+underlying add/edit-preset modal (`OO`) and its trigger state are still wired into `WO` but are
+now unreachable from any button, since their only triggers lived inside the markup just removed.
+Left in place rather than deleted outright, since removing them wasn't asked for and doing so is
+a bigger structural call — but this needs a decision: either restore some preset-management entry
+point on My Plan, or point "Edit Presets" somewhere else, or delete the orphaned `OO`
+plumbing outright.
+
+### Changed — "My Regimen" section renamed "My Treatments"
+
+### Changed — "Add Treatment Provider" replaces "+ Add Partner"
+Button label only. The sheet it opens (a `PLACEHOLDER` — no data model wired) still titles itself
+"Add Partner" and asks for "Partner/Clinic name" / "Request Partnership" — not touched, since only
+the trigger button was in scope. Worth a consistency pass later.
+
+### Changed — My Plan tracker card layout
+Icon size in `TrackerRow` 28px → 22px. Top row restructured to a single flex row (icon, title,
+then the toggle column pushed right via `margin-left:auto`) instead of two nested flex groups
+with `justify-content:space-between` — visually equivalent, moves the title left relative to the
+smaller icon, matches the exact implementation Rob specified.
+
 ## [3.27.0] — 2026-08-20
 
 `UX-OPEN-01` Phase 1d — cosmetic fixes and two new Log It! action buttons, built in
