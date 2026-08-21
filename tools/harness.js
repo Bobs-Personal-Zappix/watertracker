@@ -179,8 +179,25 @@ const STEPS = [
   },
   () => check("nav to Stats", nav("Stats")),
   () => check("nav to My Plan", nav("My Plan")),
+  () => {
+    const card = window.document.querySelector(".wt-plan-card");
+    check("My Plan tracker card found", !!card);
+    if (card) fire(card);
+  },
+  () => {
+    const sheetContent = window.document.querySelector(".wt-plan-bottom-sheet");
+    check("TrackerSheet opened", !!sheetContent);
+    check("TrackerSheet paddingBottom", sheetContent ? sheetContent.style.paddingBottom : null, "88px");
+  },
   () => check("nav to Today", nav("Today")),
   () => check("nav to Log It!", nav("Log It!")),
+  () => check("open presets/log sheet", clickByText("Use Your Presets or Log a Meal")),
+  () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
+  () => {
+    const headers = [...window.document.querySelectorAll(".wt-sheet-header h3")].map((h) => h.textContent);
+    check("My Presets sheet opened inline", headers.includes("My Presets"));
+    check("still on Log It! (no nav away)", !!window.document.querySelector(".wt-tracker-col"));
+  },
   // Add assertions for whatever changed this session.
 ];
 

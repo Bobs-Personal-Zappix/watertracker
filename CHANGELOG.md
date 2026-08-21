@@ -20,6 +20,42 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.29.0] — 2026-08-21
+
+Two fixes on top of v3.28.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
+full build/harness/lint pipeline.
+
+### Fixed — My Plan tracker bottom sheet (`TrackerSheet`) still hidden behind nav bar
+The v3.28.0 fix raised `.wt-sheet`'s bottom padding to 88px, but `TrackerSheet` renders with
+`className: "wt-sheet wt-plan-bottom-sheet"` — and `.wt-plan-bottom-sheet { padding-bottom:24px;
+}`, declared later in the stylesheet, has equal CSS specificity to `.wt-sheet` and won cascade
+tie-break by source order, silently overriding the fix for this one sheet. Added `style: {
+paddingBottom: 88 }` inline on `TrackerSheet`'s content div, which wins regardless of class
+cascade order. Confirmed via a new harness step that opens a My Plan tracker card and reads
+`sheetContent.style.paddingBottom` directly off the rendered node — asserts `"88px"`. Worth
+checking `.wt-sheet-tall` and any other modifier class combined with `.wt-sheet` for the same
+class-order trap; none found this pass (`.wt-sheet-tall` only sets `max-height`/`overflow-y`, no
+padding conflict).
+
+### Changed — "Edit Presets" now opens an inline sheet instead of navigating away
+Reverted the `a("setup")` tab-switch from v3.28.0. The link no longer leaves Log It! at all.
+Added local state to `xO` (the shared log-entry/preset sheet): `showPresetsSheet` for a new "My
+Presets" bottom sheet (header + close, the full preset list with edit/delete buttons, an "Add
+Preset" button), plus `presetModalOpen`/`presetEditTarget` for a fresh `OO` (add/edit preset
+modal) instance — reusing the same `OO` component definition My Plan already used, just a second
+instantiation local to `xO`, since `xO` and `WO` (My Plan) are never mounted at the same time and
+`WO`'s local sheet state couldn't have been triggered from Log It! anyway.
+
+The actual preset-mutation logic (`onAddPreset`/`onEditPreset`/`onDeletePreset`) was hoisted out
+of the inline closures previously declared only inside `WO`'s prop object into three named
+functions — `addPreset`, `editPreset`, `deletePreset` — declared once in the top-level app
+component alongside `pe`/`he`/`ge`/`me`. Both `WO` and `xO` now receive the same function
+references as props, so the two "preset management" surfaces (My Plan's, and this new inline one)
+can never drift out of sync with each other.
+
+**This resolves the dead end flagged in v3.28.0** — removing the Quick Presets card from My
+Regimen no longer strands "Edit Presets" with nowhere to go; it now manages presets on the spot.
+
 ## [3.28.0] — 2026-08-21
 
 Follow-up on v3.27.0 based on Rob's real-device feedback. Built in `src/app.js`, deployed to

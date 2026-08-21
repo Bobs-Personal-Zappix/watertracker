@@ -219,7 +219,7 @@ import {
         vS = "#D5E1EC",
         bS = "#C1523E",
         wS = "#5C7085",
-        xS = "3.28.0",
+        xS = "3.29.0",
         SCHEMA_VERSION = 2,
         ES = {
             logs: {},
@@ -1081,9 +1081,11 @@ import {
         onSubmit: a,
         presets: o,
         onQuickLogPreset: i,
-        onEditPresets
+        onAddPreset,
+        onEditPreset,
+        onDeletePreset
     }) {
-        let [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""), [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""), [h, g] = (0, React.useState)(JS()), [y, v] = (0, React.useState)(null);
+        let [l, u] = (0, React.useState)(""), [s, c] = (0, React.useState)(""), [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""), [h, g] = (0, React.useState)(JS()), [y, v] = (0, React.useState)(null), [showPresetsSheet, setShowPresetsSheet] = (0, React.useState)(!1), [presetModalOpen, setPresetModalOpen] = (0, React.useState)(!1), [presetEditTarget, setPresetEditTarget] = (0, React.useState)(null);
         if ((0, React.useEffect)(() => {
                 e && (u(t && t.oz ? String(t.oz) : n && "oz" === n.field ? String(n.value) : ""), c(t && t.grams ? String(t.grams) : n && "grams" === n.field ? String(n.value) : ""), d(t && t.calories ? String(t.calories) : n && "calories" === n.field ? String(n.value) : ""), m(t ? t.label : ""), g(t ? eO(t.timeMinutes) : JS()), v(null))
             }, [e, t, n]), !e) return null;
@@ -1193,7 +1195,7 @@ import {
                 cursor: "pointer",
                 fontFamily: "inherit"
             },
-            onClick: onEditPresets
+            onClick: () => setShowPresetsSheet(!0)
         }, "✏ Edit Presets"), React.default.createElement("button", {
             className: "wt-btn-primary",
             disabled: !E,
@@ -1229,6 +1231,67 @@ import {
             color: gS,
             onChange: e => d(String(e)),
             onClose: () => v(null)
+        }), showPresetsSheet && React.default.createElement("div", {
+            className: "wt-backdrop",
+            onClick: () => setShowPresetsSheet(!1)
+        }, React.default.createElement("div", {
+            className: "wt-sheet",
+            onClick: e => e.stopPropagation()
+        }, React.default.createElement("div", {
+            className: "wt-sheet-header"
+        }, React.default.createElement("h3", null, "My Presets"), React.default.createElement("button", {
+            className: "wt-icon-btn",
+            onClick: () => setShowPresetsSheet(!1),
+            "aria-label": "Close"
+        }, React.default.createElement(XIcon, {
+            size: 18
+        }))), 0 === o.length && React.default.createElement("p", {
+            className: "wt-empty-note",
+            style: {
+                marginBottom: 10
+            }
+        }, "No presets yet. Add something you log often — a drink, a shake, a usual snack — with whichever of water, protein, or calories apply."), [...o].sort((e, t) => e.name.localeCompare(t.name)).map(e => {
+            let t = [];
+            return e.oz > 0 && t.push(`${e.oz}oz`), e.grams > 0 && t.push(`${e.grams}g`), e.calories > 0 && t.push(`${e.calories}cal`), React.default.createElement("div", {
+                key: e.id,
+                className: "wt-preset-row"
+            }, React.default.createElement("span", {
+                className: "wt-preset-name"
+            }, e.name), React.default.createElement("span", {
+                className: "wt-preset-oz"
+            }, t.join(" · ")), React.default.createElement("button", {
+                className: "wt-icon-btn",
+                onClick: () => {
+                    setPresetEditTarget(e), setPresetModalOpen(!0)
+                },
+                "aria-label": "Edit preset"
+            }, React.default.createElement(Pencil, {
+                size: 14
+            })), React.default.createElement("button", {
+                className: "wt-icon-btn",
+                onClick: () => onDeletePreset(e.id),
+                "aria-label": "Delete preset"
+            }, React.default.createElement(Trash2, {
+                size: 14
+            })))
+        }), React.default.createElement("button", {
+            className: "wt-btn-secondary",
+            style: {
+                width: "100%",
+                marginTop: 4
+            },
+            onClick: () => {
+                setPresetEditTarget(null), setPresetModalOpen(!0)
+            }
+        }, React.default.createElement(Plus, {
+            size: 15
+        }), " Add Preset"))), React.default.createElement(OO, {
+            open: presetModalOpen,
+            initial: presetEditTarget,
+            onClose: () => setPresetModalOpen(!1),
+            onSave: e => {
+                presetEditTarget ? onEditPreset(presetEditTarget.id, e.name, e.oz, e.grams, e.calories) : onAddPreset(e.name, e.oz, e.grams, e.calories), setPresetModalOpen(!1)
+            }
         }))
     }
 
@@ -3904,6 +3967,9 @@ import {
             onClick: onClose
         }, React.default.createElement("div", {
             className: "wt-sheet wt-plan-bottom-sheet",
+            style: {
+                paddingBottom: 88
+            },
             onClick: e => e.stopPropagation()
         }, React.default.createElement("div", {
             className: "wt-sheet-header"
@@ -4881,6 +4947,48 @@ import {
             } [f] || "Logged"), d(null)
         }
 
+        function addPreset(e, t, r, a) {
+            n(n => ({
+                ...n,
+                settings: {
+                    ...n.settings,
+                    presets: [...n.settings.presets, {
+                        id: `${Date.now()}`,
+                        name: e,
+                        oz: t || 0,
+                        grams: r || 0,
+                        calories: a || 0
+                    }]
+                }
+            }))
+        }
+
+        function editPreset(e, t, r, a, o) {
+            n(n => ({
+                ...n,
+                settings: {
+                    ...n.settings,
+                    presets: n.settings.presets.map(n => n.id === e ? {
+                        ...n,
+                        name: t,
+                        oz: r || 0,
+                        grams: a || 0,
+                        calories: o || 0
+                    } : n)
+                }
+            }))
+        }
+
+        function deletePreset(e) {
+            n(t => ({
+                ...t,
+                settings: {
+                    ...t.settings,
+                    presets: t.settings.presets.filter(t => t.id !== e)
+                }
+            }))
+        }
+
         function ye() {
             let e = HS(new Date),
                 n = t.logs[e] || [],
@@ -5310,45 +5418,9 @@ import {
                     }
                 }))
             },
-            onAddPreset: function(e, t, r, a) {
-                n(n => ({
-                    ...n,
-                    settings: {
-                        ...n.settings,
-                        presets: [...n.settings.presets, {
-                            id: `${Date.now()}`,
-                            name: e,
-                            oz: t || 0,
-                            grams: r || 0,
-                            calories: a || 0
-                        }]
-                    }
-                }))
-            },
-            onEditPreset: function(e, t, r, a, o) {
-                n(n => ({
-                    ...n,
-                    settings: {
-                        ...n.settings,
-                        presets: n.settings.presets.map(n => n.id === e ? {
-                            ...n,
-                            name: t,
-                            oz: r || 0,
-                            grams: a || 0,
-                            calories: o || 0
-                        } : n)
-                    }
-                }))
-            },
-            onDeletePreset: function(e) {
-                n(t => ({
-                    ...t,
-                    settings: {
-                        ...t.settings,
-                        presets: t.settings.presets.filter(t => t.id !== e)
-                    }
-                }))
-            },
+            onAddPreset: addPreset,
+            onEditPreset: editPreset,
+            onDeletePreset: deletePreset,
             onAddSupplement: function(e, t, r, a, o) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
@@ -5915,9 +5987,9 @@ import {
                     }, e.name)
                 })(e), i(!1), u(null), c(null)
             },
-            onEditPresets: () => {
-                i(!1), u(null), c(null), a("setup")
-            }
+            onAddPreset: addPreset,
+            onEditPreset: editPreset,
+            onDeletePreset: deletePreset
         }), React.default.createElement(wO, {
             open: "oz" === f,
             title: "Water",
