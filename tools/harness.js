@@ -85,9 +85,7 @@ const { window } = dom;
 // GOTCHA 1: seed the real localStorage; do not replace it.
 const SEED = makeSeed({
   // ── edit per session ──
-  // supplements: [{ id: "s1", name: "TestVit", intervalDays: 1, lastTakenDate: null,
-  //                 nextDueOverride: null, trackInventory: true, qtyRemaining: 3,
-  //                 expirationDate: null }],
+  settings: { showWater: false, showTreatments: false },
 });
 if (SEED) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
 
@@ -174,7 +172,7 @@ const check = (label, actual, expected) => {
 const STEPS = [
   () => {
     check("app mounted", html().length > 1000);
-    check("tile count", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8);
+    check("tile count (Water+Treatments off in seed)", [...window.document.querySelectorAll(".wt-tracker-col")].length, 6);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => check("nav to Stats", nav("Stats")),
@@ -241,6 +239,65 @@ const STEPS = [
     check("Self-Managed sheet label stays dark (not white) on light sheet", label ? label.style.color : null, "var(--ink)");
   },
   // Add assertions for whatever changed this session.
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    check("My Plan always renders all 8 cards (Water off, Treatments off seeded)", cards.length, 8);
+    const titles = cards.map((c) => c.querySelector(".wt-plan-card-title").textContent);
+    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX & Vitamins,Treatments");
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
+    check("Water card renders dimmed (off class)", waterCard ? waterCard.classList.contains("off") : null, "true");
+  },
+  () => {
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("found Water toggle switch", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    check("still 8 cards after toggling Water on", cards.length, 8);
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
+    check("Water card no longer off after toggle-on", waterCard ? waterCard.classList.contains("off") : null, "false");
+    check("settings.showWater persisted true", stored().settings.showWater, "true");
+  },
+  () => check("nav to Log It! (after Water re-enabled)", nav("Log It!")),
+  () => {
+    check("Water tile now appears on Log It!", tiles().some((t) => t.startsWith("Water")));
+  },
+  () => check("nav back to My Plan", nav("My Plan")),
+  () => {
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("re-found Water toggle", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    check("still 8 cards after toggling Water back off", cards.length, 8);
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
+    check("Water card off again (round-trip complete)", waterCard ? waterCard.classList.contains("off") : null, "true");
+  },
+  () => {
+    const treatToggle = window.document.querySelector('[aria-label="Toggle Treatments on Log page"]');
+    check("found Treatments toggle (was off in seed)", !!treatToggle);
+    const treatCard = treatToggle ? treatToggle.closest(".wt-plan-card") : null;
+    check("Treatments card off per seed", treatCard ? treatCard.classList.contains("off") : null, "true");
+    if (treatToggle) fire(treatToggle);
+  },
+  () => {
+    const treatCard = [...window.document.querySelectorAll(".wt-plan-card")]
+      .find((c) => c.querySelector(".wt-plan-card-title").textContent === "Treatments");
+    check("Treatments card on after toggle", treatCard ? treatCard.classList.contains("off") : null, "false");
+    check("settings.showTreatments persisted true", stored().settings.showTreatments, "true");
+  },
+  () => {
+    const banner = window.document.querySelector(".wt-topbanner");
+    const cssText = window.document.querySelector("style").textContent;
+    const bannerRuleMatch = cssText.match(/\.wt-topbanner\s*\{[^}]*\}/);
+    check("header CSS has no gradient", bannerRuleMatch ? !bannerRuleMatch[0].includes("gradient") : null, "true");
+    check("header CSS uses page-bg (black) background", bannerRuleMatch ? bannerRuleMatch[0].includes("var(--page-bg)") : null, "true");
+    const titleRuleMatch = cssText.match(/\.wt-topbanner-title\s*\{[^}]*\}/);
+    check("wordmark color is #fff", titleRuleMatch ? titleRuleMatch[0].includes("color:#fff") : null, "true");
+    check("wt-topbanner element exists", !!banner);
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

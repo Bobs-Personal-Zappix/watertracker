@@ -20,6 +20,52 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.32.0] — 2026-08-21
+
+Two fixes on My Plan. Built in `src/app.js`, deployed to `site/app/bundle.js` via the full
+build/harness/lint pipeline (build clean, harness clean — nine new assertions added, see below —
+lint 11, identical no-undef count before/after and matching the currently-deployed baseline).
+
+### Fixed (CRITICAL) — toggling a tracker off on My Plan permanently trapped it
+`PlanGrid` derived one boolean per tracker (`showWater`, `showTreatments`, etc.) and used it both
+as the `on` prop passed to `TrackerRow` *and* to gate whether `TrackerRow` rendered at all
+(`X && React.createElement(TrackerRow, {...})`). Turning a tracker off made that boolean `false`,
+which unmounted the card instead of just dimming it. Since the standalone "show hidden trackers"
+affordance was removed in the 2-column redesign (`UX-OPEN-01` Phase 1d, v3.27.0 — see decision log
+entry, superseding the original "Show all trackers" link plan), there was no longer any way to
+reach an off tracker's toggle once it disappeared — a permanent trap for anyone who tapped it.
+Fix: all 8 `TrackerRow` cards (Water, Protein, Calories, Sleep, Weight, Exercise, RX & Vitamins,
+Treatments) now render unconditionally, in fixed order, on every render; only the `on` prop (already
+wired to the existing `.wt-plan-card.off` dimmed styling) changes with the toggle. Log It! is
+unaffected — it derives its own independent `showX` booleans at line ~2190 and continues to filter
+off trackers from that list. Also removed a dead `.wt-plan-show-hidden` CSS rule left over from the
+already-superseded "show hidden trackers" link; no JS state or handlers for it were found (already
+removed in v3.27.0), only this orphaned style survived.
+
+### Fixed — app header now goes full black
+`.wt-topbanner`'s `background` changed from the `linear-gradient(135deg, #0B4F72 0%, #158FB0 52%,
+#35D6E8 100%)` banner to `var(--page-bg)` (the same black used for the page body since v3.29.0), so
+the droplet logo sits directly on black with no card/plate/gradient behind it. The "HydroPro
+Tracker" wordmark was already `#fff` — no change needed there. Also updated
+`site/app/index.html`'s `<meta name="theme-color">` and `site/app/manifest.json`'s `theme_color`
+from `#1B4F72` to `#000000` so the phone status bar matches instead of showing the old blue above a
+now-black header (`apple-mobile-web-app-status-bar-style` was already `black-translucent` and
+needed no change).
+
+### Verification
+`tools/harness.js` STEPS extended with a seed that boots with `showWater: false, showTreatments:
+false`, then: confirms My Plan renders all 8 cards with fixed order and the seeded-off cards dimmed;
+toggles Water on and confirms 8 cards persist, the card un-dims, `settings.showWater` persists
+`true`, and the Log It! tile reappears; toggles Water back off and confirms the round-trip lands
+back at 8 cards, off again; repeats the on-toggle for Treatments (the other seeded-off tracker); and
+asserts the `.wt-topbanner`/`.wt-topbanner-title` CSS rules directly for no gradient, `page-bg`
+background, and `#fff` wordmark color. All pass against both the working build and the exact shipped
+`site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only). **Not yet
+verified:** on a real device — Rob should confirm the phone status bar color and the header's actual
+appearance in a real browser, since jsdom has no layout engine for anything visual.
+
 ## [3.31.0] — 2026-08-21
 
 Three fixes on top of v3.30.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
