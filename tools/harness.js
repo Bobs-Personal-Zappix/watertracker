@@ -92,6 +92,7 @@ const SEED = makeSeed({
   },
   settings: {
     showWater: false, showTreatments: false,
+    goalWeight: 180, goalExerciseMinutes: 30,
     supplements: [
       { id: "s1", name: "TestVit", intervalDays: 1, lastTakenDate: null,
         nextDueOverride: null, trackInventory: true, qtyRemaining: 10,
@@ -317,7 +318,7 @@ const STEPS = [
     check("header CSS has no gradient", bannerRuleMatch ? !bannerRuleMatch[0].includes("gradient") : null, "true");
     check("header CSS uses page-bg (black) background", bannerRuleMatch ? bannerRuleMatch[0].includes("var(--page-bg)") : null, "true");
     const titleRuleMatch = cssText.match(/\.wt-topbanner-title\s*\{[^}]*\}/);
-    check("wordmark color is #fff", titleRuleMatch ? titleRuleMatch[0].includes("color:#fff") : null, "true");
+    check("wordmark color is warm tan var(--ink-inverse) (v3.36.0; was #fff)", titleRuleMatch ? titleRuleMatch[0].includes("color:var(--ink-inverse)") : null, "true");
     check("wt-topbanner element exists", !!banner);
   },
   () => check("nav to Log It! (for grid-to-button spacing check)", nav("Log It!")),
@@ -638,9 +639,146 @@ const STEPS = [
   () => {
     const waterChip = [...window.document.querySelectorAll(".wt-plan-card")].find((c) => c.textContent.includes("Water"));
     const icon = waterChip ? waterChip.querySelector(".wt-plan-card-icon svg") : null;
-    check("My Plan Water chip icon color aligned to water token hex", icon ? icon.getAttribute("stroke") : null, "#2F80ED");
+    check("My Plan Water chip icon color aligned to water token (v3.36.0: var(--water), was hex)", icon ? icon.getAttribute("stroke") : null, "var(--water)");
   },
   () => check("no runtime errors across the full v3.35.0 pass", errors.length, 0),
+
+  // ── v3.36.0: Log It! icon fill + font sizes, warm-tan dark-bg text, My Plan tile updates ──
+  () => check("nav to Log It! (item 1a/1b checks)", nav("Log It!")),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    const icon = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
+    check("Log It! Water chip icon now has an explicit category color (item 1a)", icon ? icon.getAttribute("stroke") : null, "var(--water)");
+    const cssText = window.document.querySelector("style").textContent;
+    const goalRule = cssText.match(/\.wt-tile-goal \{[^}]*\}/);
+    const togoRule = cssText.match(/\.wt-tile-togo \{[^}]*\}/);
+    const loggedRule = cssText.match(/\.wt-tile-logged \{[^}]*\}/);
+    check("wt-tile-goal font-size raised to 14px (item 1b)", goalRule ? goalRule[0].includes("font-size:14px") : null, "true");
+    check("wt-tile-togo font-size raised to 15px, still font-weight 700 (item 1b)", togoRule ? togoRule[0].includes("font-size:15px") && togoRule[0].includes("font-weight:700") : null, "true");
+    check("wt-tile-logged font-size raised to 14px (item 1b)", loggedRule ? loggedRule[0].includes("font-size:14px") : null, "true");
+  },
+  () => {
+    const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
+    check("all 8 Log It! tiles still mount cleanly after item 1 changes", tiles.length, 8);
+    check("no runtime errors after item 1 changes", errors.length, 0);
+  },
+  () => {
+    // Item 2: warm-tan text on dark backgrounds.
+    const cssText = window.document.querySelector("style").textContent;
+    const rules = [
+      [".wt-date ", "var(--ink-inverse)"],
+      [".wt-date-label ", "var(--ink-inverse)"],
+      [".wt-section-label ", "var(--ink-inverse)"],
+      [".wt-section-label-strong ", "var(--ink-inverse)"],
+      [".wt-plan-section-label ", "var(--ink-inverse)"],
+      [".wt-range-label ", "var(--ink-inverse)"],
+    ];
+    let allOk = true;
+    for (const [sel, expected] of rules) {
+      const re = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").trim() + " \\{[^}]*\\}");
+      const m = cssText.match(re);
+      if (!m || !m[0].includes(`color:${expected}`)) { console.log(`  (${sel} missing ${expected})`); allOk = false; }
+    }
+    check("page-level dark-bg text classes (header date, section labels, range label) use var(--ink-inverse)", allOk, "true");
+    check("--ink-inverse token is the warm tan #FFF6DB", cssText.includes("--ink-inverse:#FFF6DB"), "true");
+    const navBtnRule = cssText.match(/\.wt-nav-btn \{[^}]*\}/);
+    const navActiveRule = cssText.match(/\.wt-nav-btn\.active \{[^}]*\}/);
+    check("nav inactive tab labels use var(--ink-inverse), not var(--muted) globally", navBtnRule ? navBtnRule[0].includes("color:var(--ink-inverse)") : null, "true");
+    check("nav active tab label still uses var(--accent) (unchanged)", navActiveRule ? navActiveRule[0].includes("color:var(--accent)") : null, "true");
+    const fieldLabelRule = cssText.match(/\.wt-field \{[^}]*\}/);
+    check("--muted itself untouched globally (sheet field labels still use var(--muted))", fieldLabelRule ? fieldLabelRule[0].includes("color:var(--muted)") : null, "true");
+  },
+  () => check("nav to Today (to re-check the Prior Days label color)", nav("Today")),
+  () => {
+    const label = [...window.document.querySelectorAll("span")].find((s) => s.textContent === "Prior Days:");
+    check("\"Prior Days:\" label updated to var(--ink-inverse) (item 2)", label ? label.style.color : null, "var(--ink-inverse)");
+  },
+  () => check("nav to My Plan (item 3 checks)", nav("My Plan")),
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    check("all 8 My Plan tiles mount", cards.length, 8);
+    check("no runtime errors on My Plan after item 3 changes", errors.length, 0);
+  },
+  () => {
+    // Item 3c: left accent border + resized/recolored chip on every My Plan card.
+    const expected = [
+      ["Water", "var(--water)", "var(--water-chip)"],
+      ["Protein", "var(--protein)", "var(--protein-chip)"],
+      ["Calories", "var(--calories)", "var(--calories-chip)"],
+      ["Sleep", "var(--sleep)", "var(--sleep-chip)"],
+      ["Weight", "var(--weight)", "var(--weight-chip)"],
+      ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
+      ["RX & Vitamins", "var(--meds)", "var(--meds-chip)"],
+      ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
+    ];
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    let allOk = true;
+    for (const [label, colorVar, chipVar] of expected) {
+      const card = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === label);
+      if (!card) { console.log(`  (missing My Plan card: ${label})`); allOk = false; continue; }
+      if (!(card.style.borderLeft || "").includes(colorVar)) { console.log(`  (${label} My Plan border mismatch: "${card.style.borderLeft}")`); allOk = false; }
+      const chip = card.querySelector(".wt-plan-card-icon");
+      if (!chip || chip.style.background !== chipVar) { console.log(`  (${label} My Plan chip bg mismatch)`); allOk = false; }
+    }
+    check("every My Plan card has the matching category left-border and chip-tint background", allOk, "true");
+    const cssText = window.document.querySelector("style").textContent;
+    const chipRule = cssText.match(/\.wt-plan-card-icon \{[^}]*\}/);
+    check("My Plan chip resized to 28x28 / radius 8 (item 3c)", chipRule ? chipRule[0].includes("width:28px") && chipRule[0].includes("height:28px") && chipRule[0].includes("border-radius:8px") : null, "true");
+  },
+  () => {
+    // Item 3b: bold "Target: " prefix on Water/Protein/Calories/Sleep/Exercise; Weight untouched; RX/Treatments have no goal line.
+    const withTarget = ["Water", "Protein", "Calories", "Sleep", "Exercise"];
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    let allOk = true;
+    for (const label of withTarget) {
+      const card = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === label);
+      const goal = card ? card.querySelector(".wt-plan-card-goal") : null;
+      const strong = goal ? goal.querySelector("strong") : null;
+      if (!strong || strong.textContent !== "Target: " || (strong.style.fontWeight !== "700" && window.getComputedStyle(strong).fontWeight !== "700")) {
+        console.log(`  (${label} missing bold "Target: " prefix)`); allOk = false;
+      }
+    }
+    check("Water/Protein/Calories/Sleep/Exercise My Plan cards show a bold \"Target: \" prefix (item 3b)", allOk, "true");
+    const weightCard = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === "Weight");
+    const weightGoal = weightCard ? weightCard.querySelector(".wt-plan-card-goal") : null;
+    check("Weight card's existing \"Target\" text left exactly as-is (plain text, no new <strong> wrapper)", weightGoal ? !weightGoal.querySelector("strong") && weightGoal.textContent.includes("Target") : null, "true");
+  },
+  () => {
+    // Item 3a: toggle a tile off and confirm the toggle+Track label stay at full opacity while the rest dims.
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("found Water toggle to switch off for the dimming check", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === "Water");
+    check("Water card off after toggle", waterCard ? waterCard.classList.contains("off") : null, "true");
+    const dim = waterCard ? waterCard.querySelector(".wt-plan-card-dim") : null;
+    check("content wrapper (.wt-plan-card-dim) carries the off/dim class", dim ? dim.classList.contains("off") : null, "true");
+    const toggleArea = waterCard ? waterCard.querySelector(".wt-plan-card-toggle-area") : null;
+    check("toggle+Track area exists as a sibling OUTSIDE the dimmed content wrapper", toggleArea && dim ? !dim.contains(toggleArea) : null, "true");
+    const cssText = window.document.querySelector("style").textContent;
+    const dimOffRule = cssText.match(/\.wt-plan-card-dim\.off \{[^}]*\}/);
+    const toggleAreaRule = cssText.match(/\.wt-plan-card-toggle-area \{[^}]*\}/);
+    check("dim wrapper's off state reduces opacity (0.6)", dimOffRule ? dimOffRule[0].includes("opacity:.6") : null, "true");
+    check("toggle-area CSS rule has no opacity reduction of its own", toggleAreaRule ? !toggleAreaRule[0].includes("opacity") : null, "true");
+    const toggleBtn = toggleArea ? toggleArea.querySelector(".wt-switch") : null;
+    check("toggle switch still tappable/rendered when tile is off", !!toggleBtn);
+  },
+  () => {
+    // Re-enable Water so it's back to a known-good state, matching the pre-toggle baseline.
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("found Water toggle to re-enable it", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === "Water");
+    check("Water re-enabled after the dimming check", waterCard ? !waterCard.classList.contains("off") : null, "true");
+  },
+  () => check("nav to Today (tab mounts without errors after item 2/3 changes)", nav("Today")),
+  () => check("nav to Stats (tab mounts without errors)", nav("Stats")),
+  () => check("no runtime errors across the full v3.36.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

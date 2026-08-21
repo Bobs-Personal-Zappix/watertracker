@@ -20,6 +20,90 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.36.0] — 2026-08-21
+
+Three visual refinements following v3.35.0 real-device feedback: Log It! icon fill + stat font
+sizes, a warm-tan text color for dark backgrounds app-wide, and three My Plan tile updates (toggle
+dimming fix, "Target" labels, left border + chip). Visual/style only — no data logic, schema, or
+functionality changes. Built in `src/app.js`, deployed to `site/app/bundle.js` via the full
+build/harness/lint pipeline (build clean, harness clean — 41 new assertions added, see below — lint
+11, identical no-undef count before/after and matching the currently-deployed baseline).
+
+### Fixed — Log It! chip icons rendered dark/black instead of their category color
+Each tile's chip `<div>` set `color: var(--<category>)` via CSS, expecting the lucide-react icon
+inside to inherit it through `currentColor` — it didn't. Fixed by passing `color: "var(--<category>)"`
+directly as a prop to each of the 8 icon components (the same approach already used for My Plan's
+chips, confirmed working there via harness in v3.35.0). Chip container size unchanged.
+
+### Changed — Log It! stat line font sizes increased
+`.wt-tile-goal` 13px→14px, `.wt-tile-togo` 14px→15px (still weight 700), `.wt-tile-logged`
+13px→14px. All 8 tiles confirmed still mounting cleanly with no layout errors at the new sizes.
+
+### Changed — `--ink-inverse` token set to warm tan `#FFF6DB` (was `#E8ECF1`), adopted across dark-bg text
+The token itself had been installed in v3.34.0 but never actually used anywhere — this session both
+changed its value and adopted it for the first time. Updated: the app header title, the header date
+text, section labels/headers on every tab (Today, Stats, My Plan, Settings), the Stats date-range
+label (found genuinely unstyled — inheriting dark `--ink` on the dark page background, effectively
+invisible; not explicitly requested but squarely the bug class this item targets), and the "Prior
+Days:" label on Today. **Left alone, correctly out of scope**: text inside white
+`var(--surface)`-background tiles/cards/sheets (still `--ink`, dark, as required); the active nav
+tab label (still `var(--accent)` blue); Stats chart axis labels (recharts-managed). **Bottom nav
+inactive labels**: changed the base `.wt-nav-btn` rule to `var(--ink-inverse)` rather than touching
+the global `--muted` token — `.wt-nav-btn.active`'s own `color:var(--accent)` rule has higher
+specificity and is untouched, so the active tab is unaffected; `--muted` itself still reads its old
+value everywhere else (confirmed via harness: sheet field labels unaffected).
+
+### Fixed — My Plan: toggling a tile off used to dim its toggle switch and "Track" label too
+Per `UX-10`, the toggle must always stay clearly visible so a user knows to tap it back on — but
+`.wt-plan-card.off { opacity:.6 }` applied to the whole card, and CSS opacity compounds down a
+subtree with no way for a child to opt back in to full opacity. Restructured: the card's dimmable
+content (icon, title, goal line, status) now lives in a new `.wt-plan-card-dim` wrapper that alone
+carries the `.off` opacity class; the toggle switch + "Track" label moved out to a sibling
+`.wt-plan-card-toggle-area`, absolutely positioned in the same top-right spot it always occupied
+(`.wt-plan-card` gained `position:relative` to anchor it), so it's structurally impossible for the
+card-level dim to reach it. Verified in the harness: toggle a card off, confirm the dim wrapper
+carries `.off` while the toggle area doesn't and isn't nested inside anything that does, and that
+the switch is still rendered/tappable.
+
+### Added — bold "Target: " prefix on 5 My Plan tiles
+Water, Protein, Calories, Sleep, and Exercise now show a bold (`font-weight:700`) "Target: " prefix
+before the goal value, only when a real goal is set (matches the existing "Set a goal" fallback
+behavior exactly — no prefix on the placeholder text). Weight's own "Target ${x}lbs" string — which
+predates this session and isn't actually bolded internally — was left completely untouched per the
+brief. RX & Vitamins and Treatments have no goal line and were correctly skipped.
+
+### Changed — My Plan tiles: left accent border + resized/recolored category chip
+`.wt-plan-card` gained an inline `borderLeft: "4px solid var(--<category>)"` per tile (reusing the
+`iconColor` prop already carrying that value — no new prop needed). The existing 50×50px/12px-radius
+chip (light pastel background, saturated icon) was resized to 28×28px/8px-radius and recolored to
+the same dark `var(--<category>-chip)` background + `var(--<category>)` icon used by Log It!'s
+chips — this **supersedes the v3.35.0 decision** to leave My Plan's `iconBg` alone (that call was
+made before this real-device feedback asked for visual parity with Log It!; this session's explicit
+instruction takes precedence). 2-column grid and card structure otherwise unchanged; no gem added —
+My Plan never had gem illustrations and this session didn't add any.
+
+### Verification
+`tools/harness.js` seed extended with `goalWeight:180`/`goalExerciseMinutes:30` (both were 0 by
+default, which was silently making the "Target:" prefix check on Exercise, and the "Weight text
+still contains Target" check, both meaningless — fixed the test, not the app). New assertions cover,
+per item: Log It! icon `stroke` attributes now carry the category `var()`, stat-line CSS font
+sizes, all 8 tiles still mount; the CSS rule text for every dark-bg text class asserted against
+`var(--ink-inverse)`, the token's `#FFF6DB` value, nav's inactive-vs-active color split, confirmation
+`--muted` itself is untouched; every My Plan card's border/chip pairing, chip CSS dimensions, the 5
+bold "Target:" prefixes present and Weight's untouched, and a live toggle-off/toggle-on round trip
+confirming the dim wrapper and toggle area are structurally independent. All pass against both the
+working build and the exact shipped `site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only) — everything
+DOM/CSS-text observable: icon color attributes, font-size rules, dimming class structure, bold
+prefix presence, border/chip inline styles. **Not yet verified:** anything actually visual — whether
+the Log It! icons read as clearly colored (not dark) at a glance, whether all stat text is
+comfortably readable, whether the warm tan actually reads warm and legible against the dark
+backgrounds across all 5 tabs (and stays dark, unchanged, inside white cards), whether the My Plan
+toggle+Track visibly stays bright while the rest of an off card dims, and whether the new smaller
+chip + border look right at the 2-column card width. Real-device walk needed, per the brief's own
+checklist.
+
 ## [3.35.0] — 2026-08-21
 
 Log It! tile restructure plus a category-color-token consistency pass across Log It!, Stats, and
