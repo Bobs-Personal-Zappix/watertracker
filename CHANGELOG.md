@@ -20,6 +20,48 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.27.0] — 2026-08-20
+
+`UX-OPEN-01` Phase 1d — cosmetic fixes and two new Log It! action buttons, built in
+`src/app.js` and deployed to `site/app/bundle.js` via the full build/harness/lint pipeline.
+
+### Changed — "RX & Supplements" renamed to "RX & Vitamins"
+All 4 user-facing occurrences (Log It! tile, My Plan tracker row, and the tracker-detail sheet
+title used in two places). Settings keys (`showSupplements`, `supplements`, etc.) unchanged.
+
+### Added — "Use Your Presets" and "Log a Meal" action buttons on Log It!
+Two side-by-side buttons below the tile grid. "Use Your Presets" (amber) opens the existing
+preset-capable log sheet fresh, with no entry being edited and no quick-dial value carried in —
+the same sheet already used elsewhere in the app, just newly triggered from Log It!. "Log a Meal"
+(teal) opens a new bottom sheet with an optional meal-name field and three numeric inputs
+(water/protein/calories); "Log This Meal" writes one combined log entry via the existing `pe()`
+log-entry function, the same one every other quick-log path in the app uses. A field only
+contributes to the entry if it's non-empty and > 0; if all three are empty, nothing is logged.
+
+### Changed — My Plan tracker card title font size
+`.wt-plan-card-title` 17px → 14px. Icon, goal text, and status pill sizing unchanged.
+
+### Changed — "Track" label added under each My Plan toggle
+Small 10px label beneath the on/off switch in `TrackerRow`, always visible.
+
+### Changed / reversed decision — off-trackers are always visible on My Plan now
+Removed the `showHiddenTrackers` state and the "Show hidden trackers" / "Hide inactive trackers"
+button entirely. All 8 `TrackerRow`s now render unconditionally, dimmed via the existing
+`.wt-plan-card.off` styling (`opacity:.6`, unchanged — it already satisfied the brief's
+"opacity:.6 or similar" bar). **This reverses the Aug 20 decision-log entry** ("Off-trackers
+hideable entirely — collapsed rows, 'Show all trackers' link," `UX-OPEN-01` §8) — flagged to Rob
+before building and confirmed to proceed. Decision-log update below. The helper paragraph under
+the tracker grid was reworded to match: off trackers now stay visible (dimmed) on My Plan but are
+still hidden on Log It!, and still counted in Reports.
+
+### Changed — removed vertical accent stripe on My Plan section headers
+`.wt-plan-section-label` no longer has `border-left:3px solid var(--teal)`. `padding-left:12px`
+was deliberately left in place (not called out for removal), so header text sits slightly
+indented even without the stripe — worth Rob's eyes on whether that indent should also go.
+
+### Changed — Settings page field order
+"Your name" input now renders above "How to use this," reversed from before. No styling changes.
+
 ## [3.26.0] — 2026-08-20
 
 `UX-OPEN-01` follow-up — three targeted fixes on top of Phase 1c's tile sizing, built in
