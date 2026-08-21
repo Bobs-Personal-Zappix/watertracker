@@ -97,6 +97,25 @@ Quantity per log is respected where present, but the default assumption is 1 uni
 *Why:* no per-dose quantity concept existed; adding one wasn't needed for the core use case.
 *Status:* **Provisional** · Aug 17, 2026
 
+**PROD-06 — Backfill: "Enter Missed Items" on past days.**
+The past-day view (Today → calendar icon → All Past Days → a day) gains an "Enter Missed Items" button at the top, opening a portaled entry sheet with a date field pre-filled with the viewed day but editable — so days with zero existing entries, which never appear in All Past Days, stay reachable. One control per enabled tracker. Single Save. No limit on how far back.
+*Why:* people forget to log in the moment. Adherence data that can't be corrected understates real behavior, which matters most in the clinic-facing summary.
+*Status:* **Locked — deployed v3.33.0** · Aug 21, 2026
+
+**PROD-07 — Treatments excluded from backfill in v1; RX & Vitamins included.**
+*Why:* treatments run on multi-week intervals with next-due calculated forward from the last actual dose (intentional schedule drift, v3.4 design note), so a late-entered dose risks yanking a forward schedule the user has been actively managing. Supplements default to daily, making drift risk negligible. Revisit once retroactive schedule behavior is explicitly specified.
+*Status:* **Provisional** · Aug 21, 2026
+
+**PROD-08 — Backfill decrements inventory but never recalculates next-due.**
+Applies to all backfilled entries as a rule, not judged per tracker. Backfilled entries also never fire goal celebrations, never affect today's due/done state, and restore inventory on delete through the same path live entries use.
+*Why:* a late-entered dose was genuinely consumed, so inventory must reflect it; but the forward schedule is state the user has been actively managing and must not be rewritten by a correction to the past.
+*Status:* **Locked** · Aug 21, 2026
+
+**PROD-09 — Backfilled entries carry provenance.**
+Every backfilled entry stores `backfilled: true` plus an `enteredAt` wall-clock timestamp distinct from its log date. Not surfaced in the UI in v1. Added via the versioned schema (`migrate`/`deepMergeDefaults`), not a hand-maintained field list.
+*Why:* trivially cheap now, impossible to retrofit onto existing entries. Clinic adherence data is materially more credible when live logs are distinguishable from later corrections.
+*Status:* **Locked** · Aug 21, 2026
+
 ---
 
 ## Architecture
@@ -154,8 +173,8 @@ Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STAT
 *Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.*
 
 **UX-07 — Tile order on Log It!**
-Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
-*Status:* **Locked** · Aug 17, 2026
+Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins.
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).*
 
 **UX-08 — Health Summary and doctor share live at the bottom of Stats.**
 Moved off Settings.
@@ -166,6 +185,16 @@ Moved off Settings.
 Today's Log guaranteed ≥50% of viewport; To Do Today scrolls internally when long.
 *Why:* To Do Today must stay visible while scrolling the day's log.
 *Status:* **Locked** · Aug 17, 2026
+
+**UX-10 — Off-trackers stay permanently visible on My Plan.**
+Toggling a tracker off affects the Log It! page only. The My Plan card stays in its fixed grid position, dimmed, toggle reading off. The "Show all trackers" affordance is removed rather than restored.
+*Why:* the 2-column redesign (v3.22.0–3.26.0) dropped the reveal affordance while keeping the hiding, so an off tracker became permanently unreachable — no path existed to turn it back on. My Plan is the control surface; hiding the control that restores a tracker is a trap. Visibility there is load-bearing and must not be made conditional again. Supersedes the §8 question 2 resolution noted in UX-OPEN-01.
+*Status:* **Locked** · Aug 21, 2026 · v3.32.0
+
+**UX-11 — Sheets and modals render at app root via createPortal, never nested.**
+Any sheet, modal, or popup renders via `createPortal` to `document.body` — never inside another sheet's DOM, regardless of where it's invoked from.
+*Why:* nested rendering produced repeated positioning and visibility failures across three separate bugs (My Presets sheet, the black-background render issue, and the OO preset modal). Recording this as a standing pattern rather than a series of individual fixes is what stops the class from recurring. Established and applied in v3.33.0 for both the OO preset modal and the new backfill sheet.
+*Status:* **Locked as a rule** · Aug 21, 2026
 
 ---
 
@@ -230,7 +259,7 @@ First successful `wrangler deploy` from the local clone, Aug 20, 2026. `worker/`
 
 These are recommendations or forks, **not** decisions. They double as the agenda for the strategy sessions.
 
-**STRAT-OPEN-02 — Business model and pricing.** — *now the most time-sensitive open item.*
+**STRAT-OPEN-02 — Business model and pricing.** — *most time-sensitive open item.*
 Proposed shape: clinic subscription per location, consumer free as distribution, consumer premium only after retention proves out. Explicitly ruled out: data monetization.
 *Urgency (Aug 18):* `STRAT-10` makes clinic conversations the active track, and those conversations produce the question "what does this cost." There is no answer on file. Needed **before the next clinic meeting**, not after — walking in without a price frame either stalls the conversation or anchors it somewhere unchosen.
 
@@ -244,34 +273,29 @@ A tester or clinic asked for health-platform integration; the literal ask was ne
 Full spec in `HydroPro-Config-Onboarding-Redesign.md` (project knowledge). Proposes: rename Setup → "My Plan"; merge the 8 tracker toggles and 6 goal inputs into one row per tracker; collapse the three unbounded CRUD lists to summary rows; consolidate Settings to six status rows; rebuild "Your data" as a single backed-up/not-backed-up status with ranked options behind it; group Reminders by intent; promote the tutorial and fire it on first run; add two onboarding ramps (clinic protocol code / self-serve) both ending in a first logged entry.
 *Dependencies:* `ARCH-OPEN-01` (source reconciliation) should land first — this relocates large JSX blocks, which is the worst kind of change to attempt on a minified bundle. Analytics should land before the onboarding half ships, or its effect on time-to-first-log and D7 is unmeasurable. `ARCH-OPEN-05` (versioned schema) should land before protocol provenance.
 *Update (Aug 18):* items 8–10 of the spec's §7 were gated on `STRAT-OPEN-01`. `STRAT-10` resolves that gate, and clinic-first **promotes** them — the protocol code is the clinic's distribution mechanism and light white-labeling is cheap and persuasive in a sales conversation. Note the spec cites the versioned-schema prerequisite as `ARCH-OPEN-02`; that is a mis-reference, and the correct ID is `ARCH-OPEN-05`.
-*Phase 1 complete (Aug 20, v3.22.0):* My Plan page redesigned in `src/app.js`. Unified tracker rows — one row per tracker with toggle + goal inline. Off-trackers hideable entirely via per-row toggle; "Show all trackers" affordance reveals hidden rows. Three CRUD lists collapsed to summary rows with live counts. WO component: 403 → 310 lines. Not yet deployed to `site/app/bundle.js` — deploy is a separate decision after real-browser visual verification.
-
-*Two of five §8 open questions resolved (Aug 20):* (1) "My Plan" confirmed as the name — amends UX-06. (2) Off-trackers hideable entirely — collapsed rows, "Show all trackers" link. **Superseded same day, Phase 1d (v3.27.0):** all 8 trackers now render unconditionally on My Plan, dimmed via existing `.wt-plan-card.off` styling; the `showHiddenTrackers` state and "Show hidden trackers" button were removed. Flagged as a conflict with this entry before building; Rob confirmed proceeding with the reversal.
-
+*Phase 1 complete (Aug 20, v3.22.0):* My Plan page redesigned in `src/app.js`. Unified tracker rows — one row per tracker with toggle + goal inline. Three CRUD lists collapsed to summary rows. Not yet deployed to `site/app/bundle.js` — deploy is a separate decision after real-browser visual verification.
+*Two of five §8 open questions resolved (Aug 20):* (1) "My Plan" confirmed as the name — amends UX-06. (2) Off-trackers: initially resolved as "hideable entirely — collapsed rows, 'Show all trackers' link." **Superseded Aug 21, 2026 by UX-10:** all 8 trackers now render unconditionally on My Plan, dimmed; the `showHiddenTrackers` state and button were removed. Off-trackers are only hidden on Log It!.
 *Remaining open questions:* caregiver case (probably "not yet"), appointment date location, clinic-code prompt scope (everyone vs. QR deep-link only).
-
 *Small outstanding from Phase 1:* "Add in Setup" stale copy on two Log It! tiles (Treatments/Supplements empty-state CTA) — quick fix, not yet addressed.
-
 *Phase 2 (not started):* Settings consolidation — six status rows, "Your data" backed-up/not status, Reminders grouped by intent, tutorial on first run.
 *Phase 3 (not started):* Clinic onboarding ramp.
 
+**UX-OPEN-02 — Backdrop-click cascade: OO modal closes parent Log sheet.**
+When the OO preset add/edit modal is open and the user taps its backdrop, React's tree-based event bubbling (not DOM-based) propagates the click to the parent Log sheet, closing both in one action instead of just the modal. Pre-existing behavior, not introduced by the `createPortal` fix in v3.33.0 — the portal inherits it. My Presets backdrop already has `stopPropagation` for this exact reason.
+*Fix:* one-liner `stopPropagation` on the OO modal backdrop handler, same as My Presets. Claude can do this alone.
+*Needs first:* Rob's real-device confirmation that the cascade actually manifests (jsdom can't test backdrop event behavior end-to-end). If confirmed, this is a quick patch, no design decision required.
+
 **ARCH-OPEN-01 — Source reconciliation: extraction complete, build pipeline established.**
+*Status: **Locked — complete** · Aug 20, 2026*
 Chosen approach: extract from live bundle. Executed Aug 20, 2026.
-- `src/app.js` — 6,104 lines extracted from `site/app/bundle.js` (beautified lines 25859–31962). Parses cleanly. All 37 vendor short-names mapped and wired as proper ES imports (React, ReactDOM, recharts, 24 lucide-react icons).
-- `esbuild.config.js` — build pipeline authored from scratch (none existed). Output: `site/app/bundle.build.js` (gitignored, never deployed). `NODE_ENV=production` set; harness-verified clean boot.
-- `site/app/bundle.js` and `src/App.jsx` — untouched throughout. The deployed bundle remains the source of truth until the build output is verified to match production behavior.
-*Worker side resolved (Aug 20):* the real deployed `worker.js` (728 lines) is committed, `wrangler.toml` has real values, first `wrangler deploy` succeeded (`OPS-09`).
-*All gates passed (Aug 20, 2026):*
-- Source extracted: `src/app.js`, 6,104 lines, build pipeline via `esbuild.config.js`
-- Recharts pinned to 2.15.4 (v2 fingerprint matched from deployed bundle; `@reduxjs/toolkit`/`reselect` eliminated)
-- All 38 vendor identifiers renamed to real names across 7 batches; `XIcon` used instead of `X` to avoid a real local-variable collision
-- Harness clean after every batch; real-browser Stats verification confirmed by Rob on device
-- `site/app/bundle.js` remains the deployed artifact; `src/app.js` + `esbuild.config.js` now the source of truth for future edits
-*Status:* **Locked — complete** · Aug 20, 2026
+- `src/app.js` — 6,104 lines extracted from `site/app/bundle.js`. All 38 vendor identifiers renamed to real names across 7 batches. Recharts pinned to 2.15.4.
+- `esbuild.config.js` — build pipeline authored from scratch. Output: `site/app/bundle.build.js` (gitignored). `NODE_ENV=production` set; harness-verified clean boot.
+- Worker side resolved (Aug 20): the real deployed `worker.js` (728 lines) committed, `wrangler.toml` has real values, first `wrangler deploy` succeeded (`OPS-09`).
+- `src/app.js` + `esbuild.config.js` are now the source of truth for all future edits.
 
 **ARCH-OPEN-02 — Data model: when to move off the single-blob store.**
 Currently one JSON blob in `account_backups.data`. Cannot answer "which patients are lapsing" or "what's D30 retention" — i.e. the entire B2B product. Proposed: keep the blob for sync, add normalized `log_entries` + `user_activity` rows.
-*Update (Aug 20, 2026):* `user_activity` shipped as part of `ARCH-OPEN-06` (retention analytics). The broader normalized model (`log_entries`, lapsing-patient queries) remains open — that's the clinic dashboard prerequisite and the next engineering priority after the bundle coverage fix.
+*Update (Aug 20, 2026):* `user_activity` shipped as part of `ARCH-OPEN-06` (retention analytics). The broader normalized model (`log_entries`, lapsing-patient queries) remains open — that's the clinic dashboard prerequisite.
 
 **ARCH-OPEN-03 (revised) — Health-platform integration: scope and sequencing.**
 Widened from "native wrapper for HealthKit / Health Connect?" to the full question. Forks: (a) drop the ambition entirely; (b) Capacitor wrapper, push-first to HealthKit + Health Connect — collapses Samsung and most Android into one integration, but forces ARCH-OPEN-04 (Access removal), LEGAL-OPEN-01, and provenance work in ARCH-OPEN-02; (c) cloud pull only (Oura ± Google Health) — cheapest, but off-thesis per roadmap §5; (d) aggregator (Terra/Thryve/Validic/Rook) — one integration, holds the Garmin partnership, but a third party in the middle of health data. Notes: Garmin's partner program is closed to new applicants; Google restricted health scopes require CASA assessment; the legacy Fitbit Web API decommissions Sept 2026.
@@ -280,23 +304,25 @@ Widened from "native wrapper for HealthKit / Health Connect?" to the full questi
 Standing data-loss exposure: history lives in one browser's storage. Access also can't scale past an invited list.
 
 **ARCH-OPEN-05 — Versioned schema and deep-merge migrations.**
+*Note: this entry was created at the planning stage (Aug 18). See the second ARCH-OPEN-05 entry below for the completion record.*
 Replace the hand-maintained field whitelists in the load path (`One()`, `vj()`, `yj()`) with a versioned schema, deep-merge-against-defaults, and an explicit migration chain. Roughly 100 lines; retires the silent-field-loss bug class rather than fixing it once more. Cheap in real source, miserable in a minified bundle — so it belongs immediately after `ARCH-OPEN-01`. Prerequisite for protocol provenance in `UX-OPEN-01`.
 *Created Aug 18, 2026 — this work previously had no ID and was cited incorrectly as `ARCH-OPEN-02` in the redesign spec.*
 
 **ARCH-OPEN-05 — Versioned schema and deep-merge migrations.**
+*Status: **Locked — complete** · Aug 20, 2026*
 Replaced three hand-maintained field whitelists in the load path with a single `migrate(stored)` function using `deepMergeDefaults` against `defaultSettings`. Export inverted from allowlist to denylist. `SCHEMA_VERSION=2` stamped with a migration-chain hook for future breaking changes. Fixes `goalWeight`/`goalExerciseMinutes` silent-drop bug in `src/app.js` (shipped v3.20.0); same bug patched in deployed `site/app/bundle.js` separately (v3.21.0, real-device verified Aug 20).
 *Why:* the silent-field-loss bug had already bitten sleep, weight, and supplements. The fix retires the whole bug class rather than patching it once more.
-*Status:* **Locked — complete** · Aug 20, 2026
 
 **ARCH-OPEN-06 — Retention analytics via the Worker.**
-`POST /api/progress` merged: D1 retention write (opaque id + server-assigned UTC date to `user_activity`) runs for every caller before the KV progress save, which is preserved intact for push subscribers and the cron job. Full D1 schema migrated: 6 tables (`users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`). Deployed Aug 20, 2026 — first row recorded same day.
-*Coverage gap closed (Aug 20, 2026):* bundle coverage fix (3b) shipped as v3.18.0 — `wtDeviceId()` + `wtActivityPing()` + mount-only effect added to `site/app/bundle.js`. All users, push-subscribed or not, now generate a `user_activity` row via a `{id}`-only `POST /api/progress` on app mount. Verified on real device: both push-subscribed and non-push users confirmed producing rows in `user_activity`.
-*Status:* **Fully deployed and verified** · Aug 20, 2026
+*Status: **Fully deployed and verified** · Aug 20, 2026*
+`POST /api/progress` merged: D1 retention write (opaque id + server-assigned UTC date to `user_activity`) runs for every caller before the KV progress save. Full D1 schema migrated: 6 tables (`users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`). Deployed Aug 20, 2026 — first row recorded same day.
+*Coverage gap closed (Aug 20, 2026):* bundle coverage fix shipped as v3.18.0 — `wtDeviceId()` + `wtActivityPing()` + mount-only effect added. All users, push-subscribed or not, now generate a `user_activity` row on app mount. Verified on real device.
 
 **LEGAL-OPEN-01 — Compliance path, including whether to accept HIPAA obligations.**
 The clinic path may make HydroPro a Business Associate. Separately, the FTC Health Breach Notification Rule and Washington's My Health My Data Act apply to consumer health apps outside HIPAA. Needs a digital-health attorney, not a decision made in-app.
 *Addendum (Aug 17, 2026):* Two additional independent triggers identified. (1) App-store distribution, required for any native health-platform integration, brings its own privacy-policy, data-deletion, and health-data-declaration obligations. (2) If a clinic wants to *receive* patient wearable data rather than the patient merely using it, that is materially closer to Business Associate territory than patient-entered adherence data shared via a snapshot link — in that case, legal consultation must precede the build, not follow it.
+*Addendum (Aug 21, 2026):* PROD-09 (backfill provenance fields) is the first field added specifically for clinic-facing reporting. The moment clinic patient data enters scope, this stops being theoretical.
 
 ---
 
-*Last updated: August 20, 2026 (ARCH-OPEN-06 closed, ARCH-OPEN-01 closed, ARCH-OPEN-05 closed, UX-OPEN-01 Phase 1 complete)*
+*Last updated: August 21, 2026 (UX-10, UX-11, PROD-06–09 added; UX-OPEN-02 added; UX-OPEN-01 §8 Q2 superseded by UX-10; ARCH-OPEN-01/05/06 closed; LEGAL-OPEN-01 addendum)*

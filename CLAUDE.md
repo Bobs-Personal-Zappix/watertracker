@@ -10,34 +10,18 @@ answers "what exists right now"; update it when it stops being true.
 
 ---
 
-## Source of truth: `src/app.js` + `esbuild.config.js`
+## Source of truth: the bundle, not `src/`
 
-- `src/app.js` — extracted and reconciled under `ARCH-OPEN-01`, closed Aug 20, 2026
-  (`docs/DECISION-LOG.md`) — is the current source of truth. Build it with `esbuild.config.js`.
-- `src/App.jsx` (capital `A`) is a **separate, still-stale legacy file** — missing Treatments,
-  Exercise, and everything after v3.13.0. Reference only, never build from it. Don't confuse it
-  with `src/app.js` (lowercase) — the names differ only in one letter's case.
-- **The correct build command is `node esbuild.config.js`.** There is no `npm run build` script in
-  `package.json` today. If one is ever added, don't trust it just because it exists — confirm its
-  entry point and output path first. A build script pointed at the wrong source (especially the
-  stale `src/App.jsx`) would silently revert months of shipped features, same risk this section has
-  always warned about.
-- **Deploying `site/app/bundle.js` from a build is now a verified path, not a blocked one** — but
-  only by running the full sequence every time: (1) `node esbuild.config.js`, (2)
-  `node tools/harness.js site/app/bundle.build.js` clean, (3) lint `bundle.build.js` and confirm
-  its no-undef count, (4) copy `bundle.build.js` over `site/app/bundle.js`, (5) re-run the harness
-  and lint against the exact deployed file afterward. Skipping straight to the copy without all
-  five steps is still the exact failure mode this section used to hard-block outright — the rule
-  didn't disappear, it moved into the verification sequence instead of stopping the action.
+- `site/app/bundle.js` (minified, ~702KB) **is the deployed app and the current source of truth.**
+- `src/App.jsx` is **stale** — missing Treatments, Exercise, and everything after v3.13.0.
+- **Never run `npm run build`, or any command that regenerates `site/app/bundle.js` from `src/`.**
+  It would silently revert months of shipped features. If a task appears to require a build, stop
+  and ask.
 - The ~578-check jsdom suite in the repo runs against `src/`. **Passing tests prove nothing about
-  production** until the harness has run against the real, currently-deployed `site/app/bundle.js`
-  — cite that, not the test suite, as evidence a change works.
+  production.** Do not cite them as evidence that a change works.
 
-This reflects `ARCH-OPEN-01`'s closure. The previous version of this section required stopping and
-asking before any build, because source and deployed bundle had diverged and no reconciled,
-verified pipeline existed. That's no longer true — but the underlying risk (a bad build silently
-overwriting shipped behavior) is still real, which is why steps 1–5 above are mandatory, not
-optional, every time this path is used.
+This section changes only when source reconciliation (`ARCH-OPEN-01`) is complete. Until then it
+is a hard rule, not a preference.
 
 ## Layout
 
@@ -45,7 +29,7 @@ optional, every time this path is used.
 site/app/bundle.js     the real deployed artifact — edit this
 site/app/              config.js, index.html, manifest.json, service-worker.js, icons
 src/App.jsx            STALE. Reference only. Do not build from it.
-worker/src/worker.js   Cloudflare Worker: push, auth, shares, account backup, 15-min cron
+worker/src/worker.js   Cloudflare Worker: push, auth, shares, account backup, 5-min cron
 tools/harness.js       jsdom smoke-test harness — boots the real bundle and drives the UI
 docs/                  DECISION-LOG.md, CURRENT-STATE.md, ROADMAP-v2.md
 CHANGELOG.md
