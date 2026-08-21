@@ -221,7 +221,7 @@ import {
         vS = "#D5E1EC",
         bS = "#C1523E",
         wS = "#5C7085",
-        xS = "3.36.0",
+        xS = "3.36.1",
         SCHEMA_VERSION = 2,
         ES = {
             logs: {},
@@ -3260,7 +3260,7 @@ import {
                     supplements: O.filter(e => e.name)
                 }), r()
             }
-        }, "Save"))), document.body)
+        }, "Log"))), document.body)
     }
 
     function RO({
@@ -4681,7 +4681,7 @@ import {
 })), React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
-                color: wS,
+                color: "var(--ink-inverse)",
                 margin: "6px 0 0",
                 textAlign: "center"
             }
@@ -4962,7 +4962,7 @@ import {
         }, React.default.createElement("span", {
             style: {
                 fontSize: 11.5,
-                color: wS,
+                color: "var(--ink-inverse)",
                 maxWidth: 260
             }
         }, "Notify me (push) when new feedback comes in"), React.default.createElement("button", {

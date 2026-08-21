@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.36.0*
+*As of: August 21, 2026 · Deployed version: 3.36.1*
 
 ---
 
@@ -103,7 +103,7 @@ CHANGELOG.md
 
 ---
 
-## What shipped Aug 19–21, 2026 (v3.17.0–3.36.0)
+## What shipped Aug 19–21, 2026 (v3.17.0–3.36.1)
 
 - **Worker source reconciled** — real deployed `worker.js` (728 lines: auth, share, backup, feedback, push, cron) committed for the first time. `wrangler.toml` has real values. `ARCH-OPEN-01` Worker side resolved.
 - **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`.
@@ -125,6 +125,7 @@ CHANGELOG.md
 - **v3.34.0 fixes/hardening**, same session as the tokens: BackfillSheet's transparent-background/left-right-overflow bug fixed (root cause: portaled content sits outside `.wt-root`'s CSS variable and `box-sizing` scope — same class of bug as the OO fix in v3.33.0); Today's "Prior Days" calendar-icon control enlarged, brightened, and labeled; pure-black page backgrounds repointed to `var(--bg)`; bottom nav retheme to `var(--surface-dark)` + `var(--hairline)` + `var(--accent)`/`var(--accent-chip)` active state + `aria-current`; accessibility floor (48px touch targets on icon buttons and form fields, Settings inputs raised to 16px, an icon added alongside the overdue color indicator, two specific muted-text-on-white contrast fixes inside the portaled sheets); **`UX-OPEN-02` resolved** — one-line `stopPropagation` fix, OO's backdrop click no longer cascades to close the parent Log sheet.
 - **Log It! tile restructure (v3.35.0)** — all 8 tiles (Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins) rebuilt from the old vertical stack (label → goal → status → ring → number → bottom label) to a horizontal layout: left column is a category chip + title + three stacked stat lines (goal/to-go/logged, same values and wording as before, just repositioned), right column is the existing gem/ring illustration unchanged and merely moved in the JSX. Each tile gets a 4px left accent border and chip tint in its category's token color; the container went from a 2-column grid to a single-column `gap:var(--s3)` stack. Ring fill color (the arc only, not the fill-percentage math) now reads from the category token instead of the old shared 4-color palette. **Amends `UX-02`** ("uniform tiles" previously meant the specific label→goal→status→ring→number→bottom-label vertical sequence) — see amendment note below. Added `--treatment`/`--treatment-chip` tokens (shares the teal hue with `--weight` by design, for now). Stats chart colors (combined bar, single-metric bar, Weight/Sleep lines) and My Plan's 8 tracker-chip icon colors aligned to the same category hex values. Today audited, no color drift found there.
 - **Visual refinements from real-device feedback (v3.36.0)**: Log It! chip icons actually render in their category color now (were dark/black — the wrapping `color:var(--x)` CSS never reached the lucide icon via `currentColor`; fixed by passing `color` as an explicit prop, same fix already proven on My Plan); Log It! stat line font sizes bumped a notch (goal/logged 13→14px, to-go 14→15px). `--ink-inverse` changed to warm tan `#FFF6DB` (was a cool `#E8ECF1` that had never actually been used anywhere) and adopted for the first time across every page-level text-on-dark-background spot: header title/date, section labels on all tabs, Stats range label (found genuinely unstyled/invisible there), Prior Days label, and nav's inactive tab labels (specifically, not via the global `--muted` token, which stays untouched for its other uses). My Plan tiles: (1) toggling off no longer dims the toggle switch/"Track" label — restructured so only an inner content wrapper carries the dim opacity, with the toggle as a sibling, absolutely positioned, per `UX-10`; (2) Water/Protein/Calories/Sleep/Exercise gained a bold "Target: " prefix on their goal line (Weight's pre-existing, unbolded "Target" text was left exactly as-is per the brief); (3) `iconBg` **now matches Log It!'s dark chip-tint style** (`var(--<category>-chip)`, resized 50px→28px/radius 12→8) — this explicitly supersedes the v3.35.0 call to leave My Plan's light-pastel `iconBg` alone, per this session's explicit real-device-driven instruction.
+- **v3.36.1 patch, same day** — BackfillSheet's submit button renamed "Save"→"Log" (was always there and functional, just didn't read as the thing to tap given every other entry flow in the app calls its submit action "Log"); two more `wS`-colored (old muted blue-gray) text spots found and fixed on My Plan ("Off trackers stay visible…" caption) and Settings ("Notify me (push)…" label) — both missed in v3.36.0's class-by-class pass because they use one-off inline styles. Everything else `wS`-colored in those two files confirmed to be inside a white `.wt-card`/sheet and correctly left alone.
 
 ---
 

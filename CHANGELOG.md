@@ -20,6 +20,53 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.36.1] — 2026-08-21
+
+Two real-device reports from Rob: the BackfillSheet had no visible submit control, and two spots
+of page-level text on My Plan/Settings were missed in v3.36.0's warm-tan adoption pass. Built in
+`src/app.js`, deployed to `site/app/bundle.js` via the full build/harness/lint pipeline (build
+clean, harness clean — 5 new assertions added, see below — lint 11, identical no-undef count before/
+after and matching the currently-deployed baseline).
+
+### Fixed — BackfillSheet ("Enter Missed Items") had no visible submit button
+The submit button was always there and functional — labeled **"Save"**, not "Log". Every other
+entry flow in the app (Log Items, Log Sleep, Log Weight, Log Exercise…) calls its submit action
+"Log", so "Save" didn't read as the thing to tap to finish a backfill; renamed to **"Log"** to match.
+No logic changed — same `onClick`, same `disabled: !I` gating (date set + at least one field
+filled), same handler.
+
+### Fixed — two page-level text spots still the old muted blue-gray, not the warm tan
+Both sit directly on the dark page background (not inside a white card), and were missed in
+v3.36.0's `--ink-inverse` adoption pass because that pass worked class-by-class and these two use
+one-off inline `style={color: wS}` (the old `#5C7085` constant) instead of a shared class:
+- My Plan: "Off trackers stay visible here, dimmed…" caption below the tracker grid.
+- Settings: "Notify me (push) when new feedback comes in" label next to the feedback-watch toggle.
+
+Both now use `var(--ink-inverse)`. **Left untouched, correctly**: every other `wS`-colored text in
+these two files — confirmed all of it sits inside a white `.wt-card`/sheet (My Plan's Self-Managed
+sheet section labels, Settings' "Last backed up"/"Not backed up yet", "Version X", "©
+2026…") — those are dark text on white and must stay dark, per the explicit instruction not to
+touch text that's already correct.
+
+### Verification
+`tools/harness.js` extended: BackfillSheet's submit button now searched for by exact text "Log"
+(not "Save"), confirmed present, confirmed disabled with no fields filled and enabled once fields
+are filled; the click itself is now scoped to `.wt-btn-primary` elements with exact text "Log"
+rather than `clickByText("Log")`'s document-wide substring search — that generic helper would have
+matched the bottom nav's "Log It!" tab first (both start with "Log"), which is a real ambiguity in
+the *test tooling's* simple text-matching, not in the app itself (a real user taps the specific
+button they see, not a fuzzy text search across the whole page) — worth remembering next time a
+button gets a common word like "Log" for a name. Both text-color fixes confirmed via inline
+`style.color`; the correctly-untouched in-card "Version" text confirmed still carrying its original
+color, not `var(--ink-inverse)`. All pass against both the working build and the exact shipped
+`site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only) — button
+presence/label/disabled-state and the two text colors are all DOM/style-attribute checks.
+**Not yet verified:** on a real device — Rob should confirm the "Log" button is now obviously
+there and submits correctly, and that both text spots read as the same warm tan as everything else
+on their pages.
+
 ## [3.36.0] — 2026-08-21
 
 Three visual refinements following v3.35.0 real-device feedback: Log It! icon fill + stat font

@@ -383,6 +383,9 @@ const STEPS = [
     check("BackfillSheet width:100%", sheet ? sheet.style.width : null, "100%");
     check("BackfillSheet has no negative margin", sheet ? sheet.style.margin : null, "0px");
     check("BackfillSheet uses box-sizing:border-box", sheet ? sheet.style.boxSizing : null, "border-box");
+    const logBtn = [...window.document.querySelectorAll(".wt-btn-primary")].find((b) => b.textContent.trim() === "Log");
+    check("BackfillSheet has a \"Log\" submit button (was unlabeled/missing per Rob's real-device report)", !!logBtn);
+    check("\"Log\" button starts disabled (no fields filled in yet)", logBtn ? logBtn.disabled : null, "true");
   },
   () => check("set backfill date to a day with zero existing entries", setInputByAria("Backfill entry date", DAYS_AGO(10))),
   () => check("set backfill protein amount", setInputByAria("Backfill protein amount", "25")),
@@ -394,7 +397,17 @@ const STEPS = [
     const qtyInput = row ? row.querySelector(".wt-qty-input") : null;
     check("TestVit qty defaults to 1", qtyInput ? qtyInput.value : null, "1");
   },
-  () => check("save backfill", clickByText("Save")),
+  () => {
+    const logBtn = [...window.document.querySelectorAll(".wt-btn-primary")].find((b) => b.textContent.trim() === "Log");
+    check("\"Log\" button now enabled once fields are filled", logBtn ? logBtn.disabled : null, "false");
+  },
+  () => {
+    // Scoped, not clickByText("Log") — that also matches the "Log It!" nav tab (both start
+    // with "Log"), and clickByText's document-order .find() would hit the nav tab first since
+    // it isn't inside the BackfillSheet's own portaled subtree. Query within the sheet instead.
+    const logBtn = [...window.document.querySelectorAll(".wt-btn-primary")].find((b) => b.textContent.trim() === "Log");
+    check("log backfill (button renamed Save -> Log)", logBtn ? fire(logBtn) : false);
+  },
   () => {
     const entries = stored().logs[DAYS_AGO(10)] || [];
     check("backfill landed on the selected (new) date with 4 entries", entries.length, 4);
@@ -779,6 +792,29 @@ const STEPS = [
   () => check("nav to Today (tab mounts without errors after item 2/3 changes)", nav("Today")),
   () => check("nav to Stats (tab mounts without errors)", nav("Stats")),
   () => check("no runtime errors across the full v3.36.0 pass", errors.length, 0),
+
+  // ── v3.36.1: two missed old-blue text spots on the dark page background ────────
+  () => check("nav to My Plan (missed-blue-text check)", nav("My Plan")),
+  () => {
+    const caption = [...window.document.querySelectorAll("p")].find((p) => p.textContent.startsWith("Off trackers stay visible here"));
+    check("My Plan's \"Off trackers stay visible...\" caption found", !!caption);
+    check("caption now uses var(--ink-inverse) (was the old muted blue-gray)", caption ? caption.style.color : null, "var(--ink-inverse)");
+  },
+  () => check("nav to Settings (missed-blue-text check)", nav("Settings")),
+  () => {
+    const label = [...window.document.querySelectorAll("span")].find((s) => s.textContent === "Notify me (push) when new feedback comes in");
+    check("Settings' \"Notify me (push)...\" label found", !!label);
+    check("label now uses var(--ink-inverse) (was the old muted blue-gray)", label ? label.style.color : null, "var(--ink-inverse)");
+  },
+  () => {
+    // Confirm the OTHER wS-colored text in Settings — inside the white "About" .wt-card — was
+    // correctly left untouched (dark text on white stays dark; not switched to the warm tan
+    // meant for dark backgrounds), per Rob's "don't change text already correct" instruction.
+    const version = [...window.document.querySelectorAll("p")].find((p) => p.textContent.startsWith("Version "));
+    check("in-card version text found", !!version);
+    check("in-card version text untouched (still its original muted color, not var(--ink-inverse))", version ? version.style.color !== "var(--ink-inverse)" : null, "true");
+  },
+  () => check("no runtime errors after the v3.36.1 fixes", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
