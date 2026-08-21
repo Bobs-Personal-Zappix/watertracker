@@ -413,7 +413,7 @@ const STEPS = [
   () => check("nav to Log It! (verify today's RX tile ring unaffected)", nav("Log It!")),
   () => {
     const rxTile = tiles().find((t) => t.startsWith("RX & Vitamins"));
-    check("today's RX & Vitamins tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0Taken") : null, "true");
+    check("today's RX & Vitamins tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
   },
   () => check("nav back to Today (to delete the backfilled dose)", nav("Today")),
   () => check("re-open All Past Days", clickByAria("View past days")),
@@ -526,6 +526,121 @@ const STEPS = [
     const nameInput = window.document.querySelector('input[placeholder="e.g. Sarah M."]');
     check("Settings tester-name input found (real element, not just the CSS rule)", !!nameInput);
   },
+
+  // ── v3.35.0: Log It! tile restructure + category color tokens ──────────────────
+  () => check("nav to My Plan (to re-enable Water for the full 8-tile check)", nav("My Plan")),
+  () => {
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("found Water toggle to re-enable it", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => check("nav to Log It! (item 3/4 tile restructure checks)", nav("Log It!")),
+  () => {
+    const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
+    check("all 8 Log It! tiles mount with all trackers enabled", tiles.length, 8);
+    check("no runtime errors after full 8-tile render", errors.length, 0);
+  },
+  () => {
+    // Item 3: horizontal layout — left column (chip+title+stats) and right column (gem), per tile.
+    const expected = [
+      ["Water", "var(--water)", "var(--water-chip)"],
+      ["Protein", "var(--protein)", "var(--protein-chip)"],
+      ["Calories", "var(--calories)", "var(--calories-chip)"],
+      ["Sleep", "var(--sleep)", "var(--sleep-chip)"],
+      ["Weight", "var(--weight)", "var(--weight-chip)"],
+      ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
+      ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
+      ["RX & Vitamins", "var(--meds)", "var(--meds-chip)"],
+    ];
+    const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
+    let allOk = true;
+    for (const [label, colorVar, chipVar] of expected) {
+      const tile = tiles.find((t) => t.textContent.includes(label));
+      if (!tile) { console.log(`  (missing tile: ${label})`); allOk = false; continue; }
+      const borderLeft = tile.style.borderLeft || "";
+      if (!borderLeft.includes(colorVar)) { console.log(`  (${label} border mismatch: "${borderLeft}")`); allOk = false; }
+      const chip = tile.querySelector(".wt-tile-chip");
+      if (!chip || chip.style.background !== chipVar || chip.style.color !== colorVar) { console.log(`  (${label} chip mismatch)`); allOk = false; }
+      const left = tile.querySelector(".wt-tile-left");
+      const right = tile.querySelector(".wt-tile-right");
+      if (!left || !right) { console.log(`  (${label} missing left/right columns)`); allOk = false; }
+      if (right && tile.lastElementChild !== right) { console.log(`  (${label} right column — gem — is not the last/rightmost child)`); allOk = false; }
+      const gem = right ? right.querySelector(".wt-gauge-wrap") : null;
+      if (!gem) { console.log(`  (${label} gem illustration missing from right column)`); allOk = false; }
+    }
+    check("every tile has correct left-border color token, chip tint+icon color, and left/right column split with the gem on the right", allOk, "true");
+  },
+  () => {
+    // Item 3: no saturated full-tile background fill — every tile uses var(--surface).
+    const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
+    const allWhite = tiles.every((t) => t.style.background === "" || getComputedStyle(t).backgroundColor);
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-tracker-col \{[^}]*\}/);
+    check("tile CSS background uses var(--surface), not a saturated fill", rule ? rule[0].includes("background:var(--surface)") : null, "true");
+    check("tile CSS uses var(--radius) for corner rounding", rule ? rule[0].includes("border-radius:var(--radius)") : null, "true");
+  },
+  () => {
+    // Item 2: container is now a single-column vertical stack, not a 2-col grid.
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-trackers-grid \{[^}]*\}/);
+    check("Log It! tile container is single-column flex (item 2)", rule ? rule[0].includes("display:flex") && rule[0].includes("flex-direction:column") : null, "true");
+    check("Log It! tile container uses var(--s3) gap", rule ? rule[0].includes("gap:var(--s3)") : null, "true");
+  },
+  () => {
+    // Item 4: ring fill color uses the category token (not the old shared mS/hS/gS/yS constants).
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    const ring = waterTile ? waterTile.querySelector(".wt-gauge-ring circle[opacity]") : null;
+    check("Water ring stroke uses var(--water) token", ring ? ring.getAttribute("stroke") : null, "var(--water)");
+  },
+  () => {
+    // My Plan grid is untouched — still 2-column.
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-plan-grid \{[^}]*\}/);
+    check("My Plan grid still 2-column (untouched by this session)", rule ? rule[0].includes("grid-template-columns:1fr 1fr") : null, "true");
+  },
+  () => {
+    // Spot-check: tapping a tile still opens its entry sheet — unchanged tap behavior.
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    check("found Water tile to tap", !!waterTile);
+    if (waterTile) fire(waterTile);
+  },
+  () => {
+    const dialInput = window.document.querySelector('input[placeholder="0"]');
+    check("tapping Water tile opens the quick-dial sheet (tap handler unchanged)", !!dialInput);
+  },
+  () => check("set water amount to 32 in the quick dial", setInput("0", "32")),
+  () => check("log 32oz of water", clickByText("Log 32oz")),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    const togo = waterTile ? waterTile.querySelector(".wt-tile-togo") : null;
+    check("Goal 64oz − 32oz logged = 32oz to go (ring % calculation input unchanged)", togo ? togo.textContent.trim() : null, "32oz to go");
+    const ring = waterTile ? waterTile.querySelector(".wt-gauge-ring circle[stroke-dasharray]") : null;
+    const offset = ring ? parseFloat(ring.getAttribute("stroke-dashoffset")) : null;
+    const circumference = 2 * Math.PI * 42;
+    const expectedAt50pct = circumference * 0.5;
+    check(
+      `ring fill at 32/64 = 50% (dashoffset ≈ ${expectedAt50pct.toFixed(1)} of ${circumference.toFixed(1)} circumference)`,
+      offset !== null && Math.abs(offset - expectedAt50pct) < 1,
+      "true"
+    );
+  },
+  () => check("nav to Today (tab mounts without errors after tile restructure)", nav("Today")),
+  () => check("nav to Stats (tab mounts without errors)", nav("Stats")),
+  () => check("no runtime errors on Stats tab", errors.length, 0),
+  () => check("switch Stats to the All 3 combined view", clickByText("All 3")),
+  // NOTE: recharts' ResponsiveContainer needs a non-zero measured container size before it
+  // renders any chart children, and jsdom has no layout engine (0×0 for everything) — so the
+  // actual <Bar>/<Line> fill colors can't be asserted from the rendered DOM here. Verified
+  // instead by reading the shipped bundle's source text directly (see the end-state audit) that
+  // the combined-bar and single-metric Water/Protein/Calories/Weight/Sleep fills use the raw
+  // hex token values, not var(--water) etc. — recharts doesn't reliably resolve CSS variables.
+  () => check("nav to My Plan (tab mounts without errors, chip color audit)", nav("My Plan")),
+  () => {
+    const waterChip = [...window.document.querySelectorAll(".wt-plan-card")].find((c) => c.textContent.includes("Water"));
+    const icon = waterChip ? waterChip.querySelector(".wt-plan-card-icon svg") : null;
+    check("My Plan Water chip icon color aligned to water token hex", icon ? icon.getAttribute("stroke") : null, "#2F80ED");
+  },
+  () => check("no runtime errors across the full v3.35.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

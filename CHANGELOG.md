@@ -20,6 +20,103 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.35.0] — 2026-08-21
+
+Log It! tile restructure plus a category-color-token consistency pass across Log It!, Stats, and
+My Plan. Visual-only, as scoped: no ring-fill math, tap handler, entry sheet, or goal formula
+changed — only layout and color. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
+full build/harness/lint pipeline (build clean, harness clean — 33 new assertions added, see below —
+lint 11, identical no-undef count before/after and matching the currently-deployed baseline).
+
+### Added — `--treatment` / `--treatment-chip` tokens
+Added to the `:root` block from v3.34.0, sharing the teal hue with `--weight` by design (per the
+brief — Treatments didn't have its own token before this session; My Plan and Stats never covers
+Treatments as a chart metric, so this was purely additive).
+
+### Changed — Log It! container: single-column vertical stack
+`.wt-trackers-grid` (the class shared by both of Log It!'s two tile groups) went from
+`display:grid; grid-template-columns:1fr 1fr` to `display:flex; flex-direction:column;
+gap:var(--s3)`. The redundant `marginTop:14` inline style on the second group's container was
+dropped now that `gap` provides consistent spacing throughout — previously a mismatched extra
+14px sat only between tile 4 and tile 5. My Plan's `.wt-plan-grid` is untouched and still 2-column,
+confirmed by harness assertion.
+
+### Changed — all 8 tiles restructured to a horizontal layout with left accent border
+Applies to Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, and RX & Vitamins — the
+designer's spec only named 6, the brief explicitly said apply the same pattern to all 8.
+- Outer tile (`.wt-tracker-col`): `flex-direction:row`, `background:var(--surface)` (was `#fff`,
+  same effective color, now token-based), `border-radius:var(--radius)`, `padding:var(--s4)`, and a
+  per-tile inline `borderLeft: "4px solid var(--<category>)"` — the only property that has to vary
+  per tile, so it's inline rather than eight new modifier classes.
+- New left column (`.wt-tile-left`, `flex:1`): a header row (`.wt-tile-header`) with a 36×36
+  `.wt-tile-chip` (10px radius, tinted `var(--<category>-chip)` background, icon in
+  `var(--<category>)`) plus the tile title, followed by three stacked stat lines reusing the
+  *exact* existing text/values — `.wt-tile-goal` (13px, `var(--muted)`), `.wt-tile-togo` (14px/700,
+  `var(--ink)`), and `.wt-tile-logged` (13px, `#5B6673`) — the last one combines what used to be two
+  separate elements (a big 24px number and a small caption below it, e.g. "32" then "oz" then "In"
+  as siblings) into one line, same values, same words, no wording changed.
+- New right column (`.wt-tile-right`, `flex:0 0 auto`): the existing gauge/gem component, *moved*
+  here in the JSX — not re-rendered, not resized, no new props. Its internal ring math (`lO`, the
+  shared gauge component) wasn't touched.
+
+### Changed — progress ring fill color now uses the category token
+Each of the 8 gauge-wrapper functions (`dO`/`pO`/`mO`/`hO`/`uO`/`fO`/`cO`/`sO`) had their
+`ringColor` prop changed from the old shared four-color palette (`mS`/`hS`/`gS`/`yS` — reused
+across unrelated metrics, e.g. Water and Treatments both used to share the same blue) to
+`"var(--<category>)"`. This is a plain SVG `stroke` attribute, not a `style` prop, but Log It!'s
+tiles aren't portaled (unlike v3.33's/v3.34's sheets), so they're normal descendants of `.wt-root`
+and inherit `:root`-scoped tokens fine — confirmed via harness by reading the rendered ring's
+`stroke` attribute directly. Only the fill arc's color changed; the track/background circle (same
+element, same `ringColor`, differentiated only by its existing `opacity:.42`) tracks whatever the
+fill uses, exactly as it already did — no separate track color existed to preserve or disturb.
+Ring percentage math (`pct`, `strokeDasharray`/`strokeDashoffset`) is untouched — verified in the
+harness with the brief's own spot check (64oz goal, log 32oz, ring lands within 1 unit of the
+50%-fill dashoffset).
+
+### Changed — color-token consistency audit (Stats, My Plan)
+- **Stats**: the combined "All 3" bar chart's three `<Bar>` fills, the single-metric bar chart's
+  per-tab color picker, and the Weight/Sleep `<Line>` charts' stroke+dot colors all moved from the
+  old shared `mS`/`hS`/`gS`/`yS` constants to the new category hex values (`#2F80ED`/`#27AE60`/
+  `#E8823A`/`#16A394`/`#7B61FF`) — hex, not `var()`, per the brief's explicit guidance that recharts
+  doesn't reliably resolve CSS custom properties. **Left alone, on purpose**: the green (`hS`) used
+  for "goal met" bar highlights and dashed goal-reference lines across multiple different metric
+  charts — that's a shared semantic "you hit your goal" color reused intentionally across metrics,
+  not a per-category color that drifted; changing it would be a design decision beyond a color-token
+  swap and out of this audit's scope.
+- **My Plan**: all 8 `TrackerRow` `iconColor` values (the saturated icon color inside each tracker's
+  chip) updated to the category token hex — two were meaningfully different hues before this
+  (Protein was purple, now green; Treatments was dark green, now teal) rather than just a shade
+  off. **`iconBg` (the light pastel chip background) was deliberately left untouched** — there's no
+  "light tint" token defined for these categories, only the dark `--<category>-chip` tokens meant
+  for Log It!'s new tile chips on a white surface; forcing My Plan's existing light-pastel chips to
+  that dark value would be an unrequested redesign, not a color-token alignment.
+- **Today**: audited, no drift found. The To Do Today list's Pill/Syringe icons already render in
+  neutral `var(--muted)`, not any hardcoded category color — nothing to align.
+
+### Verification
+`tools/harness.js` extended with checks per tab: Log It! — all 8 tiles mount with every tracker
+enabled, each has the correct left-border/chip-tint/chip-icon-color token trio, the gem sits in a
+`.wt-tile-right` column that's the tile's last DOM child, tile/container CSS matches the new
+token-based rules; a live spot check (tap the Water tile, log 32oz against the 64oz goal, confirm
+the "to go" text and the ring's `stroke-dashoffset` both land at the 50% mark); Today, Stats, and
+My Plan each confirmed to mount with zero runtime errors; My Plan's Water chip icon `stroke`
+attribute confirmed against the token hex; My Plan's grid confirmed still 2-column. **Not
+DOM-verified**: the Stats chart's actual rendered fill colors — recharts' `ResponsiveContainer`
+needs a real, non-zero measured container size before it renders any `<Bar>`/`<Line>` children, and
+jsdom has no layout engine (everything measures 0×0), so no chart content renders in the harness at
+all. Verified instead by reading the shipped bundle's source text directly for the hex values (see
+the end-state audit). All DOM-based checks pass against both the working build and the exact
+shipped `site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only) for everything
+DOM-observable — tile structure, colors-as-attributes, ring math. **Not yet verified:** anything
+actually *visual* — whether the gem reads as being on the right and the text on the left at a
+glance, whether the left border and chip tint look right against the white tile surface, whether
+the single-column list feels right on a real phone screen, and the Stats chart colors specifically
+(unverifiable in jsdom for the reason above). This session has more visual surface area than any
+previous one — Rob, a full real-device walk of every Log It! tile plus a look at the Stats charts
+is especially important before calling this done.
+
 ## [3.34.0] — 2026-08-21
 
 Seven items: two bug fixes, a design-token foundation, a page-background sweep, a nav retheme, an

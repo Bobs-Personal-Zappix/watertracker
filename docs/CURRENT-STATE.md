@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.34.0*
+*As of: August 21, 2026 · Deployed version: 3.35.0*
 
 ---
 
@@ -103,7 +103,7 @@ CHANGELOG.md
 
 ---
 
-## What shipped Aug 19–21, 2026 (v3.17.0–3.34.0)
+## What shipped Aug 19–21, 2026 (v3.17.0–3.35.0)
 
 - **Worker source reconciled** — real deployed `worker.js` (728 lines: auth, share, backup, feedback, push, cron) committed for the first time. `wrangler.toml` has real values. `ARCH-OPEN-01` Worker side resolved.
 - **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`.
@@ -123,14 +123,16 @@ CHANGELOG.md
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
 - **Design token system installed** (`UX-12`, v3.34.0) — a `:root` token block (surfaces, text, accent, per-tracker category color+chip pairs, 8pt spacing scale, radius/touch/nav-height, z-index scale) now sits at the top of the CSS, reachable by portaled sheets/modals as well as `.wt-root`-scoped content. `--ink`/`--muted`/`--success` intentionally exist at two different values (`.wt-root`-scoped vs `:root`-scoped) — documented inline, not a bug; see CHANGELOG v3.34.0 for the resolution mechanics. Token *adoption* (replacing the ~33 literal `#fff` card backgrounds and other hardcoded colors across the CSS) is not done — that's part of the Session 2 tile restructure below.
 - **v3.34.0 fixes/hardening**, same session as the tokens: BackfillSheet's transparent-background/left-right-overflow bug fixed (root cause: portaled content sits outside `.wt-root`'s CSS variable and `box-sizing` scope — same class of bug as the OO fix in v3.33.0); Today's "Prior Days" calendar-icon control enlarged, brightened, and labeled; pure-black page backgrounds repointed to `var(--bg)`; bottom nav retheme to `var(--surface-dark)` + `var(--hairline)` + `var(--accent)`/`var(--accent-chip)` active state + `aria-current`; accessibility floor (48px touch targets on icon buttons and form fields, Settings inputs raised to 16px, an icon added alongside the overdue color indicator, two specific muted-text-on-white contrast fixes inside the portaled sheets); **`UX-OPEN-02` resolved** — one-line `stopPropagation` fix, OO's backdrop click no longer cascades to close the parent Log sheet.
+- **Log It! tile restructure (v3.35.0)** — all 8 tiles (Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins) rebuilt from the old vertical stack (label → goal → status → ring → number → bottom label) to a horizontal layout: left column is a category chip + title + three stacked stat lines (goal/to-go/logged, same values and wording as before, just repositioned), right column is the existing gem/ring illustration unchanged and merely moved in the JSX. Each tile gets a 4px left accent border and chip tint in its category's token color; the container went from a 2-column grid to a single-column `gap:var(--s3)` stack. Ring fill color (the arc only, not the fill-percentage math) now reads from the category token instead of the old shared 4-color palette. **Amends `UX-02`** ("uniform tiles" previously meant the specific label→goal→status→ring→number→bottom-label vertical sequence) — see amendment note below. Added `--treatment`/`--treatment-chip` tokens (shares the teal hue with `--weight` by design, for now). Stats chart colors (combined bar, single-metric bar, Weight/Sleep lines) and My Plan's 8 tracker-chip icon colors aligned to the same category hex values — `iconBg` (My Plan's light pastel chip backgrounds) deliberately left alone, no light-tint token exists to align it to. Today audited, no color drift found there. My Plan's 2-column grid is untouched, unaffected by any of this.
 
 ---
 
 ## Known outstanding
 
+- **`UX-02` amended, not yet formally re-recorded in the decision log.** The Locked entry said "uniform tiles" meant the specific label→goal→status→ring→number→bottom-label vertical sequence, explicitly *not* about saving space. v3.35.0's horizontal restructure changes that sequence — the brief that requested it explicitly called for this as an amendment (not a silent violation), but the actual `docs/DECISION-LOG.md` entry text hasn't been rewritten yet. *Needs Rob's decision on the replacement wording*, then Claude can paste it in.
 - **My Presets backdrop may have the same cascade bug `UX-OPEN-02` just fixed for OO.** While fixing OO, found that My Presets' own backdrop `onClick` does *not* actually call `stopPropagation`, despite the `UX-11` decision log entry describing it as already having one. Unconfirmed whether this manifests on a real device — same one-line fix if it does. *Needs Rob's real-device check, then Claude can fix alone if confirmed.*
 - **Z-index token mismatch.** The new `--z-sheet:50`/`--z-scrim:40` tokens don't match the app's actual sheet/modal z-indices (150–191, several hand-picked levels for nested sheets). Nav now uses `var(--z-nav)=30` per spec, but nothing else was renumbered to the token scale this session — a larger, separate change if it's wanted.
-- **Token adoption sweep not started.** ~33 literal `#fff` card/surface backgrounds and 7 literal `rgba(0,0,0,…)` shadows in the CSS now have token equivalents but haven't been converted — flagged in v3.34.0, folded into the Session 2 tile restructure below rather than done piecemeal.
+- **Token adoption sweep partial.** v3.35.0 converted Log It!'s 8 tiles (`background:var(--surface)`) and the category colors used by Log It!/Stats/My Plan. Every other literal `#fff` card/surface background and `rgba(0,0,0,…)` shadow elsewhere in the CSS (My Plan cards, Stats stat cards, sheets/modals, etc.) is still untouched — candidate for `v3.36.0` (sheet standardization + polish).
 - **UX-OPEN-01 Phase 2** (not started): Settings consolidation — six status rows, "Your data" backed-up/not status, Reminders grouped by intent, tutorial on first run.
 - **UX-OPEN-01 Phase 3** (not started): Clinic onboarding ramp.
 - **"Add in Setup" stale copy** on Treatments/RX & Vitamins empty-state CTAs on Log It! — quick copy fix, not yet addressed.
@@ -141,7 +143,7 @@ CHANGELOG.md
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 21, post-v3.34.0):** `UX-OPEN-02` is resolved (was the first item in the prior sequence). Next up, **v3.35.0 = Session 2: Log It! tile restructure**, building on the token system landed this session — adopts the surface/category tokens across the tile grid rather than the literal hex values flagged above. After that: `UX-OPEN-01` Phase 2 (Settings redesign) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build (`ARCH-OPEN-02`).
+**Working sequence (updated Aug 21, post-v3.35.0):** `UX-OPEN-02` and the Log It! tile restructure are both done. Next up, **v3.36.0 = sheet standardization + polish**. After that: `UX-OPEN-01` Phase 2 (Settings redesign) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build (`ARCH-OPEN-02`).
 
 Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — most time-sensitive open item, needed before next clinic meeting), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 
