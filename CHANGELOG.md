@@ -20,6 +20,30 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.32.1] — 2026-08-21
+
+Spacing-only fix on top of v3.32.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
+full build/harness/lint pipeline (build clean, harness clean — one new assertion added, see below —
+lint 11, identical no-undef count before/after and matching the currently-deployed baseline).
+
+### Fixed — too little space between the Log It! tracker grid and the presets button
+`.wt-action-btns` had no top margin, so on Log It! the gap between the bottom row of tracker tiles
+and the "Use Your Presets or Log a Meal" button came only from `.wt-trackers-grid`'s existing
+`margin: 8px 0 6px` (6px) — visibly tight. Added `margin-top: 16px` to `.wt-action-btns`, reusing
+the 16px value already used elsewhere on the same screen (`.wt-card`'s `margin-bottom`, the sheet
+paddings) rather than introducing a new spacing constant. `wt-action-btns` is used in exactly one
+place, so the change is scoped to Log It! only.
+
+### Verification
+`tools/harness.js` extended with one assertion reading the `.wt-action-btns` CSS rule directly and
+confirming `margin-top:16px` is present. Passes against both the working build and the exact shipped
+`site/app/bundle.js`, with zero runtime errors. As always, jsdom has no layout engine — the actual
+visual gap on a real device is unverified.
+
+**Verified:** implemented and the CSS rule confirmed present in the harness (simulated browser
+only). **Not yet verified:** the actual on-screen spacing on a real device — Rob should eyeball Log
+It! to confirm 16px reads as "roughly right" and not too much/too little.
+
 ## [3.32.0] — 2026-08-21
 
 Two fixes on My Plan. Built in `src/app.js`, deployed to `site/app/bundle.js` via the full

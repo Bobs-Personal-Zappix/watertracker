@@ -298,6 +298,12 @@ const STEPS = [
     check("wordmark color is #fff", titleRuleMatch ? titleRuleMatch[0].includes("color:#fff") : null, "true");
     check("wt-topbanner element exists", !!banner);
   },
+  () => check("nav to Log It! (for grid-to-button spacing check)", nav("Log It!")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-action-btns\s*\{[^}]*\}/);
+    check("wt-action-btns has margin-top:16px (matches existing 16px spacing scale)", rule ? rule[0].includes("margin-top:16px") : null, "true");
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
