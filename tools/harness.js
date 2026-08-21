@@ -92,9 +92,14 @@ const SEED = makeSeed({
   },
   settings: {
     showWater: false, showTreatments: false,
-    supplements: [{ id: "s1", name: "TestVit", intervalDays: 1, lastTakenDate: null,
-                    nextDueOverride: null, trackInventory: true, qtyRemaining: 10,
-                    expirationDate: null }],
+    supplements: [
+      { id: "s1", name: "TestVit", intervalDays: 1, lastTakenDate: null,
+        nextDueOverride: null, trackInventory: true, qtyRemaining: 10,
+        expirationDate: null },
+      { id: "s2", name: "OverdueMed", intervalDays: 1, lastTakenDate: null,
+        nextDueOverride: DAYS_AGO(3), trackInventory: false, qtyRemaining: 0,
+        expirationDate: null },
+    ],
   },
 });
 if (SEED) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
@@ -337,15 +342,18 @@ const STEPS = [
   () => {
     const stillOpen = [...window.document.querySelectorAll(".wt-modal-header h3")].some((h) => h.textContent === "Add preset");
     check("OO modal closed after backdrop click", !stillOpen, "true");
-    // React portals bubble through the REACT tree, not the DOM tree: OO is declared as a
-    // direct child of xO's own outer backdrop (a sibling of the "My Presets" block, not
-    // nested inside it), so a click on OO's portaled backdrop also reaches xO's own
-    // backdrop onClick and closes the whole Log sheet in one action — the same cascade
-    // the pre-existing (non-portaled) "My Presets" backdrop already has, not a regression.
-    const logSheetGone = ![...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Log");
-    const myPresetsGone = ![...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "My Presets");
-    check("clicking OO's backdrop also closes the Log sheet (pre-existing backdrop-bubbling behavior, unchanged by the portal)", logSheetGone, "true");
-    check("My Presets sheet unmounted along with it", myPresetsGone, "true");
+    // v3.34.0 (UX-OPEN-02): OO's backdrop onClick now calls e.stopPropagation() before closing,
+    // so the click no longer bubbles through the REACT tree to xO's own outer backdrop onClick.
+    // Both the parent Log sheet and the nested My Presets sheet must stay open.
+    const logSheetStillOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Log");
+    const myPresetsStillOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "My Presets");
+    check("clicking OO's backdrop leaves the parent Log sheet open (UX-OPEN-02 fixed)", logSheetStillOpen, "true");
+    check("My Presets sheet also stays open", myPresetsStillOpen, "true");
+  },
+  () => check("close Log sheet (its own Close button unmounts nested My Presets too)", clickByAria("Close")),
+  () => {
+    const anyOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Log" || h.textContent === "My Presets");
+    check("both sheets closed", !anyOpen, "true");
   },
 
   // ── v3.33.0 Part B: Enter Missed Items (backfill) ──────────────────────────────
@@ -366,6 +374,14 @@ const STEPS = [
     check("BackfillSheet opened", !!h3);
     const backdrop = h3 ? h3.closest(".wt-backdrop") : null;
     check("BackfillSheet's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
+    const sheet = h3 ? h3.closest(".wt-sheet") : null;
+    check("BackfillSheet has an explicit opaque background (item 1)", sheet ? sheet.style.background : null, "rgb(242, 245, 248)");
+    check("BackfillSheet is not transparent", sheet ? sheet.style.background !== "transparent" && sheet.style.background !== "" : null, "true");
+    check("BackfillSheet anchored left:0", sheet ? sheet.style.left : null, "0px");
+    check("BackfillSheet anchored right:0 (prevents right-edge overflow from padding under content-box)", sheet ? sheet.style.right : null, "0px");
+    check("BackfillSheet width:100%", sheet ? sheet.style.width : null, "100%");
+    check("BackfillSheet has no negative margin", sheet ? sheet.style.margin : null, "0px");
+    check("BackfillSheet uses box-sizing:border-box", sheet ? sheet.style.boxSizing : null, "border-box");
   },
   () => check("set backfill date to a day with zero existing entries", setInputByAria("Backfill entry date", DAYS_AGO(10))),
   () => check("set backfill protein amount", setInputByAria("Backfill protein amount", "25")),
@@ -428,6 +444,87 @@ const STEPS = [
     check("backfilled supplement entry removed after delete", entries.some((e) => e.type === "supplement"), "false");
     const s = supp("TestVit");
     check("TestVit inventory restored after deleting backfilled dose (9 → 10)", s ? s.qtyRemaining : null, 10);
+  },
+
+  // ── v3.34.0 item 2: "Prior Days:" label + brighter/bigger calendar icon on Today ──
+  () => check("nav to Today (for Prior Days label check)", nav("Today")),
+  () => {
+    const label = [...window.document.querySelectorAll("span")].find((s) => s.textContent === "Prior Days:");
+    check("\"Prior Days:\" label present", !!label);
+    const btn = window.document.querySelector('[aria-label="View past days"]');
+    check("calendar icon button found", !!btn);
+    check("calendar icon button sits immediately after the label in the same row", label && btn ? label.nextElementSibling === btn : null, "true");
+    const svg = btn ? btn.querySelector("svg") : null;
+    check("calendar icon size increased to 24 (was 18)", svg ? svg.getAttribute("width") : null, "24");
+    check("calendar icon color brightened to #fff (was faint var(--muted))", btn ? btn.style.color : null, "rgb(255, 255, 255)");
+  },
+
+  // ── v3.34.0 item 5: nav bar dark retheme, present + correctly styled on all 5 tabs ──
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const navRule = cssText.match(/\.wt-nav \{[^}]*\}/);
+    const activeRule = cssText.match(/\.wt-nav-btn\.active \{[^}]*\}/);
+    check("nav background uses var(--surface-dark), not pure white/black", navRule ? navRule[0].includes("background:var(--surface-dark)") : null, "true");
+    check("nav top border uses var(--hairline)", navRule ? navRule[0].includes("border-top:1px solid var(--hairline)") : null, "true");
+    check("nav z-index uses var(--z-nav)", navRule ? navRule[0].includes("z-index:var(--z-nav)") : null, "true");
+    check("nav includes safe-area-inset-bottom in its padding", navRule ? navRule[0].includes("env(safe-area-inset-bottom") : null, "true");
+    check("active nav tab uses var(--accent) text on var(--accent-chip) pill", activeRule ? activeRule[0].includes("color:var(--accent)") && activeRule[0].includes("background:var(--accent-chip)") : null, "true");
+    check("active nav tab pill has border-radius:12px", activeRule ? activeRule[0].includes("border-radius:12px") : null, "true");
+  },
+  () => {
+    const tabs = ["Log It!", "Today", "Stats", "My Plan", "Settings"];
+    let allPresent = true;
+    for (const label of tabs) {
+      nav(label);
+      const nv = window.document.querySelector(".wt-nav");
+      if (!nv) allPresent = false;
+    }
+    check("wt-nav renders on all 5 tabs", allPresent, "true");
+  },
+  () => {
+    const active = window.document.querySelector(".wt-nav-btn.active");
+    check("active tab has aria-current=\"page\"", active ? active.getAttribute("aria-current") : null, "page");
+    const inactive = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => !b.classList.contains("active"));
+    check("inactive tab has no aria-current", inactive ? inactive.getAttribute("aria-current") : null, null);
+  },
+  () => check("nav to Log It! (content clearance check)", nav("Log It!")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rootRule = cssText.match(/\.wt-root \{[^}]*\}/);
+    check("page container padding-bottom uses var(--nav-h) + safe-area-inset-bottom (item 5 content clearance)", rootRule ? rootRule[0].includes("padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))") : null, "true");
+  },
+
+  // ── v3.34.0 item 6c: overdue items show an icon glyph alongside color, not color alone ──
+  () => check("nav to Today (for overdue icon check)", nav("Today")),
+  () => {
+    const overdueRow = [...window.document.querySelectorAll(".wt-treatment-overdue")].find((r) => r.textContent.includes("OverdueMed"));
+    check("seeded OverdueMed shows in To Do Today as overdue", !!overdueRow);
+    const label = overdueRow ? overdueRow.querySelector(".wt-treatment-due-label") : null;
+    const icon = label ? label.querySelector("svg") : null;
+    check("overdue label has an icon glyph alongside the text (not color alone)", !!icon, "true");
+    check("overdue label still shows the '... overdue' text too", label ? /overdue/.test(label.textContent) : null, "true");
+  },
+
+  // ── v3.34.0 item 6a: touch targets — Today's Log edit/delete buttons ≥48px ──
+  () => {
+    const iconBtn = window.document.querySelector(".wt-icon-btn");
+    check("wt-icon-btn (pencil/trash/close everywhere, incl. Today's Log) found", !!iconBtn);
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-icon-btn \{[^}]*\}/);
+    check("wt-icon-btn min-width reaches var(--touch)=48px", rule ? rule[0].includes("min-width:var(--touch)") : null, "true");
+    check("wt-icon-btn min-height reaches var(--touch)=48px", rule ? rule[0].includes("min-height:var(--touch)") : null, "true");
+    const fieldRule = cssText.match(/\.wt-field input, \.wt-field select, \.wt-field textarea \{[^}]*\}/);
+    check("date/dropdown-style inputs (incl. backfill sheet date field) also reach 48px min-height", fieldRule ? fieldRule[0].includes("min-height:var(--touch)") : null, "true");
+  },
+
+  // ── v3.34.0 item 6b: Settings form inputs raised to 16px minimum ──
+  () => check("nav to Settings (for 16px input font-size check)", nav("Settings")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-settings-tab \.wt-field input, \.wt-settings-tab \.wt-field select, \.wt-settings-tab \.wt-field textarea \{[^}]*\}/);
+    check("Settings-scoped form input font-size raised to 16px (iOS zoom fix)", rule ? rule[0].includes("font-size:16px") : null, "true");
+    const nameInput = window.document.querySelector('input[placeholder="e.g. Sarah M."]');
+    check("Settings tester-name input found (real element, not just the CSS rule)", !!nameInput);
   },
 ];
 

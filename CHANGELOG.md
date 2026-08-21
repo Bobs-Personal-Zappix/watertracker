@@ -20,6 +20,135 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.34.0] — 2026-08-21
+
+Seven items: two bug fixes, a design-token foundation, a page-background sweep, a nav retheme, an
+accessibility floor, and the `UX-OPEN-02` backdrop-cascade fix — done in that order since items 4–6
+reference the tokens installed in item 3. Built in `src/app.js`, deployed to `site/app/bundle.js`
+via the full build/harness/lint pipeline (build clean, harness clean — 37 new assertions added
+across all seven items, see below — lint 11, identical no-undef count before/after and matching the
+currently-deployed baseline).
+
+### Fixed — BackfillSheet (Enter Missed Items) rendered transparent and overflowed left/right
+Root cause: `.wt-sheet`'s `background:var(--paper)` and `.wt-root *`'s `box-sizing:border-box` are
+both declared *inside* the `.wt-root` selector's scope, but `BackfillSheet` (and `OO`, since
+v3.33.0) render via `createPortal` to `document.body` — outside `.wt-root`'s DOM subtree entirely.
+CSS custom-property and `box-sizing` inheritance both follow the DOM tree, not the React tree, so
+neither declaration ever reached the portaled sheet: `background` fell back to its initial value
+(`transparent`, since it isn't an inherited property), and `box-sizing` defaulted to `content-box`,
+so the sheet's `width:100%` plus its own horizontal padding added extra width beyond the viewport.
+Fixed by giving the sheet div an explicit inline `background:"#F2F5F8"` (the same value `--paper`
+already resolves to elsewhere), plus `right:0`, `margin:0`, and `boxSizing:"border-box"` alongside
+the existing `left:0`/`width:"100%"` so the box is anchored on both edges regardless of box model.
+`OO`'s equivalent modal never had this specific bug — its `.wt-modal` class already uses a literal
+`background:#fff`, not a variable — but is otherwise the same nested-portal pattern.
+
+### Changed — Today tab: bigger, brighter "Prior Days" control
+The calendar/clock icon that opens the past-days list was `size:18` in `var(--muted)` (very low
+contrast against the black page background). Bumped to `size:24`, recolored to `#fff`, given a
+48px×48px tap target, and paired with a new "Prior Days:" label immediately to its left so the pair
+reads as one labeled control rather than a bare, faint icon.
+
+### Added — Design token system (`UX-12`)
+Installed the v3.34.0 `:root` token block (surfaces, text, accent, one color+chip pair per tracker
+category, spacing scale, radius/touch/nav-height, z-index scale) at the top of the CSS, right after
+the existing `@import`. Installed at `:root` rather than merged into `.wt-root` specifically so the
+tokens also reach portaled sheets/modals (`UX-11`) outside `.wt-root`'s subtree — which is what item
+1 above needed and didn't have.
+**Merge conflicts, resolved without renaming:** the new spec reuses the names `--ink`, `--muted`,
+and `--success` with different values than the existing `.wt-root`-scoped ones. Left both in place
+rather than renaming either — CSS custom-property inheritance resolves from the *nearest* ancestor
+that sets the property, so `.wt-root`'s own declarations keep winning for every existing element
+inside `.wt-root` (nothing already shipped changes appearance); the `:root` values only take effect
+for content outside `.wt-root`, i.e. the portaled sheets that previously had no value for these
+variables at all. Documented inline in the CSS with a comment explaining why.
+**Not done yet (flagged, not fixed — Session 2):** a token-adoption sweep. `src/app.js`'s CSS still
+has 33 literal `#fff` card/surface backgrounds and 7 literal `rgba(0,0,0,…)` shadows that now have
+token equivalents (`var(--surface)`, etc.) but weren't touched this session, per the brief's explicit
+scope.
+
+### Changed — pure-black page/screen backgrounds → `var(--bg)`
+The only hard-coded pure black was `--page-bg:#000000` inside `.wt-root`'s own variable block, which
+feeds `.wt-root`'s background, `.wt-topbanner`'s background, the topbanner wave's `fill`, and
+`.wt-todo-today-sticky`'s background — all genuine page/screen backgrounds, none of them text color.
+Repointed to `--page-bg:var(--bg)` (`#0B0F14`, a very dark near-black rather than pure `#000`) so
+every consumer picks up the new token through one change. No inline-style or literal `"black"`/
+`rgb(0,0,0)` backgrounds existed outside this CSS variable.
+
+### Changed — bottom nav bar dark retheme
+`.wt-nav`: `background:#fff` → `var(--surface-dark)`; added `border-top:1px solid var(--hairline)`;
+`z-index:200` → `var(--z-nav)` (30 — now below the sheet/scrim range, matching the token spec's
+fixed relationship, a deliberate drop from previously being the highest z-index in the app).
+`.wt-nav-btn.active`: `color:var(--deep); background:var(--mist)` → `color:var(--accent);
+background:var(--accent-chip); border-radius:12px`. Added `aria-current="page"` to whichever tab
+button is active (and no attribute on the rest). Text labels were already always-visible and already
+11px/weight 600 — no change needed there. Content clearance: `.wt-root`'s hardcoded
+`padding-bottom:78px` → `padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))`, so
+page content clears the fixed nav using the same token the nav itself is sized from, instead of a
+magic-number approximation.
+**Not done (flagged for Rob):** the new `--z-sheet:50` token doesn't match the app's actual existing
+sheet/modal z-indices (150–191, several distinct hand-picked levels for stacked nested sheets). Item
+5 only asked for the nav's own z-index; renumbering every sheet to the token scale is a separate,
+larger change this session didn't attempt.
+
+### Added — accessibility floor
+- **Touch targets:** `.wt-icon-btn` (every pencil/trash/close icon button app-wide, including
+  Today's Log edit/delete buttons) now has `min-width:var(--touch); min-height:var(--touch)` with
+  centered content. `.wt-field input/select/textarea` (every text/number/date field app-wide,
+  including the backfill sheet's date field) gained `min-height:var(--touch)` plus explicit
+  `box-sizing:border-box` so the min-height is predictable regardless of which sheet it's rendered
+  in, portaled or not.
+- **Settings 16px inputs:** gave `HO` (the Settings tab's root element) a `wt-settings-tab`
+  className and added a scoped rule, `.wt-settings-tab .wt-field input/select/textarea { font-size:
+  16px; }`, without touching the shared `.wt-field input` rule's global 15px (used by every other
+  sheet in the app). Settings has exactly two visible text inputs (tester name, and one inside the
+  account section) — both now covered; the hidden file-input for backup import wasn't touched.
+- **Overdue icon:** added a new `AlertCircle` import (lucide-react), rendered at `size:12` inline
+  before the "N days overdue" text in Today's To Do list, scoped to `"overdue" === e.status.state`
+  only. Existing red/coral color (`var(--danger)` via `.wt-treatment-overdue`) is unchanged — the
+  icon is additive, not a replacement.
+- **Muted-text contrast, two specific instances:** the shared `.wt-field` label rule uses
+  `color:var(--muted)`. Inside `OO` and `BackfillSheet` (both portaled, both on light/white
+  backgrounds), that variable now resolves to the *new* `:root`-scoped `--muted` (`#8A97A6`,
+  ~2.98:1 against white — fails 4.5:1) rather than the existing `.wt-root`-scoped one (`#5C7085`,
+  ~5.11:1 against white — passes) that every other sheet in the app still correctly gets. Rather
+  than touching the global token (explicitly forbidden) or hand-editing every individual label,
+  added one inline `"--muted": "#5C7085"` custom-property override on each portaled sheet's own
+  outer container — it locally re-establishes the safe value for every `var(--muted)` reference
+  inside that subtree, portaled or not, present or future.
+
+### Fixed — `UX-OPEN-02`: OO modal backdrop click no longer cascades to the parent Log sheet
+One-line fix: `OO`'s backdrop `onClick` now calls `e.stopPropagation()` before `onClose()`. Since
+React portals bubble events through the *React* tree (not the DOM tree) and `OO` is declared as a
+direct child of the Log sheet's own outer backdrop, an unstopped click on `OO`'s portaled backdrop
+was reaching the Log sheet's own backdrop handler and closing both in one action.
+**Flagged, not fixed:** while verifying this, found that the non-portaled "My Presets" backdrop's
+own `onClick` (`() => setShowPresetsSheet(false)`) does *not* actually call `stopPropagation`,
+despite the decision log's `UX-11` entry describing it as already having one "for this exact
+reason." If that's still accurate for some other reason not visible in the current code, no action
+needed; if not, My Presets' own backdrop likely has the same cascade bug independently — worth a
+quick real-device check.
+
+### Verification
+`tools/harness.js` seed extended with a second supplement (`OverdueMed`, `nextDueOverride` set
+several days in the past) to exercise the overdue-icon check. New assertions cover: BackfillSheet's
+background/anchoring/box-sizing; the "Prior Days:" label and icon size/color; every `.wt-nav`/
+`.wt-nav-btn.active` CSS property against the new tokens, `wt-nav` mounting on all 5 tabs,
+`aria-current` on the active tab only; the page container's nav-clearance padding; the overdue row's
+icon presence alongside its text; the `.wt-icon-btn`/`.wt-field input` touch-target CSS; the
+Settings-scoped 16px font-size rule; and — the key regression test for item 7 — that clicking `OO`'s
+backdrop now leaves both the parent Log sheet and the nested My Presets sheet open, closable only
+via their own Close buttons. All pass against both the working build and the exact shipped
+`site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and passing in the jsdom harness (simulated browser only), including CSS
+property assertions read directly from the stylesheet text and inline style checks on rendered
+elements. **Not yet verified:** on a real device — jsdom has no layout engine, so nothing about
+actual pixel positioning, overflow, or visual contrast was measured; Rob should specifically check
+BackfillSheet renders fully opaque with no horizontal scroll/clipping, the nav bar's new dark
+styling and active-tab pill read correctly, the brighter "Prior Days" control is legible, and that
+tapping OO's backdrop now leaves the Log sheet open as expected.
+
 ## [3.33.0] — 2026-08-21
 
 Two changes, same root cause: the "OO" (add/edit preset) modal nested-position bug, plus a new
