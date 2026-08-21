@@ -198,6 +198,31 @@ const STEPS = [
     check("My Presets sheet opened inline", headers.includes("My Presets"));
     check("still on Log It! (no nav away)", !!window.document.querySelector(".wt-tracker-col"));
   },
+  () => check("click Add Preset", clickByText("Add Preset")),
+  () => {
+    const headers = [...window.document.querySelectorAll(".wt-modal-header h3")].map((h) => h.textContent);
+    check("Add preset modal opened", headers.includes("Add preset"));
+    check("set preset name", setInput("e.g. Protein shake", "Test Preset"));
+    check("set preset oz", setInput("0", "12"));
+  },
+  () => check("save new preset", clickByText("Save preset")),
+  () => {
+    const row = [...window.document.querySelectorAll(".wt-preset-row")]
+      .find((r) => r.textContent.includes("Test Preset"));
+    check("preset row rendered", !!row);
+    check("preset row has edit button", !!row && !!row.querySelector('[aria-label="Edit preset"]'));
+    check("preset row has delete button", !!row && !!row.querySelector('[aria-label="Delete preset"]'));
+  },
+  () => {
+    const row = [...window.document.querySelectorAll(".wt-preset-row")]
+      .find((r) => r.textContent.includes("Test Preset"));
+    check("click delete on new preset", row ? fire(row.querySelector('[aria-label="Delete preset"]')) : false);
+  },
+  () => {
+    const stillThere = [...window.document.querySelectorAll(".wt-preset-row")]
+      .some((r) => r.textContent.includes("Test Preset"));
+    check("preset removed after delete", !stillThere);
+  },
   // Add assertions for whatever changed this session.
 ];
 

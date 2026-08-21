@@ -20,6 +20,46 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.30.0] — 2026-08-21
+
+Built in `src/app.js`, deployed to `site/app/bundle.js` via the full build/harness/lint pipeline
+(build clean, harness clean — including a new preset-add/edit/delete round trip — lint 11,
+identical no-undef count before/after).
+
+### Investigated — "Edit Presets" button reported dead on tap
+Traced the full chain in `xO` (the shared log-entry/preset sheet): the button's `onClick`, the
+`showPresetsSheet`/`setShowPresetsSheet` state pair, the conditional sheet render, and the
+`presets`/`onAddPreset`/`onEditPreset`/`onDeletePreset` props at the single call site. Everything
+is correctly wired and matches the fix already shipped in v3.29.0. Rebuilt `src/app.js` and
+confirmed byte-for-byte identical to the previously deployed `bundle.js`, so there was no
+source/deployed drift to explain it either. Strengthened the harness test to add a preset, then
+assert the row renders with visible edit and delete buttons, then delete it — full round trip
+passes clean. **No code change made** — didn't find a bug to fix. Most likely explanation per the
+caching lesson above: a stale cached bundle predating v3.29.0 on the reporting device. Needs Rob to
+confirm on a real device after this deploy (force-refresh / reinstall if the nav bar still shows
+the old version number) whether the button now works — if it's still dead after a confirmed-fresh
+load, we need exact repro steps and device console output, because static analysis found nothing.
+
+### Changed — page background is now black
+`.wt-root`'s background moved from `--paper` (`#F2F5F8`, light) to a new `--page-bg` (`#000000`)
+variable, along with `.wt-topbanner-wave path` and `.wt-todo-today-sticky`, which shared `--paper`
+purely to blend with the page background and would otherwise show as light patches against the new
+black. Cards (`.wt-card`, `.wt-tracker-col`, `.wt-plan-card`, `.wt-regimen-card`) and sheets/modals
+(`.wt-sheet`, `.wt-modal`) still use the original `--paper` value directly and are unaffected — they
+keep their white/light surfaces with existing dark text. Text sitting directly on the page
+background switched to white/near-white: `.wt-date`, `.wt-date-label` (the "Day Planner:" /
+"My Plan for:" style header), `.wt-section-label`, `.wt-section-label-strong`, and
+`.wt-plan-section-label`. The `.wt-doctor-share-overlay` (Share with Doctor / print view) was left
+untouched — it's a separate printable screen, not part of the main page background, and CLAUDE.md
+flags print CSS as previously fragile.
+
+**Not audited**: other background-level text I didn't find named in scope, e.g. `.wt-btn-text`'s
+`var(--deep)` (dark navy) — if any such text turns out to sit directly on the new black background
+rather than inside a card, it may also need a contrast fix. Flagging so it doesn't get missed.
+
+jsdom has no layout engine, so none of this was visually verified — needs Rob's eyes on a real
+device or a Playwright screenshot pass to confirm contrast and that nothing looks broken.
+
 ## [3.29.0] — 2026-08-21
 
 Two fixes on top of v3.28.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
