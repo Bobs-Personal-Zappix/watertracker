@@ -20,6 +20,66 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.36.2] — 2026-08-21
+
+Real root cause found for the "invisible Log button" report from v3.36.1: renaming "Save" to "Log"
+wasn't the actual problem — the button itself has been rendering with a transparent background
+this whole time. Built in `src/app.js`, deployed to `site/app/bundle.js` via the full build/
+harness/lint pipeline (build clean, harness clean — 8 new assertions added, see below — lint 11,
+identical no-undef count before/after and matching the currently-deployed baseline).
+
+### Fixed — BackfillSheet's "Log" button (and OO's "Save preset" button) had a transparent background
+Root cause: `.wt-btn-primary`'s `background:var(--deep)` and `.wt-chip.active`'s `background:
+var(--deep)` both reference `--deep`, which is defined only inside `.wt-root`'s scope — never
+merged into the global `:root` token block, unlike `--ink`/`--muted`/`--success`. `BackfillSheet`
+and `OO` both render via `createPortal` to `document.body`, outside `.wt-root`'s subtree, so
+`var(--deep)` resolves to nothing there: the property is invalid at computed-value time and
+`background` (not an inherited property) falls back to its initial value — transparent. With
+`.wt-btn-primary`'s text hardcoded to `color:#fff`, the result was exactly what Rob
+described — white text on a transparent background, sitting on the sheet's light surface: visually
+gone, but still a real, clickable element (which is why tapping the empty space where it should be
+still submitted the entry).
+
+This is the same bug class as the sheet-background fix in v3.34.0 (`--paper` was undefined there
+for the same reason) — that fix covered the *sheet's own* background but missed that `.wt-btn-primary`
+and the RX-picker's `.wt-chip.active` selected-state (also `var(--deep)`) needed the same treatment,
+and that OO — which renders the identical portal pattern — had never actually been checked for this
+specific failure mode at all (it wasn't reported, but sharing the exact same structure, it had the
+identical bug: OO's own `.wt-modal` background is `var(--paper)`, invisible for the same reason, and
+its "Save preset" button and any input/chip borders using `var(--line)` were equally broken).
+
+**Fixed comprehensively, not just the one report**: both `BackfillSheet`'s `.wt-sheet` container and
+`OO`'s `.wt-modal` container now locally redefine every `.wt-root`-only custom property their own
+descendant elements actually reference — `--deep`, `--line`, and `--paper`, alongside the `--muted`
+override already added in v3.34.0. `OO`'s modal also gained the same explicit `background:"#F2F5F8"`
+override `BackfillSheet` already had, since `.wt-modal`'s `background:var(--paper)` was equally
+broken and had simply never been exercised/reported. Systematically checked every CSS class actually
+used inside these two components against the global `:root` token list to confirm no other
+`.wt-root`-only variable is still silently unresolved — none found.
+
+### Changed — BackfillSheet's "Log" button now matches Log It!'s Log button exactly
+`marginTop` 6px → 16px, matching the quick-dial's `Log ${amount}${unit}` button precisely. Both
+already shared the same `.wt-btn-primary` class (`width:100%`, `justify-content:center` built into
+the class), so once the background renders correctly the two now look and behave identically, per
+Rob's explicit ask.
+
+### Verification
+`tools/harness.js`: confirmed jsdom cannot resolve `var()` referencing an inline custom property
+set on an ancestor when computing a stylesheet-defined rule (verified empirically with a minimal
+reproduction — `getComputedStyle` just echoes the unresolved `var(--deep)` string and falls back to
+transparent) — the same jsdom limitation already documented for CSS-variable-scope checks earlier
+this project. Verified at the source instead: both containers' inline `style` objects asserted to
+literally contain `--deep:#1B4F72`, `--line:#D5E1EC`, `--paper:#F2F5F8`; the Log button's `width`/
+`marginTop` asserted directly. All pass against both the working build and the exact shipped
+`site/app/bundle.js`, with zero runtime errors.
+
+**Verified:** implemented and confirmed at the source (inline style contents) in the jsdom harness.
+**Not yet verified:** on a real device — this is exactly the kind of visual bug jsdom cannot see by
+design (no layout/paint engine), so Rob's real-device report is what caught it in the first place.
+Please confirm the "Log" button is now clearly visible (dark blue background, white text, full
+width) on BackfillSheet, and — since it shares the identical fix — that the "Save preset" button and
+any selected (active) RX/Vitamins chip inside the Add/Edit Preset modal are also now visible.
+
 ## [3.36.1] — 2026-08-21
 
 Two real-device reports from Rob: the BackfillSheet had no visible submit control, and two spots

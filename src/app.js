@@ -221,7 +221,7 @@ import {
         vS = "#D5E1EC",
         bS = "#C1523E",
         wS = "#5C7085",
-        xS = "3.36.1",
+        xS = "3.36.2",
         SCHEMA_VERSION = 2,
         ES = {
             logs: {},
@@ -1626,7 +1626,11 @@ import {
         }, React.default.createElement("div", {
             className: "wt-modal",
             style: {
-                "--muted": "#5C7085"
+                background: "#F2F5F8",
+                "--muted": "#5C7085",
+                "--deep": "#1B4F72",
+                "--line": "#D5E1EC",
+                "--paper": "#F2F5F8"
             },
             onClick: e => e.stopPropagation()
         }, React.default.createElement("div", {
@@ -3094,7 +3098,10 @@ import {
                 margin: 0,
                 boxSizing: "border-box",
                 background: "#F2F5F8",
-                "--muted": "#5C7085"
+                "--muted": "#5C7085",
+                "--deep": "#1B4F72",
+                "--line": "#D5E1EC",
+                "--paper": "#F2F5F8"
             },
             onClick: e => e.stopPropagation()
         }, React.default.createElement("div", {
@@ -3243,7 +3250,7 @@ import {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
-                marginTop: 6
+                marginTop: 16
             },
             disabled: !I,
             onClick: () => {

@@ -338,6 +338,10 @@ const STEPS = [
     const backdrop = h3 ? h3.closest(".wt-backdrop") : null;
     check("OO modal's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
     check("OO modal backdrop z-index above every nested sheet level", backdrop ? backdrop.style.zIndex : null, "180");
+    const modal = h3 ? h3.closest(".wt-modal") : null;
+    check("OO modal has an explicit opaque background (same transparent-var(--paper) bug as BackfillSheet, fixed the same way)", modal ? modal.style.background : null, "rgb(242, 245, 248)");
+    check("OO modal locally defines --deep (fixes its own invisible Save-preset button)", modal ? modal.style.getPropertyValue("--deep") : null, "#1B4F72");
+    check("OO modal locally defines --line", modal ? modal.style.getPropertyValue("--line") : null, "#D5E1EC");
     if (backdrop) fire(backdrop); // close it (onClick = onClose)
   },
   () => {
@@ -386,6 +390,19 @@ const STEPS = [
     const logBtn = [...window.document.querySelectorAll(".wt-btn-primary")].find((b) => b.textContent.trim() === "Log");
     check("BackfillSheet has a \"Log\" submit button (was unlabeled/missing per Rob's real-device report)", !!logBtn);
     check("\"Log\" button starts disabled (no fields filled in yet)", logBtn ? logBtn.disabled : null, "true");
+    check("\"Log\" button centered/full-width, matching Log It!'s Log button layout", logBtn ? logBtn.style.width : null, "100%");
+    check("\"Log\" button marginTop:16 matching Log It!'s Log button spacing", logBtn ? logBtn.style.marginTop : null, "16px");
+    // jsdom can't resolve var() referencing an inline custom property on an ancestor when
+    // computing a stylesheet rule (confirmed empirically — getComputedStyle just echoes the
+    // unresolved "var(--deep)" string and falls back to transparent) — so the button's actual
+    // visible color can't be asserted via computed style here. Verify the fix at the source
+    // instead: the sheet's own container must locally re-define every .wt-root-only custom
+    // property that .wt-btn-primary (and the .wt-chip/.wt-field/.wt-qty-* classes nested inside
+    // it) actually reference, since none of them exist in the global :root block this portaled
+    // sheet can otherwise see.
+    check("sheet locally defines --deep (fixes the invisible/transparent Log button background)", sheet ? sheet.style.getPropertyValue("--deep") : null, "#1B4F72");
+    check("sheet locally defines --line (fixes invisible input/chip borders)", sheet ? sheet.style.getPropertyValue("--line") : null, "#D5E1EC");
+    check("sheet locally defines --paper", sheet ? sheet.style.getPropertyValue("--paper") : null, "#F2F5F8");
   },
   () => check("set backfill date to a day with zero existing entries", setInputByAria("Backfill entry date", DAYS_AGO(10))),
   () => check("set backfill protein amount", setInputByAria("Backfill protein amount", "25")),
