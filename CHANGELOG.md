@@ -20,6 +20,51 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.31.0] — 2026-08-21
+
+Three fixes on top of v3.30.0. Built in `src/app.js`, deployed to `site/app/bundle.js` via the
+full build/harness/lint pipeline (build clean, harness clean — three new assertions added, see
+below — lint 11, identical no-undef count before/after).
+
+### Fixed — "My Presets" sheet rendered invisible (real bug, not a color issue — predates v3.30.0)
+The sheet was nested as a DOM child of `xO`'s own outer `.wt-sheet` (`overflow-y:auto; max-height:
+75vh`), sharing its class's base `z-index:160` with no positioning override — so it rendered
+invisibly on real devices while still updating state correctly (which is why the v3.30.0 harness
+test passed even though the button was already broken; jsdom has no layout engine to catch this
+class of bug). Gave the nested backdrop `z-index:170` and the nested sheet `position:fixed;
+z-index:171; bottom:0; left:0; width:100%` inline so it escapes the parent sheet's stacking/scroll
+container instead of relying on flex layout inherited from an ancestor it's no longer really inside
+of. Also added `touch-action:none` to `.wt-backdrop` and `overscroll-behavior:contain` to
+`.wt-sheet`/`.wt-modal` app-wide so scroll gestures on an open sheet don't leak through to the page
+behind it. New harness assertions check the nested sheet's inline `position`/`zIndex` directly.
+**Not fixed**: the "Add/Edit preset" modal (`OO`) that opens from inside this same sheet is nested
+the same way and wasn't touched — flagging it now rather than waiting for the next bug report.
+
+### Fixed — v3.30.0 accidentally whited out text inside cards and sheets
+Root cause: v3.30.0 set `.wt-root`'s own `color` to `#fff` for the new black page background.
+Several containers that don't set their own explicit text color — sheet/modal headers
+(`.wt-sheet-header h3`), `.wt-card`, `.wt-card-title`, and others — were inheriting that white
+color straight through onto their light `--paper` surfaces, making that text unreadable. Reverted
+`.wt-root`'s inherited `color` back to `var(--ink)`; the background-level text that's deliberately
+white (`.wt-date`, `.wt-date-label`, `.wt-section-label`, `.wt-section-label-strong`,
+`.wt-plan-section-label`) already carries its own explicit color and is unaffected by this revert.
+Separately, two literal `.wt-section-label` instances *inside* the "Self-Managed" `PlanSheet`
+("Supplements & Prescriptions", "Treatments") needed an explicit inline `color: var(--ink)`
+override, since that generic class itself is styled white for its (more common) page-background
+usage elsewhere — this was a real second bug, not just inheritance. New harness assertion opens
+that sheet and checks the label's inline color directly.
+
+### Fixed — stray line above "Use Your Presets or Log a Meal"
+A `.wt-divider` (`border-top:1px solid var(--line)`) was rendered directly above `.wt-action-btns`
+on the Log It! page — invisible on the old light background, glaring on the new black one. Removed
+that one instance; the divider element/class is still used correctly elsewhere (chart sections,
+etc.) and was left alone. New harness assertion checks `.wt-action-btns`'s previous sibling is not
+a divider.
+
+jsdom still has no layout engine — needs Rob's eyes on a real device (specifically Safari/iOS,
+since nested `position:fixed`-inside-`overflow` bugs are a known WebKit quirk) to confirm the sheet
+is now actually visible and none of these fixes look wrong.
+
 ## [3.30.0] — 2026-08-21
 
 Built in `src/app.js`, deployed to `site/app/bundle.js` via the full build/harness/lint pipeline

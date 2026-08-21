@@ -191,12 +191,21 @@ const STEPS = [
   },
   () => check("nav to Today", nav("Today")),
   () => check("nav to Log It!", nav("Log It!")),
+  () => {
+    const actionBtns = window.document.querySelector(".wt-action-btns");
+    const prev = actionBtns ? actionBtns.previousElementSibling : null;
+    check("no divider line above action buttons", !(prev && prev.classList.contains("wt-divider")));
+  },
   () => check("open presets/log sheet", clickByText("Use Your Presets or Log a Meal")),
   () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
   () => {
     const headers = [...window.document.querySelectorAll(".wt-sheet-header h3")].map((h) => h.textContent);
     check("My Presets sheet opened inline", headers.includes("My Presets"));
     check("still on Log It! (no nav away)", !!window.document.querySelector(".wt-tracker-col"));
+    const header = [...window.document.querySelectorAll(".wt-sheet-header")].find((h) => h.textContent.includes("My Presets"));
+    const sheet = header ? header.closest(".wt-sheet") : null;
+    check("My Presets sheet escapes parent via position:fixed", sheet ? sheet.style.position : null, "fixed");
+    check("My Presets sheet z-index above parent sheet", sheet ? sheet.style.zIndex : null, "171");
   },
   () => check("click Add Preset", clickByText("Add Preset")),
   () => {
@@ -222,6 +231,14 @@ const STEPS = [
     const stillThere = [...window.document.querySelectorAll(".wt-preset-row")]
       .some((r) => r.textContent.includes("Test Preset"));
     check("preset removed after delete", !stillThere);
+  },
+  () => check("nav to My Plan (for Self-Managed sheet check)", nav("My Plan")),
+  () => check("open Self-Managed sheet", clickByText("Self-Managed", "button")),
+  () => {
+    const label = [...window.document.querySelectorAll(".wt-section-label")]
+      .find((el) => el.textContent === "Supplements & Prescriptions");
+    check("Self-Managed sheet label found", !!label);
+    check("Self-Managed sheet label stays dark (not white) on light sheet", label ? label.style.color : null, "var(--ink)");
   },
   // Add assertions for whatever changed this session.
 ];
