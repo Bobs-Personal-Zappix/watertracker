@@ -355,7 +355,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
 .wt-voice-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }
 .wt-voice-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }
 .wt-voice-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }
-.wt-voice-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:38px; border-radius:50%; background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }
+.wt-voice-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:20px; border-radius:50%; background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }
 .wt-voice-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
 .wt-voice-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }
 .wt-voice-tile-badge svg { width:22px; height:22px; }

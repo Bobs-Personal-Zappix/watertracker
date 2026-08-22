@@ -20,6 +20,17 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.40.3] — 2026-08-22
+
+Quick follow-up from Rob's real-device check of v3.40.2.
+
+- **Voice Tracker badge nudged back right.** v3.40.2 shifted the badge left via
+  `margin-right:38px`; Rob reported it went too far. Reduced to `margin-right:20px`.
+
+**Verification:** full 5-step pipeline re-run and passed against the exact shipped `bundle.js` —
+0 runtime errors, lint at the unchanged 11-error baseline, same one pre-existing unrelated stale
+harness check. **Not yet verified on a real device.**
+
 ## [3.40.2] — 2026-08-22
 
 Follow-up fixes from Rob's review of v3.40.1.

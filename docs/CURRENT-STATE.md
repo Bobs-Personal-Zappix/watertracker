@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.40.2*
+*As of: August 22, 2026 · Deployed version: 3.40.3*
 
 ---
 
@@ -103,6 +103,11 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 22, 2026 (v3.40.3)
+
+Quick follow-up from Rob's real-device check: Voice Tracker badge was too far left after v3.40.2's
+shift; `margin-right` reduced 38px → 20px. Full pipeline re-verified. Not yet re-checked on device.
 
 ## What shipped Aug 22, 2026 (v3.40.2)
 
