@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.39.0*
+*As of: August 22, 2026 · Deployed version: 3.39.1*
 
 ---
 
@@ -103,7 +103,14 @@ CHANGELOG.md
 
 ---
 
-## What shipped Aug 22, 2026 (v3.39.0)
+## What shipped Aug 22, 2026 (v3.39.0–3.39.1)
+
+**v3.39.1 (follow-up from Rob's review):** My Plan's "What I'm Tracking" tile popups (`TrackerSheet`)
+now also color-match their tile, matching what v3.39.0 already did on Log It!. Log It!'s hero number
+is now horizontally centered in the tile (`.wt-tile-mid` flex:1 1 0, was flex:0 0 auto) instead of
+hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page header: "Tracking Plan
+& Summary for:" → "Today's Summary for:".
+
 
 - **Popup outline color-matching** — all 8 tracker entry sheets now take an explicit `borderColor`
   matching that tracker's category token (`var(--water)`, `var(--protein)`, etc.), the same color as

@@ -20,6 +20,30 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.39.1] — 2026-08-22
+
+Follow-up fixes from Rob's review of v3.39.0.
+
+- **My Plan tile popups now color-match too.** v3.39.0 only wired the color-match into the Log It!
+  sheets; the "What I'm Tracking" tile popups on My Plan (`TrackerSheet`, opened from `TrackerRow`)
+  still had the generic border. Each of the 8 `setOpenTracker(...)` calls now carries a `borderColor`
+  (reusing the same `iconColor` token already passed to that row's tile border), and `TrackerSheet`
+  applies it to its `wt-sheet`.
+- **Log It! hero number now centered in the tile**, not hugging the icon. `.wt-tile-mid` changed from
+  `flex:0 0 auto` to `flex:1 1 0` so it shares the tile's remaining width evenly with the left text
+  stack, centering the number/caption in the middle of the tile rather than against the ring.
+- **Hero-number caption bumped up**: `.wt-tile-mid-label` font-size 11px → 13px, per Rob's "a little
+  bigger" request.
+- **Today page header**: "Tracking Plan & Summary for:" (from v3.39.0) → "Today's Summary for:".
+
+**Verification:** same 5-step pipeline (esbuild → harness clean, 0 errors → lint:bundle, 11-error
+vendor baseline unchanged → copy to `site/app/bundle.js` → harness + lint re-run against the exact
+shipped file). End-state audit confirmed 16 sheet `borderColor` occurrences (8 trackers × Log It! +
+My Plan), the new `flex:1 1 0` / 13px CSS, and the new Today string all present in the shipped bundle.
+**Not yet verified on a real device** — same caveat as v3.39.0: jsdom can't confirm the centered
+layout actually looks centered, or how the wider `wt-tile-mid` box interacts with long labels like
+"Right on goal! 🎯".
+
 ## [3.39.0] — 2026-08-22
 
 Log It! tile restructure, popup outline color-matching, and three header-copy changes — all requested

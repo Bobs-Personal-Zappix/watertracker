@@ -273,7 +273,11 @@ generic popup. The tile restructure was requested by Rob specifically using the 
 large / "to go" small) as the reference; the per-tracker split (promote vs. add-new) was resolved by
 asking Rob directly rather than assuming, since Weight/Treatments/RX don't have a plain numeric
 "amount to go" the way the other five do.
-*Status:* **Locked** · Aug 22, 2026 · v3.39.0
+*Status:* **Locked** · Aug 22, 2026 · v3.39.0 — *amended Aug 22, 2026, v3.39.1: the color-match was
+initially wired into Log It!'s sheets only; My Plan's "What I'm Tracking" tile popups (`TrackerSheet`)
+now carry the same per-tracker `borderColor`. Also: the Log It! hero number is now horizontally
+centered in the tile (`flex:1 1 0`, was hugging the icon ring) and its caption font increased
+11px → 13px, both per Rob's real-review feedback.*
 
 ---
 
@@ -404,4 +408,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 22, 2026 (UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; earlier: UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 22, 2026 (UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
