@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.36.2*
+*As of: August 21, 2026 · Deployed version: 3.37.0*
 
 ---
 
@@ -129,12 +129,36 @@ CHANGELOG.md
 - **"Enter Missed Items" backfill (v3.33.0)** — Today → calendar icon → All Past Days → a day → "Enter Missed Items" opens a portaled sheet. Entries tagged `backfilled:true`/`enteredAt`, decrement inventory without touching forward schedule. BackfillSheet button visibility and label fixed (v3.36.1/3.36.2).
 - **UX-OPEN-02 resolved (v3.34.0)** — OO modal backdrop `stopPropagation` fix; no longer closes parent Log sheet.
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
+- **Dark tiles and dark sheets (v3.37.0)** — all 8 Log It! tiles and both My Plan tracker-card
+  grids: `background:var(--bg)`, full 2px category-color border on all 4 sides (replaces the
+  4px left-only accent border from v3.35.0), title/goal/to-go/logged text on `var(--ink-inverse)`.
+  Every bottom sheet and modal (`wt-sheet`/`wt-modal`) now dark (`var(--surface-dark)` +
+  `var(--ink-inverse)`), including inputs (`var(--bg)` background, `var(--ink-inverse)` text,
+  hairline border), the primary action button (now `var(--accent)` blue instead of the
+  near-invisible `var(--deep)` navy), secondary/text buttons, and preset/option rows. Manual
+  entry numeric inputs (Water/Protein/Calories/Weight) given an explicit dark background and
+  warm-tan text so they can't land on a light-on-light or dark-on-dark combination regardless of
+  which sheet renders them. Two inline `color:var(--ink)` overrides (Supplements/Treatments
+  section labels, `.wt-qty-name`) that would have gone invisible on the new dark sheets were
+  caught and fixed during this pass. Not real-device verified yet — see below.
 
 ---
 
 ## Known pattern — portaled components and CSS token scope
 
 `createPortal` renders outside `.wt-root`, where scoped CSS custom properties (like `--deep`, `--line`, `--paper`) are defined. Any portaled sheet or modal must locally redefine these tokens on its root element, or buttons and inputs will fall back to transparent/unstyled. This was the root cause of the BackfillSheet and OO modal button bugs (v3.36.2). Apply this pattern to every future portaled component.
+
+Confirmed recurring (v3.37.0): the tokens the app's two portaled components (BackfillSheet, OO
+preset modal) actually need to redefine locally are only the ones with *different* values inside
+vs. outside `.wt-root` (`--deep`, `--line`, `--paper`, `--muted`, `--ink`). Tokens installed only
+on the global `:root` block (`--bg`, `--surface-dark`, `--hairline`, `--ink-inverse`, `--accent`,
+the per-category color/chip pairs) resolve correctly for portaled content automatically, with no
+local redefinition needed — they were deliberately installed outside `.wt-root` for exactly this
+reason (see the `:root` block's own comment in `src/app.js`). v3.37.0's dark-sheet styling moved
+sheet/input/button colors onto this second group of tokens wherever possible, which is why the
+portals needed no new local overrides for the dark-theme pass. A shared utility function for
+portal containers (to stop hand-copying the `--deep`/`--line`/`--paper`/`--muted` local overrides
+into every new portaled component) is still worth doing in a future session — noted, not done.
 
 ---
 

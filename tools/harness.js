@@ -588,8 +588,8 @@ const STEPS = [
     for (const [label, colorVar, chipVar] of expected) {
       const tile = tiles.find((t) => t.textContent.includes(label));
       if (!tile) { console.log(`  (missing tile: ${label})`); allOk = false; continue; }
-      const borderLeft = tile.style.borderLeft || "";
-      if (!borderLeft.includes(colorVar)) { console.log(`  (${label} border mismatch: "${borderLeft}")`); allOk = false; }
+      const border = tile.style.border || "";
+      if (!border.includes(colorVar)) { console.log(`  (${label} border mismatch: "${border}")`); allOk = false; }
       const chip = tile.querySelector(".wt-tile-chip");
       if (!chip || chip.style.background !== chipVar || chip.style.color !== colorVar) { console.log(`  (${label} chip mismatch)`); allOk = false; }
       const left = tile.querySelector(".wt-tile-left");
@@ -602,12 +602,12 @@ const STEPS = [
     check("every tile has correct left-border color token, chip tint+icon color, and left/right column split with the gem on the right", allOk, "true");
   },
   () => {
-    // Item 3: no saturated full-tile background fill — every tile uses var(--surface).
+    // v3.37.0: tiles are now dark (var(--bg)) with a full category-color border, not a white surface.
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
     const allWhite = tiles.every((t) => t.style.background === "" || getComputedStyle(t).backgroundColor);
     const cssText = window.document.querySelector("style").textContent;
     const rule = cssText.match(/\.wt-tracker-col \{[^}]*\}/);
-    check("tile CSS background uses var(--surface), not a saturated fill", rule ? rule[0].includes("background:var(--surface)") : null, "true");
+    check("tile CSS background uses var(--bg), not var(--surface)", rule ? rule[0].includes("background:var(--bg)") : null, "true");
     check("tile CSS uses var(--radius) for corner rounding", rule ? rule[0].includes("border-radius:var(--radius)") : null, "true");
   },
   () => {
@@ -746,11 +746,11 @@ const STEPS = [
     for (const [label, colorVar, chipVar] of expected) {
       const card = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === label);
       if (!card) { console.log(`  (missing My Plan card: ${label})`); allOk = false; continue; }
-      if (!(card.style.borderLeft || "").includes(colorVar)) { console.log(`  (${label} My Plan border mismatch: "${card.style.borderLeft}")`); allOk = false; }
+      if (!(card.style.border || "").includes(colorVar)) { console.log(`  (${label} My Plan border mismatch: "${card.style.border}")`); allOk = false; }
       const chip = card.querySelector(".wt-plan-card-icon");
       if (!chip || chip.style.background !== chipVar) { console.log(`  (${label} My Plan chip bg mismatch)`); allOk = false; }
     }
-    check("every My Plan card has the matching category left-border and chip-tint background", allOk, "true");
+    check("every My Plan card has the matching category full border and chip-tint background", allOk, "true");
     const cssText = window.document.querySelector("style").textContent;
     const chipRule = cssText.match(/\.wt-plan-card-icon \{[^}]*\}/);
     check("My Plan chip resized to 28x28 / radius 8 (item 3c)", chipRule ? chipRule[0].includes("width:28px") && chipRule[0].includes("height:28px") && chipRule[0].includes("border-radius:8px") : null, "true");
@@ -832,6 +832,64 @@ const STEPS = [
     check("in-card version text untouched (still its original muted color, not var(--ink-inverse))", version ? version.style.color !== "var(--ink-inverse)" : null, "true");
   },
   () => check("no runtime errors after the v3.36.1 fixes", errors.length, 0),
+
+  // ── v3.37.0: manual entry input fix + dark tiles/sheets ────────────────────────
+  () => check("nav to Log It! (v3.37.0 manual entry check)", nav("Log It!")),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    check("found Water tile to open manual entry", !!waterTile);
+    if (waterTile) fire(waterTile);
+  },
+  () => {
+    const input = window.document.querySelector('input[placeholder="0"]');
+    check("Water manual entry numeric input present", !!input);
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-field input, \.wt-field select, \.wt-field textarea \{[^}]*\}/);
+    check("manual entry input CSS has explicit non-transparent background (var(--bg))", rule ? rule[0].includes("background:var(--bg)") : null, "true");
+    check("manual entry input CSS has explicit visible text color (var(--ink-inverse))", rule ? rule[0].includes("color:var(--ink-inverse)") : null, "true");
+  },
+  () => check("type 32 into Water manual entry input", setInput("0", "32")),
+  () => {
+    const input = window.document.querySelector('input[placeholder="0"]');
+    check("Water manual entry input accepted the typed value", input ? input.value : null, "32");
+    const logBtn = [...window.document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Log 32oz");
+    check("Log button visible/present for typed value", !!logBtn);
+  },
+  () => check("log 32oz of water (manual entry submit works)", clickByText("Log 32oz")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const tileRule = cssText.match(/\.wt-tracker-col \{[^}]*\}/);
+    check("Log It! tile CSS background is dark (var(--bg))", tileRule ? tileRule[0].includes("background:var(--bg)") : null, "true");
+    const titleRule = cssText.match(/\.wt-tile-title \{[^}]*\}/);
+    check("Log It! tile title text uses var(--ink-inverse)", titleRule ? titleRule[0].includes("color:var(--ink-inverse)") : null, "true");
+    const sheetRule = cssText.match(/\.wt-sheet \{[^}]*\}/);
+    check("bottom sheet CSS background is dark (var(--surface-dark))", sheetRule ? sheetRule[0].includes("background:var(--surface-dark)") : null, "true");
+    const btnRule = cssText.match(/\.wt-btn-primary \{[^}]*\}/);
+    check("primary sheet button uses var(--accent) background", btnRule ? btnRule[0].includes("background:var(--accent)") : null, "true");
+  },
+  () => check("no runtime errors after v3.37.0 manual-entry/tile changes", errors.length, 0),
+  () => {
+    // Close the Water manual-entry sheet, then open the combined entry sheet (via "Use Your
+    // Presets or Log a Meal") and its nested My Presets sheet — a second, independent sheet —
+    // to confirm at least one more sheet mounts cleanly under the new dark styling.
+    const closeBtns = [...window.document.querySelectorAll('button[aria-label="Close"]')];
+    if (closeBtns[0]) fire(closeBtns[0]);
+    const combinedEntryBtn = clickByText("Use Your Presets or Log a Meal");
+    check("found 'Use Your Presets or Log a Meal' button to open combined entry sheet", combinedEntryBtn);
+  },
+  () => {
+    const editPresets = [...window.document.querySelectorAll("button")].find((b) => b.textContent.includes("Edit Presets"));
+    check("found Edit Presets button to open My Presets sheet", !!editPresets);
+    if (editPresets) fire(editPresets);
+  },
+  () => {
+    const header = [...window.document.querySelectorAll("h3")].find((h) => h.textContent === "My Presets");
+    check("My Presets sheet opened without errors", !!header);
+    check("no runtime errors after opening My Presets sheet", errors.length, 0);
+  },
+  () => check("nav to Today (mounts without errors, v3.37.0)", nav("Today")),
+  () => check("nav to Stats (mounts without errors, v3.37.0)", nav("Stats")),
+  () => check("no runtime errors after full v3.37.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

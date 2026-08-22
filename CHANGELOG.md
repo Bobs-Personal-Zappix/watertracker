@@ -20,6 +20,63 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.37.0] — 2026-08-21
+
+Two changes: fixed the manual entry inputs for Water/Protein/Calories (and every other entry
+sheet), and switched all Log It!/My Plan tiles and every bottom sheet/modal to dark styling.
+
+**Manual entry input fix.** `.wt-field input` (the numeric field inside the Water/Protein/
+Calories/Weight quick-entry sheet, and every other form field in the app) had `background:#fff;
+color:var(--ink)` — correct on the old white sheet background, but the investigation this session
+found no case where it was actually rendering transparent or unclickable in the current source;
+the field was always present and functional. The real risk was contrast drift once the sheet
+itself went dark (below): a white-background input on a still-white sheet was fine, but the
+brief's hypothesis (a portal-scoped-token bug like the v3.36.2 Log button) didn't match — `wO`,
+the shared dial/manual-entry sheet, is not portaled. Rather than leave the input's styling
+implicitly dependent on the sheet staying light, it now has an explicit dark background
+(`var(--bg)`) and warm-tan text (`var(--ink-inverse)`), matching the new dark sheet exactly so
+there's no light-on-light or dark-on-dark scenario possible going forward.
+
+**Dark tiles.** All 8 Log It! tiles and both My Plan tracker-card grids: `background:var(--bg)`
+(was `var(--surface)`/`#fff`), full 2px border in the category color on all 4 sides (was a 4px
+left-only accent border, v3.35.0) via inline `style.border` replacing `style.borderLeft`. Tile
+title, goal, to-go, and logged-amount text switched to `var(--ink-inverse)`. My Plan card title
+and goal text likewise.
+
+**Dark sheets.** Every bottom sheet and modal (`wt-sheet`/`wt-modal`, covering the Log It! entry
+sheet, manual entry, My Presets, BackfillSheet, the OO preset add/edit modal, PlanSheet-based
+sheets including Add Treatment Provider and the Supplements/Treatments expanded lists, the
+Tutorial modal, and the Feedback form) now render with `background:var(--surface-dark)` and
+`color:var(--ink-inverse)`. Inside sheets: form inputs use `background:var(--bg)`, `color:
+var(--ink-inverse)`, `border:1px solid var(--hairline)`; the primary action button (`wt-btn-
+primary`) is now `background:var(--accent)` (was `var(--deep)`, which read as near-black on the
+new dark sheet); the secondary/cancel button is `background:transparent` with a hairline border;
+text-only buttons (`wt-btn-text`, e.g. "Manual or Presets Entry") use `var(--accent)`; preset/
+option rows (`wt-preset-row`, `wt-preset-btn`, `wt-preset-add-btn`) use the dark background and
+hairline border. The two portaled sheets (BackfillSheet, OO modal) had their hardcoded inline
+`background:"#F2F5F8"` changed to `"#151A21"` (matches `--surface-dark`) plus `color:"#FFF6DB"`,
+since inline styles override the CSS class and portals can't be trusted to inherit it.
+
+**Follow-on fixes found by inspection, not in the original brief:** two inline `color:
+"var(--ink)"` overrides on the Supplements/Treatments section labels inside the expanded-list
+sheet, and `.wt-qty-name`'s explicit `color:var(--ink)`, would have rendered as dark-navy text on
+the new dark sheet background — effectively invisible. Both switched to `var(--ink-inverse)`.
+
+**Explicitly left alone this session** (per Item 2c, noted rather than chased): `.wt-chip` (used
+both inside sheets and on Stats/feedback UI outside them — touching it risked unrelated
+regressions), `.wt-empty-note` (used on Log It!/Today pages directly, not just inside sheets;
+kept white by design), and the `wS` (`#5C7085`) muted helper-text constant used throughout sheets
+for secondary copy — contrast against the new dark background drops to roughly 3.5:1, which is
+readable but weaker than its ~5.7:1 on the old white sheet. Worth a follow-up pass if it reads
+poorly on a real device.
+
+Verified: jsdom harness (zero runtime errors, 8/8 tiles both tabs, manual entry accepts "32" and
+submits, My Presets sheet opens) and ESLint no-undef (11/11 baseline, unchanged) against both the
+fresh build and the exact shipped `bundle.js`. Not verified: actual visual contrast/legibility on
+a real device — jsdom has no layout engine and cannot render computed colors.
+
+---
+
 ## [3.36.2] — 2026-08-21
 
 Real root cause found for the "invisible Log button" report from v3.36.1: renaming "Save" to "Log"
