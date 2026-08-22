@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.38.1*
+*As of: August 22, 2026 · Deployed version: 3.38.2*
 
 ---
 
@@ -177,6 +177,15 @@ CHANGELOG.md
   sheet) is visually hidden behind an open sheet — a covering fix, not a DOM-removal one; the nav
   is still mounted, just visually obscured, which was judged sufficient rather than threading an
   "any sheet open" flag through the ~15 independent open/close state variables in the file.
+- **Past Days text-color bug fixed + tile icons filled (v3.38.2)** — the Past Days popup's
+  date-list buttons were rendering invisible (black) text because `<button>`/`<input>`/`<select>`/
+  `<textarea>` don't reliably inherit `color`/`font` from ancestors the way plain elements do; a
+  new global reset (`:where(button, input, select, textarea) { color:inherit; font:inherit; }`,
+  zero-specificity via `:where()` so it never overrides any of the app's many explicitly-colored
+  buttons) fixes this everywhere, not just that one popup. Also: both Log It! and My Plan's 8
+  category tile icons were outline-only (`lucide-react` default, `fill:none`) — neither was
+  actually filled despite it looking like My Plan's might be — both now pass a `fill` prop
+  matching their category color so the icon renders solid.
 
 ---
 

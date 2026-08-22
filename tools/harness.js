@@ -995,6 +995,44 @@ const STEPS = [
     check("manual entry input still present after v3.38.1 border/header changes", !!input);
   },
   () => check("no runtime errors after v3.38.1 pass", errors.length, 0),
+
+  // ── v3.38.2: Past Days text-color fix + filled tile icons ──────────────────────
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    check(
+      "global button/input/select/textarea color-inherit reset present (Past Days text-color fix)",
+      cssText.includes(":where(button, input, select, textarea) { color:inherit; font:inherit; }"),
+      "true"
+    );
+  },
+  () => check("nav to Log It! (filled-icon check)", nav("Log It!")),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    const svg = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
+    check("Log It! Water tile icon found", !!svg);
+    check("Log It! Water tile icon is filled, not transparent-inside", svg ? svg.getAttribute("fill") : null, "var(--water)");
+  },
+  () => check("nav to My Plan (filled-icon check)", nav("My Plan")),
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-plan-card")];
+    const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === "Water");
+    const svg = waterCard ? waterCard.querySelector(".wt-plan-card-icon svg") : null;
+    check("My Plan Water tile icon found", !!svg);
+    check("My Plan Water tile icon is filled, not transparent-inside", svg ? svg.getAttribute("fill") : null, "var(--water)");
+  },
+  () => check("nav to Today (Past Days text-color regression check)", nav("Today")),
+  () => {
+    const btn = window.document.querySelector('button[aria-label="View past days"]');
+    if (btn) fire(btn);
+  },
+  () => {
+    const dateBtn = [...window.document.querySelectorAll(".wt-preset-row")][0];
+    check("Past Days date-list button found", !!dateBtn);
+    const nameSpan = dateBtn ? dateBtn.querySelector(".wt-preset-name") : null;
+    check("Past Days date-list button has no conflicting inline/explicit dark color of its own (relies on the new inherit reset)", nameSpan ? nameSpan.style.color : "", "");
+    check("no runtime errors opening Past Days after the text-color fix", errors.length, 0);
+  },
+  () => check("no runtime errors after v3.38.2 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

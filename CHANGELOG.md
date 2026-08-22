@@ -20,6 +20,45 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.38.2] — 2026-08-22
+
+Two more defects from Rob's real-device pass on v3.38.1: invisible text in the Past Days popup,
+and outline-only (transparent-inside) tile icons on both Log It! and My Plan.
+
+**Past Days text-color bug, root cause.** The date-list buttons in the "Past days" view (before a
+specific day is selected) render as native `<button>` elements. Their `.wt-preset-name` label had
+no explicit `color` of its own, which had worked fine everywhere else this session because plain
+elements (`div`, `span`, `li`) inherit `color` from their ancestors — but `<button>` (and `input`/
+`select`/`textarea`) do **not** reliably inherit `color`/`font` from ancestors across browsers; the
+UA stylesheet gives them their own default (typically black/`buttontext`), which is exactly why
+every *other* button-based control in this app (`.wt-btn-primary`, `.wt-preset-btn`, `.wt-chip`,
+etc.) already had its own explicit `color` set — the Past Days date list was simply the one place
+that didn't. Fixed with a general reset, not a one-off: `:where(button, input, select, textarea)
+{ color:inherit; font:inherit; }`, added early in the stylesheet. `:where()` carries zero
+specificity, so every existing explicitly-colored button/input class still wins exactly as before
+(nothing else changes) — this only fills the gap for anything that was silently relying on
+inheritance that never actually reached it. Because this is a general fix rather than a scoped
+one, it should also catch any other not-yet-reported instance of the same bug elsewhere in the
+app, not just the Past Days popup.
+
+**Filled tile icons.** Checked before assuming: My Plan's tile icons were **not** already filled
+— both Log It! and My Plan render their category icon via `lucide-react`'s default stroke-only
+outline (`fill:none`, `color` only sets the stroke), so both had the same "transparent inside"
+look Rob flagged. Rather than reverting one to match the other, both got the same fix: each of the
+8 Log It! tile icons and the shared `TrackerRow` component (all 8 My Plan tiles) now pass a `fill`
+prop matching their existing category color alongside `color`, so the icon shape renders solid
+instead of outline-only. Purely a `fill` addition — no size, stroke-width, or color-token changes.
+
+Verified: jsdom harness (zero runtime errors, zero failing assertions across 282 checks, including
+a direct check that the rendered `<svg fill="...">` attribute is now set on both a Log It! and a
+My Plan tile icon) and ESLint no-undef (11/11 baseline, unchanged), both against the fresh build
+and the exact shipped `bundle.js`. **Not verified:** whether the filled icon style actually looks
+good for every one of the 8 icons on a real device — some lucide glyphs (e.g. `Battery`) have
+internal negative-space details that a solid fill may partially obscure; flag if any specific icon
+looks wrong once you've seen it live.
+
+---
+
 ## [3.38.1] — 2026-08-22
 
 Follow-up polish on v3.38.0, from Rob's real-device look at the dark theme: borders were too
