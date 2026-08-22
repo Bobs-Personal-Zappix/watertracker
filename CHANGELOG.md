@@ -20,6 +20,50 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.39.0] — 2026-08-22
+
+Log It! tile restructure, popup outline color-matching, and three header-copy changes — all requested
+by Rob in one pass.
+
+**Popup outline now matches its tile's category color.** All 8 tracker entry sheets (Water, Protein,
+Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins) previously shared the generic
+`--hairline-bright` border. Each sheet now takes an explicit `borderColor` (`var(--water)`,
+`var(--protein)`, etc. — the same token already used for that tracker's tile border on Log It!) so the
+bottom sheet visually continues the tile you tapped. Water/Protein/Calories/Weight share one dial
+component (`wO`) parameterized by a new `borderColor` prop passed at each call site; Sleep, RX &
+Vitamins, Treatments, and Exercise each got the color applied directly (Sleep has three separate sheet
+states — active-session, manual-entry, and choice — all three updated).
+
+**Log It! tile restructure — the middle stat is now a large, bold hero number.** Previously the "to go"
+line sat as a mid-size line inside the left-hand text stack alongside Goal and Logged/Taken. It now
+renders in a new middle column (`wt-tile-mid`, between the text stack and the icon/progress-ring), at
+24px bold with a smaller caption underneath — vertically centered next to the tile's icon bubble, as
+Rob asked using the Water tile ("120oz" large / "to go" small) as the reference example. Per-tracker
+scope, agreed with Rob before implementation:
+- **Water, Protein, Calories, Sleep, Exercise:** the existing "to go"/"left"/"over" stat moves out of
+  the left stack entirely into the new hero position (Goal and Logged stay put, unchanged size).
+- **Weight:** left stack unchanged (Goal/today's value stay as-is); the new hero number is the signed
+  amount left to reach goal (`Math.abs(goal − today's weight)`), captioned "to go" — "On goal!" when
+  the diff is zero, "Log today" when no weight's been recorded yet.
+- **Treatments:** left stack unchanged; hero number is the count of treatments planned for today,
+  captioned "to do".
+- **RX & Vitamins:** left stack unchanged; hero number is the count due today, captioned "to take".
+
+New CSS: `.wt-tile-mid` / `.wt-tile-mid-value` (24px bold) / `.wt-tile-mid-label` (11px, muted).
+
+**Header copy changes (3 pages):**
+- Log It! — "Day Tracker:" → "Tracking for:"
+- Today — "Day Planner:" → "Tracking Plan & Summary for:"
+- Stats — "TO DATE STATS:" → "CURRENT STATS FOR:"
+
+**Verification:** Full 5-step pipeline run (esbuild → harness clean boot, 0 runtime errors → lint:bundle,
+11 pre-existing vendor no-undef errors, unchanged baseline → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same clean results). End-state audit confirmed all 8
+`wt-tile-mid` blocks, all 8 sheet `borderColor` tokens, and all 3 header strings present in the shipped
+bundle. **Not yet verified:** visual layout on a real device/browser — jsdom has no layout engine, so
+vertical centering, spacing, and whether the hero number/tile-right column crowd on narrow screens
+need Rob's eyes.
+
 ## [3.38.2] — 2026-08-22
 
 Two more defects from Rob's real-device pass on v3.38.1: invisible text in the Past Days popup,

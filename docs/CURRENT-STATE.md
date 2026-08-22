@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.38.2*
+*As of: August 22, 2026 · Deployed version: 3.39.0*
 
 ---
 
@@ -102,6 +102,24 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 22, 2026 (v3.39.0)
+
+- **Popup outline color-matching** — all 8 tracker entry sheets now take an explicit `borderColor`
+  matching that tracker's category token (`var(--water)`, `var(--protein)`, etc.), the same color as
+  the tile border on Log It!, so the bottom sheet visually continues the tile that opened it.
+- **Log It! tile restructure** — the middle stat ("to go" / diff / due-count) moved out of the left
+  text stack into a new large-bold hero position (`wt-tile-mid`) between the text stack and the icon
+  ring, vertically centered next to the icon bubble. Water/Protein/Calories/Sleep/Exercise: existing
+  "to go"/"left"/"over" text becomes the hero (Goal/Logged unchanged). Weight: hero is amount left to
+  reach goal ("to go" / "On goal!" / "Log today"), left stack unchanged. Treatments: hero is count
+  planned today ("to do"), left stack unchanged. RX & Vitamins: hero is count due today ("to take"),
+  left stack unchanged.
+- **Header copy** — Log It! "Day Tracker:" → "Tracking for:"; Today "Day Planner:" → "Tracking Plan &
+  Summary for:"; Stats "TO DATE STATS:" → "CURRENT STATS FOR:".
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` (harness clean,
+  0 runtime errors; lint at the unchanged 11-error vendor baseline). **Not yet verified on a real
+  device/browser** — jsdom has no layout engine, so tile-row spacing/wrapping needs Rob's eyes.
 
 ## What shipped Aug 19–21, 2026 (v3.17.0–3.38.2)
 

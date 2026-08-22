@@ -256,6 +256,25 @@ Three supporting decisions from the dark-theme completion passes:
 *Why:* it turns a recurring per-element bug (dark text on dark background from un-inherited color) into a single structural fix. Applied v3.38.2.
 *Status:* **Locked as a rule** · Aug 21, 2026 · v3.38.2
 
+**UX-18 — Tracker sheets borrow their tile's category color; Log It! tile middle stat becomes a hero number.**
+Two related v3.39.0 changes, both explicit calls by Rob:
+1. Each of the 8 tracker entry sheets (Water, Protein, Calories, Sleep, Weight, Exercise, Treatments,
+   RX & Vitamins) now renders with its border in that tracker's category color (the same token as the
+   tile border on Log It!), replacing the generic `--hairline-bright` border.
+2. On Log It!, the middle stat line moves out of the left text stack into a new large-bold "hero"
+   position between the text stack and the icon/ring, vertically centered next to the icon bubble.
+   Scope, clarified with Rob before implementation: Water/Protein/Calories/Sleep/Exercise promote their
+   existing "to go"/"left"/"over" text as-is (Goal/Logged stay in the left stack, unchanged size).
+   Weight, Treatments, and RX & Vitamins keep all three existing left-stack stats untouched and *add* a
+   new hero number: Weight shows the amount left to reach goal ("to go"); Treatments shows the count
+   planned today ("to do"); RX & Vitamins shows the count due today ("to take").
+*Why:* the color-match makes the sheet read as a continuation of the tile the user tapped rather than a
+generic popup. The tile restructure was requested by Rob specifically using the Water tile ("120oz"
+large / "to go" small) as the reference; the per-tracker split (promote vs. add-new) was resolved by
+asking Rob directly rather than assuming, since Weight/Treatments/RX don't have a plain numeric
+"amount to go" the way the other five do.
+*Status:* **Locked** · Aug 22, 2026 · v3.39.0
+
 ---
 
 ## Legal & compliance
@@ -385,4 +404,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 21, 2026 (UX-15–17 added for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 22, 2026 (UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; earlier: UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
