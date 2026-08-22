@@ -20,6 +20,47 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.40.1] — 2026-08-22
+
+Follow-up fixes from Rob's review of v3.40.0.
+
+- **Voice Tracker tile resized to fit below the standard tile height.** Icon bubble shrunk from
+  52px to 36px (now matches `.wt-tile-chip`, the same small icon size used on every other tile).
+  Title/subtext shifted left (`margin-left:-4px` on the text column) and subtext font reduced
+  14px → 11.5px. Tile padding reduced 20px → 12px/16px so the whole card is shorter than the
+  tiles below it. Badge circle reduced 72px → 52px and horizontally aligned with the progress
+  rings in the tiles below (matching 16px right padding).
+- **Real badge image applied.** Rob supplied `voice-tracker-badge.png` (the glossy gradient
+  sphere from the original spec); it's now the actual badge fill in both the in-app tile
+  (`site/app/assets/voice-tracker-badge.png`) and the standalone deliverable
+  (`voice-tracker-tile/assets/voice-tracker-badge.png`), replacing the CSS-gradient placeholder
+  from v3.40.0.
+- **"Use Your Presets" sheet no longer wastes space below Edit Presets.** The sheet content is now
+  a flex column with the presets grid set to `flex:1 1 auto` (filling available height instead of
+  a fixed 260px cap) and "Edit Presets" pinned to the bottom via `margin-top:auto`, so the sheet's
+  existing size is used fully instead of leaving a gap.
+- **Bugfix: Manually Log a Meal no longer opens a second stacked popup.** Water/Protein/Calories
+  were tap-to-open buttons that launched the `wO` drag-dial sheet on top of the manual sheet —
+  a second backdrop stacked behind/over the first, not the plain numeric-keyboard entry the manual
+  flow is supposed to be. They're now plain `<input type="number">` fields directly in the sheet
+  (same pattern as the existing Description field), so tapping one just brings up the phone's
+  numeric keyboard and "Log Items" submits normally. No second sheet, no dial.
+- `tools/harness.js`: added checks confirming the Voice Tracker tile mounts as the trackers-grid's
+  first child and is `aria-disabled`; confirmed the manual sheet's three fields are plain number
+  inputs with no `.wt-dial-trigger` buttons; added a regression check that typing into the Water
+  field does not open a second `.wt-backdrop`. Added a best-effort sheet-cleanup step before the
+  v3.40.0/3.40.1 block since sheets are portaled to `document.body` and survive tab navigation,
+  so an earlier test's leftover open sheet was polluting the new stacked-popup check.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed the new tile
+CSS sizes, the real PNG reference, the flex-column presets sheet, and the removal of the last
+`wt-dial-trigger` usage are all present/absent as intended in the shipped bundle. The same one
+pre-existing, unrelated stale harness check from v3.40.0 (`Goal 64oz − 32oz logged`) still fails,
+untouched. **Not yet verified on a real device** — jsdom has no layout engine, so the tile's new
+height/alignment against the tiles below and the badge image's crop/fit need Rob's eyes.
+
 ## [3.40.0] — 2026-08-22
 
 Log It! split the combined "Use Your Presets or Log a Meal" flow into two independent entry

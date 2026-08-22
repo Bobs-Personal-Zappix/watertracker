@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.40.0*
+*As of: August 22, 2026 · Deployed version: 3.40.1*
 
 ---
 
@@ -103,6 +103,23 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 22, 2026 (v3.40.1)
+
+Follow-up fixes from Rob's review of v3.40.0, all in `CHANGELOG.md`:
+- Voice Tracker tile resized shorter than the tiles below it (icon bubble now 36px matching
+  `.wt-tile-chip`, badge 52px aligned with the rings below, title/subtext shifted left and subtext
+  font reduced).
+- Real `voice-tracker-badge.png` (Rob-supplied) now fills the badge in both the in-app tile and the
+  standalone deliverable, replacing the v3.40.0 CSS-gradient placeholder.
+- "Use Your Presets" sheet's presets grid now fills available height (flex column, `flex:1 1 auto`)
+  instead of leaving empty space below "Edit Presets".
+- **Bugfix:** Manually Log a Meal's Water/Protein/Calories fields were tap-to-open buttons that
+  launched a second stacked drag-dial sheet on top of the manual sheet. They're now plain number
+  inputs — tapping brings up the phone's numeric keyboard directly, no second popup.
+- Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
+  yet verified on a real device** — jsdom can't confirm the tile's new height/alignment or the
+  badge image's crop.
 
 ## What shipped Aug 22, 2026 (v3.40.0)
 

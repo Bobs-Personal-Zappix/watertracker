@@ -1029,6 +1029,18 @@ const STEPS = [
   // ── v3.40.0: Log It! action-button split, Voice Tracker tile, header AI icon removed ──
   () => check("nav to Log It! (v3.40.0 checks)", nav("Log It!")),
   () => {
+    // Best-effort: close sheets left open by earlier tests in this long-running
+    // session (sheets are portaled to document.body and survive tab navigation).
+    // Each .wt-backdrop's own onClick closes it, so click every one found; not
+    // asserted strictly since stacking/z-order across many prior tests can leave
+    // an odd one — the checks below only care that OUR new sheets aren't double-stacked.
+    for (let guard = 0; guard < 10; guard++) {
+      const backdrops = [...window.document.querySelectorAll(".wt-backdrop")];
+      if (backdrops.length === 0) break;
+      backdrops.forEach((b) => fire(b));
+    }
+  },
+  () => {
     const tile = window.document.querySelector(".wt-voice-tile");
     check("Voice Tracker tile present above Water", !!tile);
     const grid = window.document.querySelector(".wt-trackers-grid");
@@ -1056,10 +1068,23 @@ const STEPS = [
     const sheet = header ? header.closest(".wt-sheet") : null;
     check("manual meal sheet has Water/Protein/Calories field row", sheet ? !!sheet.querySelector(".wt-field-row") : null, "true");
     check("manual meal sheet has no presets grid", sheet ? !sheet.querySelector(".wt-preset-grid") : null, "true");
+    const numberInputs = sheet ? sheet.querySelectorAll('.wt-field-row input[type="number"]') : [];
+    check("manual meal sheet Water/Protein/Calories are plain number inputs, not dial-trigger buttons", numberInputs.length, 3);
+    check("manual meal sheet has no dial-trigger buttons (v3.40.1 bugfix: no stacked dial popup)", sheet ? !sheet.querySelector(".wt-dial-trigger") : null, "true");
+  },
+  () => {
+    // v3.40.1: typing into Water should NOT open a second stacked wO dial sheet.
+    const input = window.document.querySelector('.wt-field-row input[type="number"]');
+    check("found Water number input in manual meal sheet", !!input);
+    check("typed 24 into Water number input", setInput("0", "24"));
+  },
+  () => {
+    const backdrops = window.document.querySelectorAll(".wt-backdrop");
+    check("no second backdrop/dial sheet stacked open after typing a number (v3.40.1 bugfix)", backdrops.length, 1);
     const closeBtn = window.document.querySelector('button[aria-label="Close"]');
     if (closeBtn) fire(closeBtn);
   },
-  () => check("no runtime errors after v3.40.0 pass", errors.length, 0),
+  () => check("no runtime errors after v3.40.0/3.40.1 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
