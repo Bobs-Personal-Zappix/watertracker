@@ -154,6 +154,12 @@ All 8 tiles follow one structure: label → goal → status → ring → number 
 *Why:* consistency was the goal; freeing up screen space was not.
 *Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: Log It! tile layout changed to horizontal (v3.35.0). Left column: category chip (36×36) + title, then Goal/To-go/Logged stats stacked. Right column: existing gem illustration + progress ring. 4px left accent border in category color. Single-column full-width stack replacing the prior vertical format. My Plan 2-column grid is unchanged. Explicit call by Rob.*
 
+**UX-15 — Log It!/My Plan tiles and all sheets/pages switched to dark.**
+Tiles: background var(--bg), full 2px category-color border (amends UX-02's earlier 4px
+left-only accent). Sheets/modals/pages: dark surfaces, tan text (--ink-inverse), hairline
+borders on all edges, inputs/buttons re-themed. Completed app-wide in v3.38.0.
+*Status:* **Locked — v3.37.0-3.38.0** · Aug 21, 2026 — *amends UX-02.*
+
 **UX-03 — All 8 tiles use true percentage progress rings.**
 Including Weight, Exercise, Supplements, and Treatments (previously binary done/not-done).
 *Status:* **Locked** · Aug 17, 2026

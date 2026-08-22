@@ -20,6 +20,76 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.38.0] — 2026-08-22
+
+Finishes the dark-theme conversion started in v3.37.0. Three parts: a global text-color/border
+sweep, page-by-page removal of remaining white surfaces (in place, not a shared-class rewrite —
+Rob's explicit call), and header updates with two unwired placeholder icons. Takes the v3.38.0
+slot originally reserved for new partner trackers, which moves later in the sequence since this
+was the more urgent item.
+
+**Global text/border pass.** `.wt-root`'s own base text color flipped from dark navy to
+`var(--ink-inverse)` — with the whole app dark end-to-end after v3.37.0, any element that didn't
+explicitly set its own color was inheriting an unreadable dark-on-dark default. The one context
+that must stay light — the doctor-share/health-summary overlay (on-screen and printed) — was
+given its own explicit `color:var(--ink)` first, so it doesn't inherit the new default; it's
+rendered both embedded in the app (inside `.wt-root`) and standalone (a bare `?share=` link with
+no `.wt-root` ancestor at all), so this had to hold in both cases. Two more explicit dark-on-dark
+bugs turned up by tracing every remaining hardcoded dark color, not covered by the root-level
+fix: the dial-entry sheet's big center number (`fill:var(--ink)` on the SVG text) and a
+confirm-dialog's non-danger button (`background: pS`, i.e. `--deep`, hardcoded inline) — both
+would have been unreadable or blended into their dark surface. New `--muted-dark` token
+(`#9FB0C4`) added to the global `:root` block and applied everywhere secondary "helper" text sits
+on a dark surface (sheet field labels, card notes, stat labels, the dial's tick labels, etc.) —
+this is the AA-contrast fix flagged as a follow-up in the v3.37.0 summary (`wS`, `#5C7085`, sat at
+~3.5:1 against `--surface-dark`, below the 4.5:1 floor). `wS` itself was **not** changed, because
+it's also used for on-screen text in the doctor-share overlay's light controls — the exact same
+shared-constant trap as `.wt-chip`, just at the constant level instead of the class level; a new
+`wD` constant carries the lightened value at the ~26 dark-context call sites instead. All sheet/
+modal outer edges now have `border:1px solid var(--hairline)`; secondary buttons, inputs, and
+previously-borderless rows (`.wt-log-row`, `.wt-treatment-row`, `.wt-qty-row`, `.wt-divider`, the
+date-input on Today's To Do rows) got the same treatment wherever their edge had gone invisible
+against the new dark backgrounds.
+
+**Page-by-page white-surface removal.** **Today** — the Past Days popup was the worst offender
+exactly as flagged: its `.wt-log-row` entries were white boxes with `.wt-sheet`'s inherited tan
+text color landing on top of them, i.e. tan-on-white inside a dark-on-white sheet — invisible in
+both directions at once. Converted `.wt-log-row`/`.wt-log-time`/`.wt-log-icon`, and the To Do
+Today `.wt-treatment-row` cards including their overdue/today-due tinted backgrounds (now
+`var(--alert-chip)`/`var(--meds-chip)`, the existing dark category-tint tokens, instead of pastel
+`#FBEEEC`/`#FEF3E8`). **Stats** — segmented control, range-nav buttons, stat boxes, and every
+`.wt-card` (including the Health Summary/doctor-share launcher) converted; chart containers now
+dark, but the four recharts `Tooltip` popups still use the library's default white
+`contentStyle` — left alone per the brief (chart internals, flag for follow-up rather than risk
+breaking a chart this session). **My Plan** — `.wt-regimen-card` (My Treatments section, the
+Austin Drip Lounge demo card, "Add Treatment Provider") converted; the off-state dimmed tile icon
+background was itself a separate leftover light chip (`var(--paper)`) fixed alongside it.
+**Settings** — covered entirely by the global `.wt-card`/`.wt-field` fixes; no page-specific
+surfaces left over. **Left alone, flagged rather than fixed:** `.wt-chip`, used both inside dark
+sheets and inside the light/printable doctor-share overlay — touching it would fix one context
+and break the other, the same reasoning that correctly protected it in v3.37.0.
+
+**Header.** Logo badge 82px→70px, title 27px→23px (~15% each, per spec) to make room for two new
+placeholder icons — neither wired to anything, no tap handler: a 32px circular profile icon (left
+of the logo, `lucide-react` `User`, muted fill) and a `Sparkles` icon in `var(--accent)` (right of
+the title) marking the future Smart Entry assistant entry point (`UX-14`, tracked separately from
+this session's `UX-15`).
+
+**Process note.** Three pre-existing harness assertions turned out to be stale — two from v3.36.2
+asserting the old light `#F2F5F8` inline sheet background, one from before v3.37.0 asserting a
+sheet label should stay dark-on-light — and all three should have been caught as failures during
+v3.37.0's own verification, not this session's. They weren't, because that session's harness runs
+were checked by tailing the last N lines of output rather than grepping for `FAIL` explicitly.
+Fixed this session, and `grep "^FAIL"` (not `tail`) is now how harness output gets checked.
+
+Verified: jsdom harness (zero runtime errors, zero failing assertions across 257 checks —
+including the Past Days popup's dark background/border/text-color and the header's two
+placeholders) and ESLint no-undef (11/11 baseline, unchanged), both against the fresh build and
+the exact shipped `bundle.js`. Not verified: real-device visual contrast and layout — jsdom has
+no layout engine.
+
+---
+
 ## [3.37.0] — 2026-08-21
 
 Two changes: fixed the manual entry inputs for Water/Protein/Calories (and every other entry

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 21, 2026 · Deployed version: 3.37.0*
+*As of: August 22, 2026 · Deployed version: 3.38.0*
 
 ---
 
@@ -141,6 +141,30 @@ CHANGELOG.md
   which sheet renders them. Two inline `color:var(--ink)` overrides (Supplements/Treatments
   section labels, `.wt-qty-name`) that would have gone invisible on the new dark sheets were
   caught and fixed during this pass. Not real-device verified yet — see below.
+- **Dark theme completed app-wide (v3.38.0, `UX-15`)** — finishes what v3.37.0 started. All
+  remaining white/light surfaces on Today, Stats, My Plan, and Settings converted in place
+  (page by page, not a shared-class rewrite, per Rob's explicit call): Today's Past Days popup
+  (previously the worst offender — text, field borders, and the popup's own border were all
+  invisible), To Do Today rows, Today's Log rows; Stats' segmented control, range-nav buttons,
+  stat boxes, and cards (including the Health Summary launcher); My Plan's My Treatments/regimen
+  cards (Austin Drip Lounge demo card included); Settings' cards and fields. Every sheet/modal
+  outer edge now has a `1px solid var(--hairline)` border. A new `--muted-dark` token (`#9FB0C4`)
+  replaces `--muted`/the `wS` inline constant wherever secondary "helper" text sits on a dark
+  surface, clearing the AA 4.5:1 floor the v3.37.0 summary flagged (`wS` itself is unchanged,
+  since it's also used on the doctor-share overlay's on-screen light controls — a second
+  shared-constant case, same pattern as `.wt-chip`). `.wt-root`'s own base text color flipped
+  from dark navy to `--ink-inverse`, since the app is dark end-to-end now; the doctor-share
+  overlay (print/share page, must stay light) was given its own explicit `color:var(--ink)` so
+  it doesn't inherit the new default. Header: logo and title reduced ~15% (82px→70px badge,
+  27px→23px title) to make room for two new placeholder icons, neither wired to anything —
+  a circular profile icon (left of the logo, `lucide-react` `User`) and a `Sparkles` AI-assistant
+  icon in `--accent` (right of the title, future Smart Entry entry point per `UX-14`).
+  **Shared-component stragglers intentionally left untouched** (flagged, not fixed, to avoid
+  regressing a context that must stay light): `.wt-chip` (used inside dark sheets AND inside the
+  light/printable doctor-share overlay); `.wt-empty-note` was fully converted this session since
+  none of its ~14 usages are in a light context. **Also noted, not touched:** the four recharts
+  `Tooltip` `contentStyle` popups on Stats still render with the library's default white
+  background — arguably chart internals, out of scope per this session's brief; worth a follow-up.
 
 ---
 
@@ -176,7 +200,11 @@ into every new portaled component) is still worth doing in a future session — 
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 21):** v3.37.0 sheet standardization (swipe-dismiss, focus trap, Escape, one-at-a-time) → UX-OPEN-01 Phase 2 (Settings redesign) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build (`ARCH-OPEN-02`).
+**Working sequence (updated Aug 22):** dark-theme completion shipped v3.38.0, taking the version
+slot originally reserved for new partner trackers — that work moves later in the sequence, after
+sheet standardization (swipe-dismiss, focus trap, Escape, one-at-a-time) → UX-OPEN-01 Phase 2
+(Settings redesign) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build
+(`ARCH-OPEN-02`).
 
 Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — most time-sensitive open item, needed before next clinic meeting), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 

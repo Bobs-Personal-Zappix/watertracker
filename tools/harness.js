@@ -259,7 +259,9 @@ const STEPS = [
     const label = [...window.document.querySelectorAll(".wt-section-label")]
       .find((el) => el.textContent === "Supplements & Prescriptions");
     check("Self-Managed sheet label found", !!label);
-    check("Self-Managed sheet label stays dark (not white) on light sheet", label ? label.style.color : null, "var(--ink)");
+    // Sheet went dark in v3.37.0 (this label's inline color was flipped from var(--ink) to
+    // var(--ink-inverse) that session so it wouldn't render invisible on the new dark background).
+    check("Self-Managed sheet label uses var(--ink-inverse) on the now-dark sheet", label ? label.style.color : null, "var(--ink-inverse)");
   },
   // Add assertions for whatever changed this session.
   () => {
@@ -339,7 +341,8 @@ const STEPS = [
     check("OO modal's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
     check("OO modal backdrop z-index above every nested sheet level", backdrop ? backdrop.style.zIndex : null, "180");
     const modal = h3 ? h3.closest(".wt-modal") : null;
-    check("OO modal has an explicit opaque background (same transparent-var(--paper) bug as BackfillSheet, fixed the same way)", modal ? modal.style.background : null, "rgb(242, 245, 248)");
+    // v3.37.0 darkened this from #F2F5F8 to #151A21 as part of the sheet dark-theme conversion.
+    check("OO modal has an explicit opaque dark background (v3.37.0 dark theme)", modal ? modal.style.background : null, "rgb(21, 26, 33)");
     check("OO modal locally defines --deep (fixes its own invisible Save-preset button)", modal ? modal.style.getPropertyValue("--deep") : null, "#1B4F72");
     check("OO modal locally defines --line", modal ? modal.style.getPropertyValue("--line") : null, "#D5E1EC");
     if (backdrop) fire(backdrop); // close it (onClick = onClose)
@@ -380,7 +383,8 @@ const STEPS = [
     const backdrop = h3 ? h3.closest(".wt-backdrop") : null;
     check("BackfillSheet's backdrop is a direct child of document.body (portal, not nested)", backdrop ? backdrop.parentElement === window.document.body : null, "true");
     const sheet = h3 ? h3.closest(".wt-sheet") : null;
-    check("BackfillSheet has an explicit opaque background (item 1)", sheet ? sheet.style.background : null, "rgb(242, 245, 248)");
+    // v3.37.0 darkened this from #F2F5F8 to #151A21 as part of the sheet dark-theme conversion.
+    check("BackfillSheet has an explicit opaque dark background (v3.37.0 dark theme)", sheet ? sheet.style.background : null, "rgb(21, 26, 33)");
     check("BackfillSheet is not transparent", sheet ? sheet.style.background !== "transparent" && sheet.style.background !== "" : null, "true");
     check("BackfillSheet anchored left:0", sheet ? sheet.style.left : null, "0px");
     check("BackfillSheet anchored right:0 (prevents right-edge overflow from padding under content-box)", sheet ? sheet.style.right : null, "0px");
@@ -716,7 +720,9 @@ const STEPS = [
     check("nav inactive tab labels use var(--ink-inverse), not var(--muted) globally", navBtnRule ? navBtnRule[0].includes("color:var(--ink-inverse)") : null, "true");
     check("nav active tab label still uses var(--accent) (unchanged)", navActiveRule ? navActiveRule[0].includes("color:var(--accent)") : null, "true");
     const fieldLabelRule = cssText.match(/\.wt-field \{[^}]*\}/);
-    check("--muted itself untouched globally (sheet field labels still use var(--muted))", fieldLabelRule ? fieldLabelRule[0].includes("color:var(--muted)") : null, "true");
+    // v3.38.0: sheet field labels moved from var(--muted) to the lighter var(--muted-dark) —
+    // the v3.37.0 low-contrast fix flagged in that session's summary and addressed here.
+    check("sheet field labels use the AA-contrast var(--muted-dark), not the old var(--muted)", fieldLabelRule ? fieldLabelRule[0].includes("color:var(--muted-dark)") : null, "true");
   },
   () => check("nav to Today (to re-check the Prior Days label color)", nav("Today")),
   () => {
@@ -890,6 +896,70 @@ const STEPS = [
   () => check("nav to Today (mounts without errors, v3.37.0)", nav("Today")),
   () => check("nav to Stats (mounts without errors, v3.37.0)", nav("Stats")),
   () => check("no runtime errors after full v3.37.0 pass", errors.length, 0),
+
+  // ── v3.38.0: finish dark theme everywhere + header placeholders ────────────────
+  () => {
+    // Header: profile placeholder (left), logo, title, AI placeholder (right).
+    const banner = window.document.querySelector(".wt-topbanner-inner");
+    check("header banner found", !!banner);
+    const profile = window.document.querySelector(".wt-topbanner-profile");
+    const ai = window.document.querySelector(".wt-topbanner-ai");
+    check("profile placeholder icon present (left of logo)", !!profile);
+    check("AI assistant placeholder icon present (right of title)", !!ai);
+    if (banner && profile && ai) {
+      const kids = [...banner.children];
+      const profileIdx = kids.indexOf(profile);
+      const badgeIdx = kids.findIndex((k) => k.className.includes("wt-topbanner-badge"));
+      const textIdx = kids.findIndex((k) => k.className.includes("wt-topbanner-text"));
+      const aiIdx = kids.indexOf(ai);
+      check("header order is profile, logo, title, AI icon", profileIdx < badgeIdx && badgeIdx < textIdx && textIdx < aiIdx, "true");
+    }
+    const cssText = window.document.querySelector("style").textContent;
+    const badgeRule = cssText.match(/\.wt-topbanner-badge \{[^}]*\}/);
+    check("logo badge resized down from 82px", badgeRule ? /width:(\d+)px/.exec(badgeRule[0])[1] < 82 : null, "true");
+    const titleRule = cssText.match(/\.wt-topbanner-title \{[^}]*\}/);
+    check("title font-size resized down from 27px", titleRule ? /font-size:(\d+)px/.exec(titleRule[0])[1] < 27 : null, "true");
+  },
+  () => check("nav to Today (Past Days popup check)", nav("Today")),
+  () => {
+    const btn = window.document.querySelector('button[aria-label="View past days"]');
+    check("found 'View past days' button", !!btn);
+    if (btn) fire(btn);
+  },
+  () => {
+    const sheet = [...window.document.querySelectorAll(".wt-sheet")].find((s) => s.textContent.includes("Past days") || s.textContent.includes("Enter Missed Items"));
+    check("Past Days popup opened (sheet mounted)", !!sheet);
+    check("no runtime errors opening Past Days popup", errors.length, 0);
+    const cssText = window.document.querySelector("style").textContent;
+    const sheetRule = cssText.match(/\.wt-sheet \{[^}]*\}/);
+    check("sheet CSS has a visible outer border (var(--hairline))", sheetRule ? sheetRule[0].includes("border:1px solid var(--hairline)") : null, "true");
+    const logRowRule = cssText.match(/\.wt-log-row \{[^}]*\}/);
+    check("Past Days log rows are dark (var(--bg)), not white", logRowRule ? logRowRule[0].includes("background:var(--bg)") : null, "true");
+    const logTimeRule = cssText.match(/\.wt-log-time \{[^}]*\}/);
+    check("Past Days log row time text uses var(--ink-inverse), not var(--ink)", logTimeRule ? logTimeRule[0].includes("color:var(--ink-inverse)") : null, "true");
+  },
+  () => check("no runtime errors after Past Days popup check", errors.length, 0),
+  () => check("nav to Settings (mounts with inputs, v3.38.0)", nav("Settings")),
+  () => {
+    const input = [...window.document.querySelectorAll("input")].find((i) => i.type === "text" || i.type === "email");
+    check("Settings has at least one input rendered", !!input);
+    check("no runtime errors on Settings", errors.length, 0);
+  },
+  () => check("nav to My Plan (v3.38.0 dark-theme regression check)", nav("My Plan")),
+  () => check("no runtime errors on My Plan", errors.length, 0),
+  () => check("nav to Stats (v3.38.0 dark-theme regression check)", nav("Stats")),
+  () => check("no runtime errors on Stats", errors.length, 0),
+  () => check("nav to Log It! (manual entry regression check)", nav("Log It!")),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    check("found Water tile for v3.38.0 regression check", !!waterTile);
+    if (waterTile) fire(waterTile);
+  },
+  () => {
+    const input = window.document.querySelector('input[placeholder="0"]');
+    check("Water manual entry input still present (v3.37.0 regression check)", !!input);
+  },
+  () => check("no runtime errors after full v3.38.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
