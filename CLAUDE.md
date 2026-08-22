@@ -1,7 +1,7 @@
 # HydroPro Tracker
 
 Deployed React 18 PWA health-entry tracker on Cloudflare (Pages + Workers + D1 + KV) at
-hydroprotracker.com. Live version 3.16.0. One part-time maintainer (Rob). Closed tester group
+hydroprotracker.com. Deployed version: 3.38.2. One part-time maintainer (Rob). Closed tester group
 behind Cloudflare Access.
 
 Read `docs/DECISION-LOG.md` before proposing anything. Never re-litigate entries marked
@@ -123,12 +123,16 @@ Distinguish clearly between: *implemented* · *verified in simulated browser* ·
 device by Rob* · *committed and deployed*. Never imply something was tested more thoroughly than
 it was. If you ran out of room mid-task, say exactly where you stopped and what remains.
 
-## End every working session with
+## End every working session with — update the repo docs in the same commit
 
-1. **What changed** — brief.
-2. **What needs Rob's real-device test** — specific things to check, not "please test."
-3. **What's still outstanding** — including anything started and not finished.
-4. **Draft Decision Log entries** for anything decided, in the log's existing format, ready to paste.
+The docs live in the repo and are the ONLY continuity layer. They must never lag the code, so update them as the final step of the work — not as drafts for Rob to carry elsewhere:
+
+1. Bump the version; add a CHANGELOG.md entry (most-recent-first).
+2. Update docs/CURRENT-STATE.md — deployed version, what shipped, what's outstanding, current working sequence.
+3. Append any decisions to docs/DECISION-LOG.md in the existing format. Never delete an entry; supersede it.
+4. Update the "Deployed version" line at the top of this file.
+5. Complete replacement files, never fragments (OPS-07). Stage docs + code in the SAME commit.
+6. Then report: what changed, what needs Rob's real-device test, what's outstanding — and show git diff --cached before committing. Don't push until Rob approves.
 
 ## Working with Rob
 
