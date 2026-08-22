@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.38.0*
+*As of: August 22, 2026 · Deployed version: 3.38.1*
 
 ---
 
@@ -165,6 +165,18 @@ CHANGELOG.md
   none of its ~14 usages are in a light context. **Also noted, not touched:** the four recharts
   `Tooltip` `contentStyle` popups on Stats still render with the library's default white
   background — arguably chart internals, out of scope per this session's brief; worth a follow-up.
+- **Border/header polish (v3.38.1)** — follow-up to v3.38.0 from Rob's real-device look. New
+  `--hairline-bright` token (`#5A7390`) replaces `--hairline` on every card/row/input/button/sheet
+  border introduced in v3.37.0–v3.38.0 (dimmer than `--ink-inverse` text, per explicit instruction,
+  but clearly visible against `--bg`/`--surface-dark`). Header profile/AI placeholder icons grown
+  32px→40px with brighter icon colors and (for the AI icon) a new `--accent-chip` circular
+  background matching the profile icon's chip treatment. Header (`.wt-topbanner`) given
+  `z-index:250` so it stays visible above any open sheet's backdrop; the doctor-share full-screen
+  overlay raised to `z-index:260` so it still correctly replaces the header when that's open
+  instead. `.wt-backdrop` opacity raised `.45→.94` so the footer nav (`z-index:30`, well below any
+  sheet) is visually hidden behind an open sheet — a covering fix, not a DOM-removal one; the nav
+  is still mounted, just visually obscured, which was judged sufficient rather than threading an
+  "any sheet open" flag through the ~15 independent open/close state variables in the file.
 
 ---
 

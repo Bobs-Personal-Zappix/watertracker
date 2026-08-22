@@ -20,6 +20,50 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.38.1] — 2026-08-22
+
+Follow-up polish on v3.38.0, from Rob's real-device look at the dark theme: borders were too
+faint to see, the two new header placeholder icons were too small/dim, and the header/footer
+needed different visibility behavior around bottom sheets.
+
+**Brighter borders.** New `--hairline-bright` token (`#5A7390`, a muted slate-blue — deliberately
+dimmer than the `--ink-inverse` tan text color, per Rob's explicit "not as bright as the text"
+call, but clearly visible against both `--bg` and `--surface-dark`) replaces `var(--hairline)`
+wherever it was used for a "bubble" (card/row/input/button) or "bottom-up popup" (sheet/modal)
+border — all 23 usages introduced across v3.37.0–v3.38.0, including the nav bar's own top border
+for visual consistency with everything else that got the brighter treatment.
+
+**Bigger, brighter header icons.** Both placeholders grew from 32px to 40px. The profile icon's
+`User` glyph went from 16px `var(--muted)` (dim gray) to 20px `var(--muted-dark)` (the brighter
+token already introduced in v3.38.0 for secondary text) and its border upgraded to
+`--hairline-bright`. The AI-assistant icon's `Sparkles` glyph grew from 18px to 22px and gained a
+`var(--accent-chip)` circular background plus a `--hairline-bright` border — previously a bare
+floating icon with no chip, now visually matches the profile icon's "pronounced" circular
+treatment.
+
+**Header always visible; footer hides behind an open sheet.** `.wt-topbanner` given
+`z-index:250` — above every sheet/backdrop z-index in the app (max was 191) — so it now paints on
+top of any open bottom sheet's backdrop instead of being dimmed by it. `.wt-doctor-share-overlay`
+(the full-screen health-summary/print view, a different case from a bottom sheet) raised to
+`z-index:260` so it still correctly replaces the header when *it's* open. `.wt-backdrop`'s scrim
+opacity raised from `.45` to `.94` alpha — since the footer nav (`z-index:30`) sits well below
+every sheet's backdrop already, making the backdrop itself near-opaque is what actually hides the
+footer from view while a sheet is open, without needing to track "is any sheet currently open" as
+a single flag across the ~15 independent open/close state variables scattered through the file.
+This is a visual-covering fix, not a DOM-removal one — the footer is still mounted and dimmed-out
+behind the sheet, which is sufficient for the stated goal and lower-risk than threading a new shared
+boolean through every sheet in one pass.
+
+Verified: jsdom harness (zero runtime errors, zero failing assertions across 270 checks) and
+ESLint no-undef (11/11 baseline, unchanged), both against the fresh build and the exact shipped
+`bundle.js`. Two more pre-existing harness assertions turned out stale from earlier sessions
+(nav's border color, this session's own sheet-border check) and were updated to reflect the new
+intentional colors — caught immediately this time via `grep "^FAIL"`, not by tailing output.
+**Not verified:** the actual visual brightness/contrast of the new border color and icon sizing —
+jsdom has no layout engine; needs Rob's eyes on a real device.
+
+---
+
 ## [3.38.0] — 2026-08-22
 
 Finishes the dark-theme conversion started in v3.37.0. Three parts: a global text-color/border

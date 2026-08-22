@@ -500,7 +500,9 @@ const STEPS = [
     const navRule = cssText.match(/\.wt-nav \{[^}]*\}/);
     const activeRule = cssText.match(/\.wt-nav-btn\.active \{[^}]*\}/);
     check("nav background uses var(--surface-dark), not pure white/black", navRule ? navRule[0].includes("background:var(--surface-dark)") : null, "true");
-    check("nav top border uses var(--hairline)", navRule ? navRule[0].includes("border-top:1px solid var(--hairline)") : null, "true");
+    // v3.38.1 brightened all hairline borders (including nav's) to var(--hairline-bright) —
+    // Rob's follow-up request that the borders were too faint to see.
+    check("nav top border uses the brightened var(--hairline-bright)", navRule ? navRule[0].includes("border-top:1px solid var(--hairline-bright)") : null, "true");
     check("nav z-index uses var(--z-nav)", navRule ? navRule[0].includes("z-index:var(--z-nav)") : null, "true");
     check("nav includes safe-area-inset-bottom in its padding", navRule ? navRule[0].includes("env(safe-area-inset-bottom") : null, "true");
     check("active nav tab uses var(--accent) text on var(--accent-chip) pill", activeRule ? activeRule[0].includes("color:var(--accent)") && activeRule[0].includes("background:var(--accent-chip)") : null, "true");
@@ -932,7 +934,7 @@ const STEPS = [
     check("no runtime errors opening Past Days popup", errors.length, 0);
     const cssText = window.document.querySelector("style").textContent;
     const sheetRule = cssText.match(/\.wt-sheet \{[^}]*\}/);
-    check("sheet CSS has a visible outer border (var(--hairline))", sheetRule ? sheetRule[0].includes("border:1px solid var(--hairline)") : null, "true");
+    check("sheet CSS has a visible outer border (var(--hairline-bright) as of v3.38.1)", sheetRule ? sheetRule[0].includes("border:1px solid var(--hairline-bright)") : null, "true");
     const logRowRule = cssText.match(/\.wt-log-row \{[^}]*\}/);
     check("Past Days log rows are dark (var(--bg)), not white", logRowRule ? logRowRule[0].includes("background:var(--bg)") : null, "true");
     const logTimeRule = cssText.match(/\.wt-log-time \{[^}]*\}/);
@@ -960,6 +962,39 @@ const STEPS = [
     check("Water manual entry input still present (v3.37.0 regression check)", !!input);
   },
   () => check("no runtime errors after full v3.38.0 pass", errors.length, 0),
+
+  // ── v3.38.1: brighter borders, bigger header icons, header/footer stacking ─────
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    check("--hairline-bright token defined", cssText.includes("--hairline-bright:#5A7390"), "true");
+    const cardRule = cssText.match(/\.wt-card \{[^}]*\}/);
+    check("card borders upgraded to var(--hairline-bright)", cardRule ? cardRule[0].includes("border:1px solid var(--hairline-bright)") : null, "true");
+    const sheetRule = cssText.match(/\.wt-sheet \{[^}]*\}/);
+    check("sheet outer border upgraded to var(--hairline-bright)", sheetRule ? sheetRule[0].includes("border:1px solid var(--hairline-bright)") : null, "true");
+    const inputRule = cssText.match(/\.wt-field input, \.wt-field select, \.wt-field textarea \{[^}]*\}/);
+    check("input borders upgraded to var(--hairline-bright)", inputRule ? inputRule[0].includes("border:1px solid var(--hairline-bright)") : null, "true");
+    const backdropRule = cssText.match(/\.wt-backdrop \{[^}]*\}/);
+    check("backdrop is now near-opaque (alpha .94) so the footer is hidden behind an open sheet", backdropRule ? backdropRule[0].includes("rgba(14,42,46,.94)") : null, "true");
+    const topbannerRule = cssText.match(/\.wt-topbanner \{[^}]*\}/);
+    check("header now has a z-index (250) above any sheet/backdrop so it always stays visible", topbannerRule ? topbannerRule[0].includes("z-index:250") : null, "true");
+    const shareRule = cssText.match(/\.wt-doctor-share-overlay \{[^}]*\}/);
+    check("doctor-share full-screen overlay raised above the header's new z-index (260 > 250)", shareRule ? shareRule[0].includes("z-index:260") : null, "true");
+    const profileRule = cssText.match(/\.wt-topbanner-profile \{[^}]*\}/);
+    check("profile placeholder resized up to 40px", profileRule ? profileRule[0].includes("width:40px") : null, "true");
+    const aiRule = cssText.match(/\.wt-topbanner-ai \{[^}]*\}/);
+    check("AI placeholder resized up to 40px with a visible chip background", aiRule ? aiRule[0].includes("width:40px") && aiRule[0].includes("background:var(--accent-chip)") : null, "true");
+  },
+  () => check("nav to Log It! (v3.38.1 regression check)", nav("Log It!")),
+  () => check("all 8 Log It! tiles still mount after border-color change", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8),
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
+    if (waterTile) fire(waterTile);
+  },
+  () => {
+    const input = window.document.querySelector('input[placeholder="0"]');
+    check("manual entry input still present after v3.38.1 border/header changes", !!input);
+  },
+  () => check("no runtime errors after v3.38.1 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
