@@ -20,6 +20,58 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.40.0] — 2026-08-22
+
+Log It! split the combined "Use Your Presets or Log a Meal" flow into two independent entry
+paths, added a non-functional "Voice Tracker" tile as a preview of the future Smart Entry
+capability, and removed the placeholder AI header icon now that the tile carries that role.
+Also produced a standalone, dependency-free HTML/CSS/JS Voice Tracker tile component for future
+wiring outside the React bundle.
+
+- **Presets and manual entry split into two flows.** The single "Use Your Presets or Log a Meal"
+  button and its combined sheet (`xO`) — presets grid, manual Water/Protein/Calories/Description/
+  Time fields, and "Edit Presets" all in one place — is now two buttons and two sheets:
+  - **"Use Your Presets"** opens a trimmed `xO`: presets grid, "Edit Presets" (→ My Presets
+    sub-sheet, unchanged), tap-to-log-instantly. No manual fields, no "Log Items" button of its
+    own — logging happens by tapping a preset.
+  - **"Manually Log a Meal"** (new, green, matching the Protein category color `var(--protein)`)
+    opens a new `ManualMealSheet`: Water/Protein/Calories/Description/Time fields and "Log Items",
+    carrying over all of `xO`'s previous manual-entry behavior (drag-dial triggers, validation,
+    submit logic) unchanged.
+  - **Editing an existing water/protein/calories log entry** (tap an entry in Today's log → edit)
+    now opens `ManualMealSheet` pre-filled, not the presets sheet — editing is inherently a
+    manual-field operation, and the presets sheet no longer carries fields to edit into. Explicit
+    call by Rob.
+- **"Voice Tracker" tile added to Log It!**, positioned above the Water tile, unconditionally
+  visible. Gold-gradient-bordered dark card with an AI-agent icon bubble, title/subtext, and a
+  glossy gradient-sphere badge with a mic glyph — **not wired to anything**; it's a design preview
+  for the future Smart Entry voice-entry capability, not yet functional.
+- **Header AI (Sparkles) icon removed.** Per `UX-14`/`UX-16`, this was the placeholder future
+  Smart-Entry entry point in the app header. Explicit call by Rob: the new Voice Tracker tile now
+  carries that role instead, so the header placeholder is redundant. Supersedes the header-based
+  placement from `UX-14`/`UX-16` — see `UX-19` in the decision log.
+- **Standalone Voice Tracker component produced** at `voice-tracker-tile/` — plain HTML/CSS/JS, no
+  framework, no build step, matching the full design spec (colors, fonts, gradient border/badge
+  ring, idle/listening/done states, `initVoiceTracker()` / `setVoiceTrackerState()` API for a future
+  speech-recognition integration to call into). No source badge image was supplied, so the badge
+  circle uses a CSS radial-gradient sphere in both the standalone files and the in-app tile instead
+  of an image; a README in `voice-tracker-tile/assets/` documents how to swap in a real PNG later.
+- **`tools/harness.js` updated** for the split: stale selectors depending on the old combined
+  button text and the removed AI icon (`UX-OPEN-02` OO-backdrop check, preset CRUD flow, header
+  order check) now target the new UI; new checks added for the tile, the two buttons, and both
+  sheets' field composition.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed both new
+button strings, the removed combined-button string, the Voice Tracker copy/CSS class, and the
+removed `.wt-topbanner-ai` CSS rule are all present/absent as intended in the shipped bundle. One
+harness check (`Goal 64oz − 32oz logged = 32oz to go`) still fails — pre-existing at HEAD before
+this session (stale since the v3.39.0 tile restructure moved that text to `.wt-tile-mid-label`),
+unrelated to this change, not touched here. **Not yet verified on a real device** — jsdom has no
+layout engine, so the Voice Tracker tile's visual design (gradient border, badge ring, glow
+animation) and the new button's sizing/color next to the presets button need Rob's eyes.
+
 ## [3.39.1] — 2026-08-22
 
 Follow-up fixes from Rob's review of v3.39.0.

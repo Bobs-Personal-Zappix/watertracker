@@ -217,7 +217,7 @@ const STEPS = [
     const prev = actionBtns ? actionBtns.previousElementSibling : null;
     check("no divider line above action buttons", !(prev && prev.classList.contains("wt-divider")));
   },
-  () => check("open presets/log sheet", clickByText("Use Your Presets or Log a Meal")),
+  () => check("open presets/log sheet", clickByText("Use Your Presets")),
   () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
   () => {
     const headers = [...window.document.querySelectorAll(".wt-sheet-header h3")].map((h) => h.textContent);
@@ -331,7 +331,7 @@ const STEPS = [
   },
 
   // ── v3.33.0 Part A: OO (add/edit preset) modal must portal to document.body ──
-  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Your Presets or Log a Meal")),
+  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Your Presets")),
   () => check("open My Presets sheet (for OO portal check)", clickByText("✏ Edit Presets")),
   () => check("click Add Preset (opens OO modal)", clickByText("Add Preset")),
   () => {
@@ -353,9 +353,9 @@ const STEPS = [
     // v3.34.0 (UX-OPEN-02): OO's backdrop onClick now calls e.stopPropagation() before closing,
     // so the click no longer bubbles through the REACT tree to xO's own outer backdrop onClick.
     // Both the parent Log sheet and the nested My Presets sheet must stay open.
-    const logSheetStillOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Log");
+    const logSheetStillOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "Use Your Presets");
     const myPresetsStillOpen = [...window.document.querySelectorAll(".wt-sheet-header h3")].some((h) => h.textContent === "My Presets");
-    check("clicking OO's backdrop leaves the parent Log sheet open (UX-OPEN-02 fixed)", logSheetStillOpen, "true");
+    check("clicking OO's backdrop leaves the parent presets sheet open (UX-OPEN-02 fixed)", logSheetStillOpen, "true");
     check("My Presets sheet also stays open", myPresetsStillOpen, "true");
   },
   () => check("close Log sheet (its own Close button unmounts nested My Presets too)", clickByAria("Close")),
@@ -877,13 +877,13 @@ const STEPS = [
   },
   () => check("no runtime errors after v3.37.0 manual-entry/tile changes", errors.length, 0),
   () => {
-    // Close the Water manual-entry sheet, then open the combined entry sheet (via "Use Your
-    // Presets or Log a Meal") and its nested My Presets sheet — a second, independent sheet —
+    // Close the Water manual-entry sheet, then open the presets sheet (via "Use Your
+    // Presets") and its nested My Presets sheet — a second, independent sheet —
     // to confirm at least one more sheet mounts cleanly under the new dark styling.
     const closeBtns = [...window.document.querySelectorAll('button[aria-label="Close"]')];
     if (closeBtns[0]) fire(closeBtns[0]);
-    const combinedEntryBtn = clickByText("Use Your Presets or Log a Meal");
-    check("found 'Use Your Presets or Log a Meal' button to open combined entry sheet", combinedEntryBtn);
+    const presetsBtn = clickByText("Use Your Presets");
+    check("found 'Use Your Presets' button to open presets sheet", presetsBtn);
   },
   () => {
     const editPresets = [...window.document.querySelectorAll("button")].find((b) => b.textContent.includes("Edit Presets"));
@@ -901,21 +901,14 @@ const STEPS = [
 
   // ── v3.38.0: finish dark theme everywhere + header placeholders ────────────────
   () => {
-    // Header: profile placeholder (left), logo, title, AI placeholder (right).
+    // Header: profile placeholder (left), logo, title. AI placeholder removed v3.40.0 —
+    // its future-Smart-Entry role is now carried by the Voice Tracker tile on Log It!.
     const banner = window.document.querySelector(".wt-topbanner-inner");
     check("header banner found", !!banner);
     const profile = window.document.querySelector(".wt-topbanner-profile");
     const ai = window.document.querySelector(".wt-topbanner-ai");
     check("profile placeholder icon present (left of logo)", !!profile);
-    check("AI assistant placeholder icon present (right of title)", !!ai);
-    if (banner && profile && ai) {
-      const kids = [...banner.children];
-      const profileIdx = kids.indexOf(profile);
-      const badgeIdx = kids.findIndex((k) => k.className.includes("wt-topbanner-badge"));
-      const textIdx = kids.findIndex((k) => k.className.includes("wt-topbanner-text"));
-      const aiIdx = kids.indexOf(ai);
-      check("header order is profile, logo, title, AI icon", profileIdx < badgeIdx && badgeIdx < textIdx && textIdx < aiIdx, "true");
-    }
+    check("AI assistant placeholder icon removed from header (v3.40.0, superseded by Voice Tracker tile)", !ai);
     const cssText = window.document.querySelector("style").textContent;
     const badgeRule = cssText.match(/\.wt-topbanner-badge \{[^}]*\}/);
     check("logo badge resized down from 82px", badgeRule ? /width:(\d+)px/.exec(badgeRule[0])[1] < 82 : null, "true");
@@ -981,8 +974,7 @@ const STEPS = [
     check("doctor-share full-screen overlay raised above the header's new z-index (260 > 250)", shareRule ? shareRule[0].includes("z-index:260") : null, "true");
     const profileRule = cssText.match(/\.wt-topbanner-profile \{[^}]*\}/);
     check("profile placeholder resized up to 40px", profileRule ? profileRule[0].includes("width:40px") : null, "true");
-    const aiRule = cssText.match(/\.wt-topbanner-ai \{[^}]*\}/);
-    check("AI placeholder resized up to 40px with a visible chip background", aiRule ? aiRule[0].includes("width:40px") && aiRule[0].includes("background:var(--accent-chip)") : null, "true");
+    check(".wt-topbanner-ai CSS rule removed along with the header icon (v3.40.0)", cssText.includes(".wt-topbanner-ai"), "false");
   },
   () => check("nav to Log It! (v3.38.1 regression check)", nav("Log It!")),
   () => check("all 8 Log It! tiles still mount after border-color change", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8),
@@ -1033,6 +1025,41 @@ const STEPS = [
     check("no runtime errors opening Past Days after the text-color fix", errors.length, 0);
   },
   () => check("no runtime errors after v3.38.2 pass", errors.length, 0),
+
+  // ── v3.40.0: Log It! action-button split, Voice Tracker tile, header AI icon removed ──
+  () => check("nav to Log It! (v3.40.0 checks)", nav("Log It!")),
+  () => {
+    const tile = window.document.querySelector(".wt-voice-tile");
+    check("Voice Tracker tile present above Water", !!tile);
+    const grid = window.document.querySelector(".wt-trackers-grid");
+    check("Voice Tracker tile is first child of the trackers grid", grid ? grid.firstElementChild === tile : null, "true");
+    check("Voice Tracker tile marked aria-disabled (not yet functional)", tile ? tile.getAttribute("aria-disabled") : null, "true");
+  },
+  () => {
+    const btns = [...window.document.querySelectorAll(".wt-action-btn")].map((b) => b.textContent);
+    check("'Use Your Presets' button present (renamed from combined button)", btns.some((t) => t.includes("Use Your Presets")));
+    check("'Manually Log a Meal' button present (new second button)", btns.some((t) => t.includes("Manually Log a Meal")));
+  },
+  () => check("open presets sheet (v3.40.0 split check)", clickByText("Use Your Presets")),
+  () => {
+    const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Use Your Presets");
+    check("presets-only sheet header found", !!header);
+    const sheet = header ? header.closest(".wt-sheet") : null;
+    check("presets-only sheet has no manual Water/Protein/Calories fields", sheet ? !sheet.querySelector(".wt-field-row") : null, "true");
+    const closeBtn = window.document.querySelector('button[aria-label="Close"]');
+    if (closeBtn) fire(closeBtn);
+  },
+  () => check("open manual meal sheet (v3.40.0 split check)", clickByText("Manually Log a Meal")),
+  () => {
+    const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Manually Log a Meal");
+    check("manual meal sheet header found", !!header);
+    const sheet = header ? header.closest(".wt-sheet") : null;
+    check("manual meal sheet has Water/Protein/Calories field row", sheet ? !!sheet.querySelector(".wt-field-row") : null, "true");
+    check("manual meal sheet has no presets grid", sheet ? !sheet.querySelector(".wt-preset-grid") : null, "true");
+    const closeBtn = window.document.querySelector('button[aria-label="Close"]');
+    if (closeBtn) fire(closeBtn);
+  },
+  () => check("no runtime errors after v3.40.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

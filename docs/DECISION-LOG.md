@@ -279,6 +279,26 @@ now carry the same per-tracker `borderColor`. Also: the Log It! hero number is n
 centered in the tile (`flex:1 1 0`, was hugging the icon ring) and its caption font increased
 11px → 13px, both per Rob's real-review feedback.*
 
+**UX-19 — Log It! entry-flow split; Voice Tracker tile supersedes the header AI icon as the Smart
+Entry placeholder entry point.**
+Two related v3.40.0 changes, both explicit calls by Rob:
+1. The combined "Use Your Presets or Log a Meal" button/sheet (presets + manual Water/Protein/
+   Calories/Description/Time fields, all in one place) splits into two independent flows: "Use
+   Your Presets" (presets grid + Edit Presets only) and a new "Manually Log a Meal" button
+   (green/`var(--protein)`) opening a new `ManualMealSheet` with the manual fields. Editing an
+   existing log entry routes to `ManualMealSheet`, not the presets sheet.
+2. A new, non-functional "Voice Tracker" tile is added to Log It! above Water — a design preview
+   for a future voice-driven Smart Entry path. Because it exists, the header AI (Sparkles) icon
+   that `UX-14`/`UX-16` placed as the future Smart Entry entry point is removed as redundant.
+*Why:* splitting presets from manual entry was requested directly — two distinct user intents
+(instant preset tap vs. deliberate manual entry) sharing one sheet added friction to both. The
+header-icon removal is not a reversal of `UX-14`'s "global assistant" positioning decision, only a
+change in *which placeholder* signals it: the Voice Tracker tile now carries that role instead of
+the header icon. `UX-14`'s core claim (Smart Entry is app-level, not per-page) is untouched — actual
+Smart Entry Phase 1 (text-based, per `PROD-10`/`PROD-11`) still targets its own build slot; the
+Voice Tracker tile is visual-only today, not the real feature.
+*Status:* **Locked** · Aug 22, 2026 · v3.40.0 — amends `UX-14`/`UX-16`'s header-icon placement
+
 ---
 
 ## Legal & compliance
@@ -408,4 +428,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 22, 2026 (UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 22, 2026 (UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*

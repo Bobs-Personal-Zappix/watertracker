@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.39.1*
+*As of: August 22, 2026 · Deployed version: 3.40.0*
 
 ---
 
@@ -65,6 +65,7 @@ site/app/              config.js, index.html, manifest.json, service-worker.js,
 worker/src/worker.js   Cloudflare Worker: push, auth, shares, account backup, 15-min cron
 tools/harness.js       jsdom smoke-test harness
 docs/                  DECISION-LOG.md, CURRENT-STATE.md, ROADMAP-v2.md
+voice-tracker-tile/    standalone HTML/CSS/JS Voice Tracker component (not wired into the app)
 CHANGELOG.md
 ```
 
@@ -102,6 +103,33 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 22, 2026 (v3.40.0)
+
+**Log It! entry-flow split, Voice Tracker tile preview, header AI icon removed.** Requested by Rob
+in one pass; full detail in `CHANGELOG.md`.
+
+- The combined "Use Your Presets or Log a Meal" button/sheet split into two independent flows:
+  **"Use Your Presets"** (presets grid + Edit Presets only, no manual fields) and **"Manually Log a
+  Meal"** (new, green/`var(--protein)`-colored button; Water/Protein/Calories/Description/Time
+  fields + Log Items, in a new `ManualMealSheet` component). Editing an existing log entry now
+  routes to `ManualMealSheet` rather than the presets sheet.
+- New **"Voice Tracker" tile** on Log It!, above Water, unconditionally visible — gold-gradient
+  card, AI-agent icon, gradient-sphere mic badge. **Not functional** — a design preview for the
+  future Smart Entry voice path, no backend or speech wiring.
+- **Header AI (Sparkles) icon removed** — explicit call by Rob: the Voice Tracker tile now carries
+  the future-Smart-Entry-entry-point role that `UX-14`/`UX-16` had assigned to the header icon. See
+  `UX-19` in the decision log.
+- **Standalone Voice Tracker deliverable** produced at `voice-tracker-tile/` (plain HTML/CSS/JS, no
+  framework/build step) per Rob's separate detailed spec, for future wiring outside the React
+  bundle. Badge uses a CSS gradient sphere (no source image was supplied); see that folder's
+  `assets/README.txt` for swapping in a real image later.
+- `tools/harness.js` updated: stale selectors depending on removed button text/AI icon fixed; new
+  checks added for the tile and both split sheets.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` (harness
+  clean except one pre-existing, unrelated stale check predating this session; lint at the
+  unchanged 11-error vendor baseline). **Not yet verified on a real device** — jsdom has no layout
+  engine, so the Voice Tracker tile's visual design and the new button's sizing need Rob's eyes.
 
 ## What shipped Aug 22, 2026 (v3.39.0–3.39.1)
 
@@ -202,7 +230,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 21, after v3.38.2):** The dark-theme conversion is complete app-wide. Next up, per the master roadmap: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written for v3.40.0). Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient.
+**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient.
 
 See `docs/ROADMAP-v3.md` (HydroPro-Master-Roadmap) for the full version-by-version plan.
 

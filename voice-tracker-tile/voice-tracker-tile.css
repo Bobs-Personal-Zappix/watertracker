@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');
+
+.voice-tracker-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background:
+    linear-gradient(#0B0F14, #0B0F14) padding-box,
+    linear-gradient(135deg, #FFE696, #CE8C08) border-box;
+  box-shadow: 0 0 22px rgba(255, 196, 40, 0.35);
+  cursor: pointer;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.voice-tracker-tile:focus-visible {
+  outline: 2px solid #FFC428;
+  outline-offset: 3px;
+}
+
+/* ── Icon bubble (left) ───────────────────────────────────────────── */
+
+.vt-icon-bubble {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #564216;
+  color: #FFC428;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vt-icon-bubble svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ── Text column (middle) ─────────────────────────────────────────── */
+
+.vt-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vt-title {
+  font-weight: 700;
+  font-size: 22px;
+  color: #FFF6DB;
+  line-height: 1.15;
+}
+
+.vt-subtext {
+  font-weight: 500;
+  font-size: 14px;
+  color: #FFF6DB;
+  line-height: 1.4;
+  margin-top: 6px;
+  max-width: 26ch;
+}
+
+/* ── Badge (right) ────────────────────────────────────────────────── */
+
+.vt-badge {
+  position: relative;
+  flex-shrink: 0;
+  align-self: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #561A96;
+  /* Glossy multi-color gradient sphere. No source PNG was supplied, so this
+     is built from CSS gradients to match the gold/pink/purple/blue/green +
+     specular-highlight look described in the spec. Swap in a real
+     assets/voice-tracker-badge.png later by replacing this `background`
+     line with: background-image:url('assets/voice-tracker-badge.png');
+     background-size:cover; background-position:center; */
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #ffe9a8 8%, #ffc24d 16%, #ff8fc9 34%, #b06bf0 54%, #6a6ff5 72%, #3ddc84 100%);
+}
+
+.vt-badge svg {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+/* gradient ring, same diagonal as the tile border */
+.vt-badge::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #FFE696, #CE8C08);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  box-shadow: 0 0 16px rgba(255, 196, 40, 0.35);
+}
+
+/* small white marker dot at 12 o'clock on the ring */
+.vt-badge::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* ── States ───────────────────────────────────────────────────────── */
+
+@keyframes vt-pulse-idle {
+  0%, 100% { box-shadow: 0 0 22px rgba(255, 196, 40, 0.35); }
+  50%      { box-shadow: 0 0 30px rgba(255, 196, 40, 0.55); }
+}
+
+@keyframes vt-pulse-listening {
+  0%, 100% { box-shadow: 0 0 26px rgba(255, 196, 40, 0.55); }
+  50%      { box-shadow: 0 0 42px rgba(255, 196, 40, 0.85); }
+}
+
+@keyframes vt-flash-done {
+  0%   { box-shadow: 0 0 44px rgba(255, 196, 40, 0.9); }
+  100% { box-shadow: 0 0 22px rgba(255, 196, 40, 0.35); }
+}
+
+.voice-tracker-tile[data-state="idle"] {
+  animation: vt-pulse-idle 3.2s ease-in-out infinite;
+}
+
+.voice-tracker-tile[data-state="listening"] {
+  animation: vt-pulse-listening 1.1s ease-in-out infinite;
+}
+
+.voice-tracker-tile[data-state="listening"] .vt-badge {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.voice-tracker-tile[data-state="listening"] .vt-badge::before {
+  animation: vt-pulse-listening 1.1s ease-in-out infinite;
+}
+
+.voice-tracker-tile[data-state="done"] {
+  animation: vt-flash-done 0.6s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-tracker-tile,
+  .voice-tracker-tile[data-state="idle"],
+  .voice-tracker-tile[data-state="listening"],
+  .voice-tracker-tile[data-state="done"],
+  .voice-tracker-tile[data-state="listening"] .vt-badge::before {
+    animation: none !important;
+  }
+}
