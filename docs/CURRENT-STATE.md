@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.38.2*
+*As of: August 21, 2026 · Deployed version: 3.38.2*
 
 ---
 
@@ -103,7 +103,7 @@ CHANGELOG.md
 
 ---
 
-## What shipped Aug 19–21, 2026 (v3.17.0–3.36.2)
+## What shipped Aug 19–21, 2026 (v3.17.0–3.38.2)
 
 - **Worker source reconciled** — real deployed `worker.js` (728 lines: auth, share, backup, feedback, push, cron) committed for the first time. `wrangler.toml` has real values. `ARCH-OPEN-01` Worker side resolved.
 - **Full D1 schema migrated** — 6 tables live in `hydropro-db`: `users`, `login_tokens`, `sessions`, `shares`, `account_backups`, `user_activity`.
@@ -129,63 +129,17 @@ CHANGELOG.md
 - **"Enter Missed Items" backfill (v3.33.0)** — Today → calendar icon → All Past Days → a day → "Enter Missed Items" opens a portaled sheet. Entries tagged `backfilled:true`/`enteredAt`, decrement inventory without touching forward schedule. BackfillSheet button visibility and label fixed (v3.36.1/3.36.2).
 - **UX-OPEN-02 resolved (v3.34.0)** — OO modal backdrop `stopPropagation` fix; no longer closes parent Log sheet.
 - **VAPID config corrected** — `VAPID_CONTACT_EMAIL` = `mailto:rob@hydroprotracker.com`; public key set.
-- **Dark tiles and dark sheets (v3.37.0)** — all 8 Log It! tiles and both My Plan tracker-card
-  grids: `background:var(--bg)`, full 2px category-color border on all 4 sides (replaces the
-  4px left-only accent border from v3.35.0), title/goal/to-go/logged text on `var(--ink-inverse)`.
-  Every bottom sheet and modal (`wt-sheet`/`wt-modal`) now dark (`var(--surface-dark)` +
-  `var(--ink-inverse)`), including inputs (`var(--bg)` background, `var(--ink-inverse)` text,
-  hairline border), the primary action button (now `var(--accent)` blue instead of the
-  near-invisible `var(--deep)` navy), secondary/text buttons, and preset/option rows. Manual
-  entry numeric inputs (Water/Protein/Calories/Weight) given an explicit dark background and
-  warm-tan text so they can't land on a light-on-light or dark-on-dark combination regardless of
-  which sheet renders them. Two inline `color:var(--ink)` overrides (Supplements/Treatments
-  section labels, `.wt-qty-name`) that would have gone invisible on the new dark sheets were
-  caught and fixed during this pass. Not real-device verified yet — see below.
-- **Dark theme completed app-wide (v3.38.0, `UX-15`)** — finishes what v3.37.0 started. All
-  remaining white/light surfaces on Today, Stats, My Plan, and Settings converted in place
-  (page by page, not a shared-class rewrite, per Rob's explicit call): Today's Past Days popup
-  (previously the worst offender — text, field borders, and the popup's own border were all
-  invisible), To Do Today rows, Today's Log rows; Stats' segmented control, range-nav buttons,
-  stat boxes, and cards (including the Health Summary launcher); My Plan's My Treatments/regimen
-  cards (Austin Drip Lounge demo card included); Settings' cards and fields. Every sheet/modal
-  outer edge now has a `1px solid var(--hairline)` border. A new `--muted-dark` token (`#9FB0C4`)
-  replaces `--muted`/the `wS` inline constant wherever secondary "helper" text sits on a dark
-  surface, clearing the AA 4.5:1 floor the v3.37.0 summary flagged (`wS` itself is unchanged,
-  since it's also used on the doctor-share overlay's on-screen light controls — a second
-  shared-constant case, same pattern as `.wt-chip`). `.wt-root`'s own base text color flipped
-  from dark navy to `--ink-inverse`, since the app is dark end-to-end now; the doctor-share
-  overlay (print/share page, must stay light) was given its own explicit `color:var(--ink)` so
-  it doesn't inherit the new default. Header: logo and title reduced ~15% (82px→70px badge,
-  27px→23px title) to make room for two new placeholder icons, neither wired to anything —
-  a circular profile icon (left of the logo, `lucide-react` `User`) and a `Sparkles` AI-assistant
-  icon in `--accent` (right of the title, future Smart Entry entry point per `UX-14`).
-  **Shared-component stragglers intentionally left untouched** (flagged, not fixed, to avoid
-  regressing a context that must stay light): `.wt-chip` (used inside dark sheets AND inside the
-  light/printable doctor-share overlay); `.wt-empty-note` was fully converted this session since
-  none of its ~14 usages are in a light context. **Also noted, not touched:** the four recharts
-  `Tooltip` `contentStyle` popups on Stats still render with the library's default white
-  background — arguably chart internals, out of scope per this session's brief; worth a follow-up.
-- **Border/header polish (v3.38.1)** — follow-up to v3.38.0 from Rob's real-device look. New
-  `--hairline-bright` token (`#5A7390`) replaces `--hairline` on every card/row/input/button/sheet
-  border introduced in v3.37.0–v3.38.0 (dimmer than `--ink-inverse` text, per explicit instruction,
-  but clearly visible against `--bg`/`--surface-dark`). Header profile/AI placeholder icons grown
-  32px→40px with brighter icon colors and (for the AI icon) a new `--accent-chip` circular
-  background matching the profile icon's chip treatment. Header (`.wt-topbanner`) given
-  `z-index:250` so it stays visible above any open sheet's backdrop; the doctor-share full-screen
-  overlay raised to `z-index:260` so it still correctly replaces the header when that's open
-  instead. `.wt-backdrop` opacity raised `.45→.94` so the footer nav (`z-index:30`, well below any
-  sheet) is visually hidden behind an open sheet — a covering fix, not a DOM-removal one; the nav
-  is still mounted, just visually obscured, which was judged sufficient rather than threading an
-  "any sheet open" flag through the ~15 independent open/close state variables in the file.
-- **Past Days text-color bug fixed + tile icons filled (v3.38.2)** — the Past Days popup's
-  date-list buttons were rendering invisible (black) text because `<button>`/`<input>`/`<select>`/
-  `<textarea>` don't reliably inherit `color`/`font` from ancestors the way plain elements do; a
-  new global reset (`:where(button, input, select, textarea) { color:inherit; font:inherit; }`,
-  zero-specificity via `:where()` so it never overrides any of the app's many explicitly-colored
-  buttons) fixes this everywhere, not just that one popup. Also: both Log It! and My Plan's 8
-  category tile icons were outline-only (`lucide-react` default, `fill:none`) — neither was
-  actually filled despite it looking like My Plan's might be — both now pass a `fill` prop
-  matching their category color so the icon renders solid.
+- **Dark theme completed app-wide (v3.37.0–3.38.2)** — the whole app converted from white-on-black mismatch to a coherent dark system:
+  - Manual entry input bug hardened (v3.37.0) — explicit dark bg + tan text so it can't land dark-on-dark
+  - All Log It! and My Plan tiles: `var(--bg)` background with full 2px category-color border (v3.37.0)
+  - All sheets/modals/pages dark-themed; every remaining white bubble on Today/Stats/My Plan/Settings converted in place (v3.38.0)
+  - Past Days popup — was fully illegible (invisible text and borders), now readable (v3.38.0, root-caused in v3.38.2)
+  - `.wt-root` base text flipped to `--ink-inverse`; doctor-share overlay explicitly kept light (v3.38.0)
+  - `--muted-dark` (#9FB0C4) fixes low-contrast helper text; `--hairline-bright` (#5A7390) gives visible borders everywhere (v3.38.0/3.38.1)
+  - Header: logo/title reduced ~15%; unwired placeholder icons added — profile circle (left), Sparkles AI-assistant (right, future Smart Entry entry point) (v3.38.0/3.38.1)
+  - Header/footer stacking fixed: header stays above open sheets, doctor-share takes full screen, footer covered by near-opaque backdrop (v3.38.1)
+  - Global form-control reset `:where(button,input,select,textarea){color:inherit;font:inherit}` — catches the dark-on-dark button-text bug class generally (v3.38.2)
+  - All 8 Log It! tile icons + My Plan TrackerRow icons now solid-filled in category color (v3.38.2)
 
 ---
 
@@ -193,27 +147,29 @@ CHANGELOG.md
 
 `createPortal` renders outside `.wt-root`, where scoped CSS custom properties (like `--deep`, `--line`, `--paper`) are defined. Any portaled sheet or modal must locally redefine these tokens on its root element, or buttons and inputs will fall back to transparent/unstyled. This was the root cause of the BackfillSheet and OO modal button bugs (v3.36.2). Apply this pattern to every future portaled component.
 
-Confirmed recurring (v3.37.0): the tokens the app's two portaled components (BackfillSheet, OO
-preset modal) actually need to redefine locally are only the ones with *different* values inside
-vs. outside `.wt-root` (`--deep`, `--line`, `--paper`, `--muted`, `--ink`). Tokens installed only
-on the global `:root` block (`--bg`, `--surface-dark`, `--hairline`, `--ink-inverse`, `--accent`,
-the per-category color/chip pairs) resolve correctly for portaled content automatically, with no
-local redefinition needed — they were deliberately installed outside `.wt-root` for exactly this
-reason (see the `:root` block's own comment in `src/app.js`). v3.37.0's dark-sheet styling moved
-sheet/input/button colors onto this second group of tokens wherever possible, which is why the
-portals needed no new local overrides for the dark-theme pass. A shared utility function for
-portal containers (to stop hand-copying the `--deep`/`--line`/`--paper`/`--muted` local overrides
-into every new portaled component) is still worth doing in a future session — noted, not done.
-
 ---
 
 ## Known outstanding
 
+- **Sheet standardization** (still not started): swipe-dismiss, focus trap, Escape key, one-sheet-at-a-time — React implementation of designer's Priority 5 spec. This was slated for v3.37.0 but that slot went to the manual-entry bug fix + dark tiles; still open.
+- **Recharts Tooltip popups on Stats** still use the library's default white background — deferred from the v3.38.0 dark sweep to avoid breaking charts. Follow-up item.
+- **Footer-hide is backdrop-based, not state-based** (v3.38.1): the footer is visually covered by a near-opaque sheet backdrop rather than removed, because there's no single "a sheet is open" flag (would mean touching ~15 scattered open/close variables). If the footer peeks through on an untested sheet, that's why. Candidate for a proper fix if it recurs.
 - **UX-OPEN-01 Phase 2** (not started): Settings consolidation — six status rows, "Your data" backed-up/not status, Reminders grouped by intent, tutorial on first run.
-- **UX-OPEN-01 Phase 3** (not started): Clinic onboarding ramp.
-- **Sheet standardization** (v3.37.0): swipe-dismiss, focus trap, Escape key, one-sheet-at-a-time — React implementation of designer's Priority 5 spec.
+- **UX-OPEN-01 Phase 3** (not started): Clinic onboarding ramp — overlaps with the roadmap's protocol-code work.
 - **"Add in Setup" stale copy** on Treatments/RX & Vitamins empty-state CTAs on Log It! — quick copy fix, not yet addressed.
-- **UX-13 (--treatment token) and UX-12 (design tokens)** — Decision Log entries exist but CURRENT-STATE shipped features should reflect them; noted above.
+- **Some lucide glyphs filled may look odd** (v3.38.2): icons with internal negative space (e.g. Battery) render differently when filled vs. stroked. Flag any that look wrong for individual adjustment.
+
+---
+
+## Design system reference (current tokens)
+
+- `--bg` #0B0F14 (page), `--surface-dark` #151A21 (cards/sheets)
+- `--ink-inverse` #FFF6DB (warm tan — all text on dark surfaces)
+- `--muted-dark` #9FB0C4 (secondary/helper text on dark, AA-passing)
+- `--hairline-bright` #5A7390 (visible borders on cards/rows/inputs/buttons/sheets)
+- Category colors: `--water` `--protein` `--calories` `--sleep` `--weight` `--exercise` `--meds` `--treatment` — used for tile borders (2px), chips, ring fills, chart colors
+- Exempt from dark theme: the doctor-share / health-summary overlay stays light (embedded and as standalone `?share=` page)
+- Global rule: `:where(button,input,select,textarea){color:inherit;font:inherit}` — form controls don't inherit color reliably, this catches dark-on-dark bugs (UX-17)
 
 ---
 
@@ -221,11 +177,9 @@ into every new portaled component) is still worth doing in a future session — 
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 22):** dark-theme completion shipped v3.38.0, taking the version
-slot originally reserved for new partner trackers — that work moves later in the sequence, after
-sheet standardization (swipe-dismiss, focus trap, Escape, one-at-a-time) → UX-OPEN-01 Phase 2
-(Settings redesign) → server as source of truth (`ARCH-OPEN-04`) → clinic-side build
-(`ARCH-OPEN-02`).
+**Working sequence (updated Aug 21, after v3.38.2):** The dark-theme conversion is complete app-wide. Next up, per the master roadmap: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written for v3.40.0). Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient.
+
+See `docs/ROADMAP-v3.md` (HydroPro-Master-Roadmap) for the full version-by-version plan.
 
 Running in parallel, needing no engineering: clinic validation conversations (`STRAT-OPEN-03`), pricing (`STRAT-OPEN-02` — most time-sensitive open item, needed before next clinic meeting), and the digital-health attorney consult (`LEGAL-OPEN-01`).
 

@@ -68,6 +68,10 @@ Clinic distribution (B2B2C) gets priority for attention and roadmap sequencing; 
 *Why:* clinic conversations are perishable — an operator in an active conversation may commit elsewhere if nothing materializes. Current consumer testers are friendly users who tolerate waiting. Where one opportunity decays and the other doesn't, sequence toward the decaying one. Market logic (near-zero CAC, clear clinic ROI, crowded consumer category) points the same direction. Explicit call by Rob.
 *Status:* **Locked** · Aug 18, 2026
 
+**STRAT-11 — "No AI" decision reversed, scoped to assisted-entry only.**
+The prior decision to shelve AI features (roadmap §5) is reversed for the narrow case of AI-assisted data entry ("Smart Entry"): the user describes what they consumed in plain language, an AI interprets it into the app's tracked metrics, and the user reviews and confirms before anything is logged. This does NOT reopen the AI-coach decision. The distinction is load-bearing: Smart Entry estimates and interprets; it never recommends, never comments on whether something is healthy, and never interprets what a log means for the user's health. The user is always the final authority — no value enters the record without explicit human confirmation.
+*Status:* **Locked** — explicit call by Rob · Aug 21, 2026 · target v3.40.0
+
 ---
 
 ## Product scope
@@ -116,6 +120,24 @@ Every backfilled entry stores `backfilled: true` plus an `enteredAt` wall-clock 
 *Why:* trivially cheap now, impossible to retrofit onto existing entries. Clinic adherence data is materially more credible when live logs are distinguishable from later corrections.
 *Status:* **Locked** · Aug 21, 2026
 
+**PROD-10 — Smart Entry Phase 1 scope: all trackers, three interpretation classes.**
+Phase 1 (text-based) covers all current trackers, split by how the AI handles each:
+- *Consumables & time-based* (Water, Protein, Calories, Exercise, Calories Burned, Sleep, Time In Bed / Out of Bed): AI interprets a natural-language description into numeric values; user confirms or edits.
+- *Treatments & RX/Vitamins:* AI matches a spoken name against the user's OWN configured items. When match confidence is low, the AI surfaces candidate items for the user to pick ("did you mean…?") rather than guessing. Never decrements inventory on an unconfirmed match.
+- *Measured readings* (Weight, Resting Heart Rate, Steps): no interpretation — the spoken/typed number is captured directly, since there is nothing to interpret and the AI adds no value.
+*Why:* the three classes have genuinely different interpretation problems and failure modes; conflating them would muddy the Phase 1 accuracy signal and put inventory data at risk. Explicit call by Rob (chose full-scope Phase 1 with the safe-matching design over a consumables-first version).
+*Status:* **Locked** · Aug 21, 2026 · target v3.40.0
+
+**PROD-11 — Smart Entry: confirmation is mandatory and must be real.**
+Every Smart Entry passes through a confirm step before logging. The confirm UI must make review genuine, not reflexive: stats shown large and legible, any single value editable in one tap, and Confirm a deliberate action rather than an auto-tappable default. For inventory-affecting trackers (Treatments, RX), a low-confidence match must present candidates rather than pre-selecting one.
+*Why:* the human-in-the-loop confirmation is the architectural safeguard that keeps the feature on the estimation side of the line (see `STRAT-11`). If users can blow past it unread, the safeguard is theater and the AI is effectively entering data unreviewed.
+*Status:* **Locked** · Aug 21, 2026
+
+**PROD-12 — Smart Entry carries a marginal per-use cost — a first for the app.**
+Every Smart Entry is an LLM API call (and, when voice ships, a speech-to-text call). Unlike the rest of HydroPro, which runs essentially free on Cloudflare, this cost scales with usage. Mitigations required from Phase 1: cache common interpretations and apply a sensible per-user daily cap. The per-call cost should factor into any clinic pricing conversation (handled outside engineering).
+*Why:* recorded so the shift in unit economics is a conscious decision, not a surprise on the first API bill.
+*Status:* **Locked** · Aug 21, 2026
+
 ---
 
 ## Architecture
@@ -153,12 +175,6 @@ Rejects an earlier recommendation to center values inside the icons.
 All 8 tiles follow one structure: label → goal → status → ring → number → bottom label.
 *Why:* consistency was the goal; freeing up screen space was not.
 *Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: Log It! tile layout changed to horizontal (v3.35.0). Left column: category chip (36×36) + title, then Goal/To-go/Logged stats stacked. Right column: existing gem illustration + progress ring. 4px left accent border in category color. Single-column full-width stack replacing the prior vertical format. My Plan 2-column grid is unchanged. Explicit call by Rob.*
-
-**UX-15 — Log It!/My Plan tiles and all sheets/pages switched to dark.**
-Tiles: background var(--bg), full 2px category-color border (amends UX-02's earlier 4px
-left-only accent). Sheets/modals/pages: dark surfaces, tan text (--ink-inverse), hairline
-borders on all edges, inputs/buttons re-themed. Completed app-wide in v3.38.0.
-*Status:* **Locked — v3.37.0-3.38.0** · Aug 21, 2026 — *amends UX-02.*
 
 **UX-03 — All 8 tiles use true percentage progress rings.**
 Including Weight, Exercise, Supplements, and Treatments (previously binary done/not-done).
@@ -201,6 +217,44 @@ Toggling a tracker off affects the Log It! page only. The My Plan card stays in 
 Any sheet, modal, or popup renders via `createPortal` to `document.body` — never inside another sheet's DOM, regardless of where it's invoked from.
 *Why:* nested rendering produced repeated positioning and visibility failures across three separate bugs (My Presets sheet, the black-background render issue, and the OO preset modal). Recording this as a standing pattern rather than a series of individual fixes is what stops the class from recurring. Established and applied in v3.33.0 for both the OO preset modal and the new backfill sheet.
 *Status:* **Locked as a rule** · Aug 21, 2026
+
+**UX-11a — Portaled components must locally redefine scoped CSS tokens.**
+Any component portaled to `document.body` (per UX-11) renders outside `.wt-root`, where scoped CSS custom properties (`--deep`, `--line`, `--paper`, and similar) are defined. Such components must locally redefine these tokens on their root element, or buttons, inputs, and backgrounds fall back to transparent/unstyled.
+*Why:* this was the root cause of the BackfillSheet and OO modal button-invisibility bugs (surfaced across v3.36.1/v3.36.2). It is a direct consequence of UX-11 and must be applied to every portaled component going forward.
+*Status:* **Locked as a rule** · Aug 21, 2026 · v3.36.2
+
+**UX-12 — Design token system is the single source of truth for color and spacing.**
+A `:root` block defines all surface, text, category-color, spacing (8pt grid), z-index, and layout tokens. New colors and spacing values reference tokens rather than hard-coded hex/px.
+*Why:* prior to this, colors drifted per-component and per-screen. Centralizing them retires color drift as a bug class and makes theme-wide changes (e.g. the warm-tan text and dark-tile passes) single-point edits.
+*Status:* **Locked** · Aug 21, 2026 · v3.34.0
+
+**UX-13 — `--treatment` token added.**
+Treatments gets its own semantic token (`--treatment` / `--treatment-chip`), teal (#16A394), sharing the hue with `--weight` by design but separated in code for future differentiation. Applied to the Treatments tile border, chip, and ring.
+*Why:* the designer's category spec covered 7 categories for 8 tiles; Treatments had no token. A dedicated token avoids a hard-coded color and allows the two teal tiles to diverge later without a hunt.
+*Status:* **Locked** · Aug 21, 2026 · v3.35.0
+
+**UX-14 — Smart Entry lives as a global header assistant, not a per-page feature.**
+The Smart Entry trigger is an assistant icon in the app header, to the right of the brand name (with a user-profile icon planned for the left). It opens Smart Entry as a modal from any page. Constraint for Phase 1: although summonable from anywhere, its capability is scoped strictly to entry-and-confirm — it captures a consumption/activity entry and routes it through the confirm card, and declines other requests.
+*Why:* positioning it app-level rather than on a single page establishes it as a general assistant whose scope can widen over time (more pages, more capabilities) without re-homing the entry point. The global placement is the platform decision; the narrow Phase 1 scope is what keeps it on the estimation side of the line (see `STRAT-11`, `PROD-11`) until scope is deliberately widened.
+*Status:* **Locked** · Aug 21, 2026 · target v3.40.0
+
+**UX-15 — Log It!/My Plan tiles and all sheets/pages switched to dark.**
+Tiles: background `var(--bg)`, full 2px category-color border (amends UX-02's earlier 4px left-only accent). Sheets/modals/pages: dark surfaces (`--surface-dark`), tan text (`--ink-inverse`), hairline borders on all edges, inputs/buttons re-themed. Completed app-wide across v3.37.0–3.38.2. The base `.wt-root` text color flipped to `--ink-inverse` since the whole app is now dark; the doctor-share / health-summary overlay is explicitly exempt and must stay light (both embedded and as its own `?share=` standalone page).
+*Why:* the white-on-black mismatch left large parts of the app illegible (the Past Days popup was fully invisible). Converting to a single dark system with consistent borders and tan text makes the app coherent and readable. Amends UX-02.
+*Status:* **Locked** · Aug 21, 2026 · v3.37.0–3.38.2 — amends UX-02
+
+**UX-16 — Dark-theme support tokens and header placeholders.**
+Three supporting decisions from the dark-theme completion passes:
+- `--muted-dark` (#9FB0C4) replaces the old muted helper-text color on dark surfaces, which failed AA contrast (~3.5:1). Exempt: the doctor-share overlay's on-screen text (light context).
+- `--hairline-bright` (#5A7390, muted slate-blue) is the standard visible border on cards/rows/inputs/buttons/sheets — dimmer than the tan text but clearly visible on dark backgrounds.
+- App header carries two unwired placeholder icons: a circular profile placeholder to the LEFT of the logo, and a Sparkles AI-assistant icon to the RIGHT of the title (the future Smart Entry entry point per UX-14). Both are 40px, visually chipped, not connected to anything yet. Logo and title reduced ~15% to make room.
+*Why:* recorded so the placeholder icons aren't mistaken for live features, and so the two new tokens are the known standard rather than being re-invented per component.
+*Status:* **Locked** · Aug 21, 2026 · v3.38.0–3.38.1
+
+**UX-17 — Global form-control inheritance reset.**
+`:where(button, input, select, textarea) { color: inherit; font: inherit; }` added globally. These elements don't reliably inherit `color`/`font` from ancestors the way `div`/`span` do, which is why the Past Days date-list buttons rendered black-on-dark (invisible) while every other button had an explicit color. The reset catches this bug class generally rather than patching each instance.
+*Why:* it turns a recurring per-element bug (dark text on dark background from un-inherited color) into a single structural fix. Applied v3.38.2.
+*Status:* **Locked as a rule** · Aug 21, 2026 · v3.38.2
 
 ---
 
@@ -331,4 +385,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 21, 2026 (UX-10, UX-11, PROD-06–09 added; UX-OPEN-02 added; UX-OPEN-01 §8 Q2 superseded by UX-10; ARCH-OPEN-01/05/06 closed; LEGAL-OPEN-01 addendum)*
+*Last updated: August 21, 2026 (UX-15–17 added for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
