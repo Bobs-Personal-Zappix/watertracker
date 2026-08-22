@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.40.1*
+*As of: August 22, 2026 · Deployed version: 3.40.2*
 
 ---
 
@@ -103,6 +103,23 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 22, 2026 (v3.40.2)
+
+Follow-up fixes from Rob's review of v3.40.1, all in `CHANGELOG.md`:
+- Voice Tracker tile: subtext font reduced (11.5px → 10px), badge shifted left (`margin-right:38px`)
+  to roughly horizontally align with the progress rings below. **Vertical center-line alignment
+  across tiles of different heights is not verifiable in jsdom** and is flagged as a known
+  limitation needing Rob's real-device check.
+- Preset buttons on "Use Your Presets" now center their text both horizontally and vertically
+  (`.wt-preset-btn` was missing flex-centering, causing text to sit high and clip at the bottom).
+- Fixed the presets sheet's excess bottom space and a backdrop/scroll interference bug — a forced
+  `minHeight:60vh` on the sheet (added in v3.40.0's "less wasted space" fix) created a mismatch
+  between the sheet's visual and actual boundaries. Reverted to normal content-driven sheet sizing
+  with the presets grid capped at `max-height:50vh` and independently scrollable.
+- Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
+  yet verified on a real device** — jsdom can't confirm badge vertical alignment, preset bubble
+  centering, or that the scroll-interference bug is actually resolved on a touchscreen.
 
 ## What shipped Aug 22, 2026 (v3.40.1)
 

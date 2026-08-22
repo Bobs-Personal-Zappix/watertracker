@@ -20,6 +20,39 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.40.2] — 2026-08-22
+
+Follow-up fixes from Rob's review of v3.40.1.
+
+- **Voice Tracker tile: subtext smaller, badge shifted left.** Subtext font reduced 11.5px → 10px.
+  Badge circle given `margin-right:38px` (was flush against the tile's 16px edge padding) so its
+  horizontal center roughly matches the progress rings' horizontal center in the tiles below (ring
+  center sits ~67.5px from the tile's right edge; badge center now sits ~64px). Vertical alignment
+  is a known limitation: jsdom has no layout engine, so exact cross-tile center-line matching for
+  tiles of different heights can't be computed or verified here — needs Rob's real-device eyes to
+  confirm or further nudge.
+- **Fixed preset button text formatting.** `.wt-preset-btn` had no vertical-centering rule, so text
+  sat high and could get clipped at the bottom of the grid cell when the CSS grid stretched button
+  heights. Added `display:flex; align-items:center; justify-content:center; min-height:52px` so
+  preset names are centered both ways inside their bubble.
+- **Fixed "Use Your Presets" sheet's excess bottom space and backdrop/scroll interference.** The
+  v3.40.0 fix that expanded the presets grid used `minHeight:"60vh"` on the sheet plus
+  `flex:1 1 auto`/`margin-top:auto` — when there were few presets, the grid didn't stretch to fill
+  that forced height, leaving dead space between the grid and "Edit Presets," and created a mismatch
+  between the sheet's visual bottom and its actual boundary that interfered with tapping/scrolling.
+  Reverted to the sheet's normal content-driven sizing (same pattern every other sheet in the app
+  uses) with the presets grid capped at `max-height:50vh` and scrollable on its own — no more forced
+  minimum height, no more gap.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed the new sub
+font-size, badge margin, preset-button flex-centering, and removal of the forced `60vh` sheet
+height are all present in the shipped bundle. Same one pre-existing, unrelated stale harness check
+still fails, untouched. **Not yet verified on a real device** — jsdom cannot confirm the badge's
+actual vertical alignment against the rings below, the preset bubble text centering, or that the
+sheet's dead-space/scroll-interference bug is actually gone on a touchscreen.
+
 ## [3.40.1] — 2026-08-22
 
 Follow-up fixes from Rob's review of v3.40.0.
