@@ -299,6 +299,20 @@ Smart Entry Phase 1 (text-based, per `PROD-10`/`PROD-11`) still targets its own 
 Voice Tracker tile is visual-only today, not the real feature.
 *Status:* **Locked** · Aug 22, 2026 · v3.40.0 — amends `UX-14`/`UX-16`'s header-icon placement
 
+**UX-20 — Profile page: header-icon-only entry point, local-only storage.**
+A new Profile page (Full Name, Email, Phone, photo upload) is reached only via the header's
+profile icon — not added to the bottom nav, no other entry point. Data is stored entirely in
+`settings.profile` (localStorage, versioned schema per `ARCH-OPEN-05`), including the photo as a
+base64 data URI — it does not reach the Worker/D1 backend, does not affect the account's real
+sign-in email (`settings.account.email`, used for magic-link auth) or push/SMS notification
+contact info.
+*Why:* explicit call by Rob on both points. Keeping this local-only avoids new backend engineering
+(upload endpoint, schema change, auth-linkage risk) for what's currently pure personalization —
+matches the pattern most existing settings already use. The header-icon-only entry point keeps the
+nav bar's 5 tabs unchanged and treats Profile as a personal-settings destination rather than a
+core navigation destination.
+*Status:* **Locked** · Aug 23, 2026 · v3.41.0
+
 ---
 
 ## Legal & compliance
@@ -428,4 +442,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 22, 2026 (UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 23, 2026 (UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.40.4*
+*As of: August 23, 2026 · Deployed version: 3.41.0*
 
 ---
 
@@ -32,6 +32,8 @@ Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX 
 - Accounts: email magic-link sign-in, session revocation
 - Backup: automatic account backup, recovery-code cloud backup, manual JSON file export/import, CSV export
 - In-app tutorial (lives in Settings)
+- Profile page (Full Name, Email, Phone, photo upload) — reached only via the header profile icon,
+  local-only storage (`settings.profile`), not tied to account sign-in
 
 ---
 
@@ -119,6 +121,23 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.41.0)
+
+Log It! action-button restyle and a new Profile page, all in `CHANGELOG.md`:
+- "Use Your Presets" button restyled to a transparent/glossy blue outline (`var(--water)` border +
+  soft glow); its bottom sheet and "Manually Log a Meal"'s sheet now each carry a matching colored
+  border (blue / protein-green) continuing the tile-to-sheet color-match pattern (`UX-18`).
+- New **Profile page** — Full Name, Email, Mobile Phone, and a photo upload (2MB cap, stored as a
+  base64 data URI). Reached only via the header profile icon (now a real button, was decorative).
+  Explicit Save button; a Back button returns to Log It! since Profile isn't in the bottom nav.
+  **Local-only by design** — new `settings.profile` field added to the versioned-schema defaults,
+  picked up automatically by `migrate()`/backup export-import; does not reach the Worker/D1 or
+  affect the account's real sign-in email/notifications. Explicit call by Rob.
+- `tools/harness.js`: new end-to-end check for the full profile flow (open → fill → save → persist →
+  back). Full 5-step verification pipeline run and passed. **Not yet verified on a real device** —
+  jsdom can't confirm the button's visual "glossy" look, photo crop/scale, or phone file-picker
+  behavior.
 
 ## What shipped Aug 22, 2026 (v3.40.3)
 

@@ -20,6 +20,45 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.41.0] — 2026-08-23
+
+Log It! action-button restyle and a new Profile page, requested by Rob in one pass.
+
+- **"Use Your Presets" button is now a glossy blue outline.** Background changed from a solid gold
+  gradient to `transparent` with a 2px `var(--water)` border and a soft blue glow
+  (`box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15)`) for a glossy
+  look. Text/icon color changed to `var(--ink-inverse)` (tan).
+- **Both entry sheets now carry a matching colored border.** The "Use Your Presets" bottom sheet
+  takes `borderColor:"var(--water)"` (matching its button); the "Manually Log a Meal" sheet takes
+  `borderColor:"var(--protein)"` (matching its button's existing green), continuing the same
+  tile-to-sheet color-matching pattern used elsewhere in the app (`UX-18`).
+- **New Profile page** (`ProfilePage` component), reached only via the header's profile icon —
+  previously a decorative, `aria-hidden` circle, now a real button (`onClick: () => a("profile")`).
+  Not in the bottom nav and has no other entry point, per Rob's request. Fields: Full Name, Email
+  Address, Mobile Phone Number (all plain text/email/tel inputs), and a profile photo upload
+  (`<input type="file" accept="image/*">`, capped at 2MB, stored as a base64 data URI). Explicit
+  Save button; the header's profile icon shows the uploaded photo once one exists. A Back button
+  (`ChevronLeft`, already imported) in the shared header returns to Log It!, since Profile has no
+  nav-tab equivalent to switch away from.
+- **Storage: local-only, by design.** New `settings.profile` object (`fullName`, `email`, `phone`,
+  `photoDataUri`) added to the versioned-schema defaults (`ES.settings`, `ARCH-OPEN-05`) — picked up
+  automatically by `migrate()`/`deepMergeDefaults` and by backup export/import (`ve()`'s denylist
+  export includes it with no extra wiring). This is a personalization-only field, explicitly
+  separate from `settings.account.email` (the real sign-in/magic-link email) — a note to that effect
+  is shown on the Profile page itself. Does not reach the Worker/D1 backend or affect notifications;
+  explicit call by Rob to keep this local-only for now.
+- `tools/harness.js`: added a full click-through check — profile icon is a real clickable button,
+  Profile page mounts with all 4 fields plus Back, typing + Save persists `settings.profile.fullName`
+  into stored data, and Back returns to Log It!.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). The new harness checks exercise the full
+profile flow end-to-end (open → fill → save → persist → back) and all pass. Same one pre-existing,
+unrelated stale harness check still fails, untouched. **Not yet verified on a real device** — jsdom
+can't confirm the button glow/outline actually reads as "glossy," how the profile photo crops/scales
+on a real screen, or file-picker behavior on a phone.
+
 ## [3.40.4] — 2026-08-23
 
 Follow-up polish from Rob's review of v3.40.3.

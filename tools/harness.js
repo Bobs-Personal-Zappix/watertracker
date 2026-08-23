@@ -1085,6 +1085,39 @@ const STEPS = [
     if (closeBtn) fire(closeBtn);
   },
   () => check("no runtime errors after v3.40.0/3.40.1 pass", errors.length, 0),
+
+  // ── v3.41.0: Profile page, reached only via the header profile icon ──
+  () => check("nav to Log It! (profile page checks)", nav("Log It!")),
+  () => {
+    const profileBtn = window.document.querySelector('button[aria-label="Open your profile"]');
+    check("header profile icon is a clickable button (was aria-hidden decorative before)", !!profileBtn);
+    if (profileBtn) fire(profileBtn);
+  },
+  () => {
+    const title = [...window.document.querySelectorAll(".wt-date-label")].find((el) => el.textContent === "Profile");
+    check("Profile page header title found", !!title);
+    check("Profile page not reachable via bottom nav (no nav button targets it)", ![...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.includes("Profile")));
+    check("Full Name field present", window.document.querySelector('input[placeholder="e.g. Sarah M."]') !== null);
+    check("Email Address field present", window.document.querySelector('input[type="email"][placeholder="you@example.com"]') !== null);
+    check("Mobile Phone Number field present", window.document.querySelector('input[type="tel"]') !== null);
+    check("photo upload file input present", window.document.querySelector('input[type="file"][accept="image/*"]') !== null);
+    check("Back button present", !!window.document.querySelector('button[aria-label="Back"]'));
+  },
+  () => check("typed a full name", setInput("e.g. Sarah M.", "Test Tester")),
+  () => check("clicked Save on Profile page", clickByText("Save")),
+  () => {
+    check("profile.fullName persisted to settings", stored().settings.profile.fullName, "Test Tester");
+    check("no runtime errors after profile save", errors.length, 0);
+  },
+  () => {
+    const backBtn = window.document.querySelector('button[aria-label="Back"]');
+    check("found Back button to leave Profile page", !!backBtn);
+    if (backBtn) fire(backBtn);
+  },
+  () => {
+    check("back navigation returns to Log It!", tiles().some((t) => t.startsWith("Water")));
+  },
+  () => check("no runtime errors after v3.41.0 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
