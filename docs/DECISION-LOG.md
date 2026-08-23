@@ -360,6 +360,45 @@ consistent with the app's existing "state facts, don't manufacture celebration" 
 while still making an honest "you're caught up" status feel rewarding rather than empty.
 *Status:* **Locked** · Aug 23, 2026 · v3.43.0 — amends `UX-21` point 2
 
+**UX-23 — "To Do Today" removed; Today becomes exec-summary-at-top, full-log-below.**
+With "Today at a Glance" (`UX-22`) covering due/overdue callouts, Rob judged the older "To Do
+Today" section (a full list of due items, with an inline next-due-date input) pure duplication —
+its only function beyond duplication was that date-editing control, which wasn't considered
+essential to keep as-is. Removed entirely; Today's layout is now Voice Assistant tile → Today at a
+Glance → Today's Log.
+*Why:* two sections both surfacing "what's due" on the same page was redundant once the summary
+existed; collapsing to one makes Today read cleanly as summary-then-detail.
+*Status:* **Locked** · Aug 23, 2026 · v3.44.0 — the next-due-date-editing capability this removed is
+resolved narrower and better-organized in `UX-24`.
+
+**UX-24 — Self-Managed RX: supplements split into Vitamins & Supplements / RX on My Plan only.**
+Removing "To Do Today" (`UX-23`) also removed the app's only next-due-date-editing UI, surfaced as
+a standing-risk flag before building anything further. Resolved shape, explicit calls by Rob:
+1. My Plan's combined "Self-Managed" tile (supplements + treatments in one sheet) splits into a new
+   "Self-Managed RX" section — two tiles, "Vitamins & Supplements" and "RX" — inserted between "My
+   Treatments" and where the old "Self-Managed" tile sat. Existing supplements with no category tag
+   default to "Vitamins & Supplements."
+2. Vitamins & Supplements: daily items, no scheduling question in the add form (`intervalDays`
+   implicitly 1, never asked).
+3. RX: keeps the schedule field, and gains an editable next-due-date input per row — this is where
+   the capability gap from `UX-23` is restored, scoped to RX items specifically (not Treatments).
+4. Log It! and Today are explicitly untouched — both still treat all supplements as one combined
+   list for daily logging and due-counting (one "RX & Vitamins" tile, one due-count callout). Rob's
+   reasoning: vitamins, supplements, and prescriptions are taken the same way day-to-day, so
+   splitting the *logging* step would add daily friction for very similar items even though they
+   need different setup-time detail (scheduling variables differ, which is why the split matters on
+   My Plan specifically).
+5. A "Self-Managed Treatments" tile was added alongside the two new ones, preserving the old
+   "Self-Managed" sheet's treatment add/edit/delete unchanged — not explicitly requested, but flagged
+   and kept since the old sheet was the *only* place treatments could be managed at all, and folding
+   it away silently would have been the same class of quiet capability loss as the next-due-date gap.
+*Why:* keeps day-to-day logging at one step (the thing that matters most for adherence, `STRAT-02`)
+while giving setup-time management the category-specific detail each type actually needs.
+*Status:* **Locked** · Aug 23, 2026 · v3.45.0
+*Known gap:* Treatments still have no next-due-date-editing UI anywhere in the app (out of scope for
+this change — "My Treatments" isn't fully built out yet per Rob). Flagged in
+`docs/CURRENT-STATE.md`'s Known outstanding.
+
 ---
 
 ## Legal & compliance
@@ -489,5 +528,8 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (UX-22 added for v3.43.0 — "Tracked So Far" replaced with "Today at
+*Last updated: August 23, 2026 (UX-24 added for v3.45.0 — Self-Managed RX split on My Plan
+(Vitamins & Supplements / RX), next-due-date editing restored for RX items; UX-23 added for v3.44.0
+— "To Do Today" removed, Today is now exec-summary-at-top/full-log-below; earlier: UX-22 added for
+v3.43.0 — "Tracked So Far" replaced with "Today at
 a Glance" needs-attention summary, amends UX-21; earlier: UX-21 amended for v3.42.1 — nav-order swap reverted per Rob after real-device testing, Today's content changes retained; earlier: UX-21 added for v3.42.0 — Today promoted to landing page, Tracked So Far section, nav order swap, amends UX-06; earlier: UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*

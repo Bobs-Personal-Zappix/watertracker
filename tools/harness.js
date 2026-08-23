@@ -253,16 +253,27 @@ const STEPS = [
       .some((r) => r.textContent.includes("Test Preset"));
     check("preset removed after delete", !stillThere);
   },
-  () => check("nav to My Plan (for Self-Managed sheet check)", nav("My Plan")),
-  () => check("open Self-Managed sheet", clickByText("Self-Managed", "button")),
+  () => check("nav to My Plan (for Vitamins & Supplements sheet check)", nav("My Plan")),
+  // "Self-Managed" (combined supplements+treatments) was split in this session into
+  // "Vitamins & Supplements" / "RX" (under a new "Self-Managed RX" header) plus a standalone
+  // "Self-Managed Treatments" tile — see docs/DECISION-LOG.md UX-22/UX-23.
+  () => check("open Vitamins & Supplements sheet", clickByText("Vitamins & Supplements", "button")),
   () => {
-    const label = [...window.document.querySelectorAll(".wt-section-label")]
-      .find((el) => el.textContent === "Supplements & Prescriptions");
-    check("Self-Managed sheet label found", !!label);
-    // Sheet went dark in v3.37.0 (this label's inline color was flipped from var(--ink) to
-    // var(--ink-inverse) that session so it wouldn't render invisible on the new dark background).
-    check("Self-Managed sheet label uses var(--ink-inverse) on the now-dark sheet", label ? label.style.color : null, "var(--ink-inverse)");
+    const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
+      .find((el) => el.textContent === "Vitamins & Supplements");
+    check("Vitamins & Supplements sheet title found", !!title);
   },
+  () => check("close Vitamins & Supplements sheet", clickByAria("Close")),
+  () => check("open RX sheet", clickByText("RX", "button")),
+  () => {
+    const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
+      .find((el) => el.textContent === "RX");
+    check("RX sheet title found", !!title);
+    // Sheet went dark in v3.37.0 — empty-note text must stay on the dark-safe token, not invisible.
+    const note = window.document.querySelector(".wt-empty-note");
+    check("RX sheet empty-note present and dark-theme styled", !!note);
+  },
+  () => check("close RX sheet", clickByAria("Close")),
   // Add assertions for whatever changed this session.
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
@@ -442,8 +453,6 @@ const STEPS = [
     check("TestVit inventory decremented by backfilled dose (10 → 9)", s ? s.qtyRemaining : null, 9);
     check("TestVit lastTakenDate untouched by backfill (rule 2: schedule never recalculates)", s ? s.lastTakenDate : "MISSING", null);
     check("TestVit nextDueOverride untouched by backfill (rule 2)", s ? s.nextDueOverride : "MISSING", null);
-    const stillDueToday = [...window.document.querySelectorAll(".wt-treatment-name")].some((el) => el.textContent === "TestVit");
-    check("TestVit still shows as due in To Do Today (rule 3: not marked done by backfill)", stillDueToday, "true");
   },
   () => check("nav to Log It! (verify today's RX tile ring unaffected)", nav("Log It!")),
   () => {
@@ -532,14 +541,14 @@ const STEPS = [
   },
 
   // ── v3.34.0 item 6c: overdue items show an icon glyph alongside color, not color alone ──
+  // (surface moved from the removed "To Do Today" section to "Today at a Glance" in v3.43.0/v3.44.0)
   () => check("nav to Today (for overdue icon check)", nav("Today")),
   () => {
-    const overdueRow = [...window.document.querySelectorAll(".wt-treatment-overdue")].find((r) => r.textContent.includes("OverdueMed"));
-    check("seeded OverdueMed shows in To Do Today as overdue", !!overdueRow);
-    const label = overdueRow ? overdueRow.querySelector(".wt-treatment-due-label") : null;
-    const icon = label ? label.querySelector("svg") : null;
-    check("overdue label has an icon glyph alongside the text (not color alone)", !!icon, "true");
-    check("overdue label still shows the '... overdue' text too", label ? /overdue/.test(label.textContent) : null, "true");
+    const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("RX & Vitamins"));
+    check("seeded OverdueMed is reflected in the RX & Vitamins due callout", !!medsRow);
+    const icon = medsRow ? medsRow.querySelector(".wt-tracked-row-chip svg") : null;
+    check("due callout has an icon glyph alongside color (not color alone)", !!icon, "true");
+    check("due callout text still states the due count", medsRow ? /due today/.test(medsRow.textContent) : null, "true");
   },
 
   // ── v3.34.0 item 6a: touch targets — Today's Log edit/delete buttons ≥48px ──
@@ -1137,7 +1146,6 @@ const STEPS = [
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    check("'To Do Today' section still present", labels.includes("To Do Today"));
     check("'Today's log' section still present", labels.some((l) => l.toLowerCase() === "today's log"));
   },
   () => {
@@ -1172,8 +1180,8 @@ const STEPS = [
     check("'Today at a Glance' section present (renamed from 'Tracked So Far')", labels.includes("Today at a Glance"), "true");
     check("old 'Tracked So Far' label is gone", labels.includes("Tracked So Far"), false);
     const idxGlance = labels.indexOf("Today at a Glance");
-    const idxToDo = labels.indexOf("To Do Today");
-    check("'Today at a Glance' appears before 'To Do Today'", idxGlance >= 0 && idxToDo >= 0 && idxGlance < idxToDo, "true");
+    const idxLog = labels.some((l) => l.toLowerCase() === "today's log");
+    check("'Today at a Glance' present alongside 'Today's log'", idxGlance >= 0 && idxLog, "true");
   },
   () => {
     const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
@@ -1184,6 +1192,97 @@ const STEPS = [
     check("Today at a Glance does not list every enabled tracker (no Water/Calories/Sleep/Exercise noise in default seed)", rows.some((r) => /Water|Calories|Sleep|Exercise/.test(r.textContent)), false);
   },
   () => check("no runtime errors after v3.43.0 Today-at-a-Glance pass", errors.length, 0),
+
+  // ── v3.44.0: "To Do Today" removed (Today at a Glance now the only summary), "Voice Tracker" ──
+  // renamed "Voice Assistant", header locked (sticky) and its dead space trimmed ──
+  () => check("nav to Today (v3.44.0 checks)", nav("Today")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
+    check("'To Do Today' section removed from Today page", labels.includes("To Do Today"), false);
+    check("'Today at a Glance' still present", labels.includes("Today at a Glance"), "true");
+    check("'Today's log' still present", labels.some((l) => l.toLowerCase() === "today's log"));
+  },
+  () => {
+    check("wt-todo-today-sticky / wt-todo-today-scroll classes no longer used", !window.document.querySelector(".wt-todo-today-sticky") && !window.document.querySelector(".wt-todo-today-scroll"), "true");
+  },
+  () => {
+    const tile = window.document.querySelector(".wt-voice-tile");
+    check("Voice tile present on Today page", !!tile);
+    check("Voice tile now labeled 'Voice Assistant' (renamed from 'Voice Tracker')", tile ? tile.textContent.includes("Voice Assistant") : null, "true");
+    check("old 'Voice Tracker' label is gone", tile ? tile.textContent.includes("Voice Tracker") : null, false);
+  },
+  () => check("no runtime errors after v3.44.0 Today-page pass", errors.length, 0),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const bannerRule = cssText.match(/\.wt-topbanner \{[^}]*\}/);
+    check("wt-topbanner is now sticky (locked header, doesn't scroll away)", bannerRule ? bannerRule[0].includes("position:sticky") && bannerRule[0].includes("top:0") : null, "true");
+    check("wt-topbanner bottom padding trimmed (was 28px)", bannerRule ? !bannerRule[0].includes("padding:22px 16px 28px") : null, "true");
+    const frameRule = cssText.match(/\.wt-frame \{[^}]*\}/);
+    check("wt-frame top padding trimmed to bring content up (was 18px)", frameRule ? !frameRule[0].includes("padding:18px 18px 4px") : null, "true");
+  },
+  () => check("no runtime errors after v3.44.0 header-spacing pass", errors.length, 0),
+
+  // ── v3.44.0: Self-Managed RX — Vitamins & Supplements / RX split, self-managed Treatments ──
+  // preserved as its own tile, RX next-due-date editing added (see decision log UX-22/UX-23) ──
+  () => check("nav to My Plan (for Self-Managed RX checks)", nav("My Plan")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-plan-section-label")].map((el) => el.textContent);
+    check("'Self-Managed RX' section header present", labels.includes("Self-Managed RX"), "true");
+  },
+  () => check("open Vitamins & Supplements sheet (legacy-item default check)", clickByText("Vitamins & Supplements", "button")),
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
+    check("seeded TestVit (no category field) defaults into Vitamins & Supplements", rows.some((r) => r.includes("TestVit")), "true");
+    check("seeded OverdueMed (no category field) defaults into Vitamins & Supplements", rows.some((r) => r.includes("OverdueMed")), "true");
+  },
+  () => check("open Add-vitamin form", clickByText("Add vitamin or supplement", "button")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-field")].map((l) => l.textContent);
+    check("vitamin add form has no 'Take every (days)' schedule field", labels.some((l) => l.includes("Take every")), false);
+  },
+  () => check("fill new vitamin name", setInput("e.g. Vitamin D, Fish Oil", "TestVitamin")),
+  () => check("save new vitamin", clickByText("Save", "button")),
+  () => {
+    const v = supp("TestVitamin");
+    check("new vitamin stored with category:'vitamin'", v ? v.category : null, "vitamin");
+    check("new vitamin implicitly daily (intervalDays:1) with no schedule prompt", v ? v.intervalDays : null, 1);
+  },
+  () => check("close Vitamins & Supplements sheet", clickByAria("Close")),
+  () => check("open RX sheet", clickByText("RX", "button")),
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
+    check("seeded TestVit does NOT appear in RX (it defaulted to vitamin)", rows.some((r) => r.includes("TestVit")), false);
+  },
+  () => check("open Add-prescription form", clickByText("Add prescription", "button")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-field")].map((l) => l.textContent);
+    check("RX add form keeps the 'Take every (days)' schedule field", labels.some((l) => l.includes("Take every")), "true");
+  },
+  () => check("fill new RX name", setInput("e.g. Metformin", "TestRx")),
+  () => check("set new RX interval to every 3 days", setInput("1", "3")),
+  () => check("save new RX item", clickByText("Save", "button")),
+  () => {
+    const r = supp("TestRx");
+    check("new RX item stored with category:'rx'", r ? r.category : null, "rx");
+    check("new RX item keeps its entered interval (3 days)", r ? r.intervalDays : null, 3);
+  },
+  () => {
+    // TestRx has intervalDays:3 and no lastTakenDate/nextDueOverride yet, so DS() treats it as
+    // due today (UX-05: never-taken items are due immediately) — its date input should be present.
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")];
+    const rxRow = rows.find((r) => r.textContent.includes("TestRx"));
+    const dateInput = rxRow ? rxRow.querySelector(".wt-treatment-date-input") : null;
+    check("TestRx row shows an editable next-due date input", !!dateInput);
+    if (dateInput) {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(dateInput, DAYS_AGO(-5));
+      dateInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+    }
+  },
+  () => {
+    const r = supp("TestRx");
+    check("editing the date input updates TestRx's nextDueOverride (the capability lost when To Do Today was removed)", r ? r.nextDueOverride : null, DAYS_AGO(-5));
+  },
+  () => check("no runtime errors after Self-Managed RX pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

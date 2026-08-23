@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.43.0*
+*As of: August 23, 2026 · Deployed version: 3.45.0*
 
 ---
 
@@ -23,7 +23,9 @@ from v3.42.0 remain, only the nav order reverted)
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
 - Sleep with start/finish session tracking across midnight
-- Supplements and Treatments, both with recurring schedules and always-editable next-due dates
+- Supplements and Treatments, both with recurring schedules. Next-due-date editing lives on My
+  Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
+  edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
 - Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete)
 - Past-days log viewer (calendar icon on Today); past-day entries are deletable
 - "Enter Missed Items" backfill on any past day (Today → calendar icon → day → button)
@@ -128,6 +130,41 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.45.0)
+
+My Plan's "Self-Managed" tile split into "Self-Managed RX" (two tiles: Vitamins & Supplements, RX)
+plus a standalone "Self-Managed Treatments" tile, per Rob's direction:
+- New `category` field (`'vitamin'`|`'rx'`) on supplement items; legacy items with no category
+  default to vitamin wherever read, no migration needed.
+- Vitamins & Supplements: add/edit/delete, no schedule field (implicitly daily).
+- RX: add/edit/delete, keeps the schedule field, and each row now has an editable next-due-date
+  input — restores the capability lost when v3.44.0 removed "To Do Today" (the only place that
+  editing used to live), scoped to RX items specifically.
+- Self-Managed Treatments: same CRUD as before, just its own tile — preserved deliberately since the
+  old "Self-Managed" sheet was the only place treatments could be managed at all.
+- Log It! and Today deliberately untouched — both still treat all supplements as one combined list
+  for daily logging and due-counting, by explicit choice (minimizes daily logging steps).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
+
+## What shipped Aug 23, 2026 (v3.44.0)
+
+"To Do Today" removed from the Today page, "Voice Tracker" renamed "Voice Assistant," app header
+locked (sticky) and tightened, per Rob's direction:
+- "To Do Today" (the due-items list with inline next-due-date editing) removed — "Today at a
+  Glance" (v3.43.0) already surfaces due/overdue meds & treatments as a callout, making the old
+  section pure duplication. Its only unique function, inline next-due-date editing, was
+  reintroduced narrower and better-organized on My Plan in v3.45.0 (see above).
+- "Voice Tracker" tile renamed "Voice Assistant" throughout (Log It! and Today) — label only, still
+  non-functional.
+- App header (`wt-topbanner`) changed to `position:sticky; top:0` so it no longer scrolls away;
+  its padding and `wt-frame`'s top padding trimmed to remove dead space under the logo/title.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. One
+  unrelated pre-existing stale harness check (`wt-tile-togo` water-tile assertion, predating this
+  session — superseded by the v3.39.0 hero-number tile restructure) confirmed failing identically
+  on the already-deployed v3.43.0 bundle, so not a regression from this work. **Not yet verified on
+  a real device.**
 
 ## What shipped Aug 23, 2026 (v3.43.0)
 
@@ -349,6 +386,11 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 - **UX-OPEN-01 Phase 3** (not started): Clinic onboarding ramp — overlaps with the roadmap's protocol-code work.
 - **"Add in Setup" stale copy** on Treatments/RX & Vitamins empty-state CTAs on Log It! — quick copy fix, not yet addressed.
 - **Some lucide glyphs filled may look odd** (v3.38.2): icons with internal negative space (e.g. Battery) render differently when filled vs. stroked. Flag any that look wrong for individual adjustment.
+- **Treatments have no next-due-date editing UI anywhere in the app** (since v3.44.0 removed "To Do
+  Today," the only place it lived). v3.45.0 restored this for RX items on My Plan, but "Self-Managed
+  Treatments" wasn't in scope for that fix — a wrong next-due date on a treatment currently can't be
+  corrected without deleting and re-adding the item. Worth raising with Rob before "My Treatments"
+  gets built out further.
 
 ---
 

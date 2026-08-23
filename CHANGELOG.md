@@ -20,6 +20,100 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.45.0] — 2026-08-23
+
+My Plan's "Self-Managed" tile (which bundled all supplements/prescriptions and self-managed
+treatments into one combined sheet) split into a new **"Self-Managed RX"** section with two tiles —
+"Vitamins & Supplements" and "RX" — plus a standalone "Self-Managed Treatments" tile, per Rob's
+direction following the "To Do Today" removal (v3.44.0). Log It! and Today are unaffected — they
+still log/count all supplements together in one place, by explicit choice, to keep daily logging to
+one step.
+
+- **New `category` field on supplement items** (`'vitamin'` | `'rx'`). Existing items with no
+  category (all supplements created before this release) default to `'vitamin'` wherever read —
+  no migration/rewrite needed, since the field is simply absent on old items and treated as
+  "vitamin" by a `!== 'rx'` check, the same optional-field pattern already used for
+  `trackInventory`/`qtyRemaining`/`expirationDate`. New items get the category stamped at creation
+  by `onAddSupplement`/`onEditSupplement`, which both gained a `category` parameter.
+- **My Plan reorganized**: "My Treatments" (unchanged, partner/clinic demo) → new "Self-Managed RX"
+  header → "Vitamins & Supplements" tile → "RX" tile → "Self-Managed Treatments" tile (unchanged
+  behavior, just no longer bundled with supplements in one sheet).
+  - **Vitamins & Supplements**: view/add/edit/delete only — the add form has no interval/schedule
+    field at all (these are daily items by design, so `intervalDays` is implicitly 1 and never
+    asked about).
+  - **RX**: view/add/edit/delete, keeps the existing "Take every (days)" schedule field, and now
+    also shows each item's due/overdue state with an **editable next-due-date input** per row — this
+    restores the capability that "To Do Today" (removed in v3.44.0) used to be the only place to
+    exercise. Editing the date calls a new `onEditSupplementNextDue` handler wired from the app root
+    down through My Plan.
+  - **Self-Managed Treatments**: identical CRUD to before, just given its own tile instead of being
+    bundled with supplements in the old "Self-Managed" sheet — this was preserved deliberately so
+    treatment management wasn't quietly lost in the split (it wasn't explicitly requested, but the
+    old sheet was the *only* place treatments could be added/edited/deleted).
+  - `CO` (the shared supplement add/edit modal) gained a `category` prop that hides the schedule
+    field and adjusts modal copy for vitamins, while leaving the RX and legacy-caller behavior
+    unchanged.
+- **Log It! and Today deliberately untouched**: both still read `settings.supplements` as one list
+  (no category filtering), so the combined "RX & Vitamins" tile, its due-count, and "Today at a
+  Glance"'s due-count callout keep working exactly as before — adding an RX item or a vitamin both
+  show up the same way for daily logging. This was Rob's explicit call: splitting Log It! into two
+  tiles would add a second daily-logging step for very similar items, working against minimizing
+  steps to log.
+- `tools/harness.js`: replaced the stale "Self-Managed sheet" checks with checks for the new
+  "Vitamins & Supplements" and "RX" sheets; added checks that legacy no-category items default
+  correctly into Vitamins & Supplements, that the vitamin add form hides the schedule field while
+  the RX add form keeps it, that new items are stamped with the right category, and an end-to-end
+  check that editing an RX item's date input actually updates its `nextDueOverride` in storage.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One unrelated
+  pre-existing stale check still fails (`wt-tile-togo` water-tile assertion, documented in v3.44.0 —
+  unrelated to this change). **Not yet verified on a real device** — jsdom can't confirm how the
+  three-tile My Plan section looks/reads, or how the RX date-input feels on a touchscreen.
+
+## [3.44.0] — 2026-08-23
+
+Follow-up from Rob's review of v3.43.0's "Today at a Glance": "To Do Today" removed as redundant
+now that the new summary covers it, "Voice Tracker" renamed "Voice Assistant," and the app header
+tightened and locked in place.
+
+- **"To Do Today" section removed from the Today page.** Now that "Today at a Glance" surfaces
+  due/overdue RX & Vitamins and Treatments as a callout, the old section (a full list of due items
+  with per-item overdue/today status and an inline "change next-due date" input) was pure
+  duplication — per Rob, its only real function beyond that duplication was letting you edit an
+  item's next-due date inline, which isn't essential to keep. Today is now a clean exec-summary-at-
+  top, full-log-below layout: Voice Assistant tile → Today at a Glance → Today's Log.
+  - The per-item next-due-date editing UI is gone along with it; next-due dates can still be
+    corrected from My Plan (unaffected — this session didn't touch that page).
+  - `onEditNextDue` (the handler wiring that date input) removed as dead code along with its call
+    site, since its only caller was the removed section.
+  - Dead CSS (`wt-todo-today-sticky`, `wt-todo-today-scroll`) removed.
+  - The v3.34.0 accessibility rule "overdue state has icon glyph alongside color, not color alone"
+    (see decision log `UX-OPEN-01`/item 6c) is preserved — it now lives on "Today at a Glance"'s
+    due-count callouts (`AlertCircle` icon + colored border), which is the only remaining surface
+    that shows due/overdue meds & treatments on this page. Note the callouts show an aggregate
+    count, not a per-item overdue-vs-due-today distinction the old section had — flagging in case
+    that granularity is missed on real-device review.
+- **"Voice Tracker" renamed "Voice Assistant"** throughout (tile title and aria-label, on both Log
+  It! and Today). Purely a label change — still the same non-functional design preview, no behavior
+  change.
+- **App header locked and tightened.** `.wt-topbanner` (the banner holding the drip-logo badge and
+  "HydroPro Tracker" title) changed from `position:relative` to `position:sticky; top:0` so it no
+  longer scrolls away with the page content — Rob's "locked" request. Its bottom padding was cut
+  from 28px to 10px (top 22px → 16px), and `.wt-frame`'s top padding cut from 18px to 10px, removing
+  the excess dead space under the logo/title so the page content beneath starts higher on screen.
+- `tools/harness.js`: removed/replaced checks that depended on the deleted "To Do Today" DOM (the
+  backfill "rule 3" and v3.34.0 overdue-icon checks now assert against the RX & Vitamins tile ring
+  and the new due-count callout instead of the removed section); added checks for the section's
+  removal, the Voice Assistant rename, and the sticky/trimmed header.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One unrelated
+  pre-existing stale check failed (`wt-tile-togo` water-tile assertion, predating this session —
+  that class was superseded by the v3.39.0 hero-number tile restructure and the test was never
+  updated; confirmed present and failing identically on the already-deployed v3.43.0 bundle before
+  any of this session's changes, so it is not a regression from this work). **Not yet verified on a
+  real device** — jsdom can't confirm how the sticky header feels while scrolling, whether the
+  tightened spacing looks right, or how the shorter Today page reads as a whole.
+
 ## [3.43.0] — 2026-08-23
 
 Today's "Tracked So Far" section replaced with a compact "Today at a Glance" needs-attention
