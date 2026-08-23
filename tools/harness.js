@@ -1118,6 +1118,16 @@ const STEPS = [
     check("back navigation returns to Log It!", tiles().some((t) => t.startsWith("Water")));
   },
   () => check("no runtime errors after v3.41.0 pass", errors.length, 0),
+
+  // ── v3.41.1: bugfix — header profile photo overflowed its circular clip ──
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-topbanner-profile \{[^}]*\}/);
+    check("wt-topbanner-profile clips its contents (overflow:hidden) so a photo can't square-overhang the circle", rule ? rule[0].includes("overflow:hidden") : null, "true");
+    const photoRule = cssText.match(/\.wt-topbanner-profile-photo \{[^}]*\}/);
+    check("wt-topbanner-profile-photo stays within its box (max-width/max-height:100%)", photoRule ? photoRule[0].includes("max-width:100%") && photoRule[0].includes("max-height:100%") : null, "true");
+  },
+  () => check("no runtime errors after v3.41.1 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

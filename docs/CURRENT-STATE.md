@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.41.0*
+*As of: August 23, 2026 · Deployed version: 3.41.1*
 
 ---
 
@@ -121,6 +121,15 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.41.1)
+
+Bugfix from Rob's real-device test: uploading a profile photo left a black square overlapping the
+header profile icon and app name after returning from the Profile page (inconsistent — cleared on
+switching nav tabs). Root cause: `.wt-topbanner-profile` had no `overflow:hidden`, so the photo's
+square edges weren't guaranteed clipped to the circular button. Fixed by adding
+`overflow:hidden` there and `max-width/max-height:100%` + `object-position:center` to
+`.wt-topbanner-profile-photo`. Full pipeline re-verified. **Not yet re-tested on a real device.**
 
 ## What shipped Aug 23, 2026 (v3.41.0)
 

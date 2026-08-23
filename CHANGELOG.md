@@ -20,6 +20,33 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.41.1] — 2026-08-23
+
+Bugfix from Rob's real-device test of v3.41.0.
+
+- **Fixed: header profile icon/app name showed a black square overlapping them after uploading a
+  profile photo.** Root cause: `.wt-topbanner-profile` (the circular header button) had no
+  `overflow:hidden`, so the uploaded `<img>` — sized `width:100%;height:100%` of its 40×40 box —
+  wasn't actually clipped to the parent's circular `border-radius`; only `.wt-topbanner-profile-photo`
+  itself had rounding, which isn't sufficient on its own to guarantee the image's square edges never
+  paint outside the circle on first render. Rob reported the artifact was inconsistent — present on
+  return from the Profile page, gone after switching to a different nav tab — consistent with a
+  stale first-paint that a later reflow corrects, rather than a persistent layout bug, but the
+  missing `overflow:hidden` was the real, fixable defect either way.
+- Fix: added `overflow:hidden` to `.wt-topbanner-profile`, plus `max-width:100%;max-height:100%;
+  object-position:center` to `.wt-topbanner-profile-photo` so the image is guaranteed to be
+  clipped and centered within its circular container regardless of the photo's original dimensions
+  or render timing.
+- `tools/harness.js`: added a check confirming both CSS rules are present in the shipped bundle.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed both CSS rules
+are present in the shipped bundle. Same one pre-existing, unrelated stale harness check still
+fails, untouched. **Not yet verified on a real device** — jsdom cannot render CSS clipping/paint
+behavior at all, so this fix needs Rob to re-upload a photo and confirm the artifact is actually
+gone, including the specific "returns from Profile page" repro path he described.
+
 ## [3.41.0] — 2026-08-23
 
 Log It! action-button restyle and a new Profile page, requested by Rob in one pass.
