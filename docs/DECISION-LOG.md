@@ -192,7 +192,7 @@ Goal counts treatments actually due today; done counts those actually logged tod
 
 **UX-06 — Navigation and titles.**
 Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STATS:" + date, "Setup for:" + date, "Settings" (no date).
-*Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.*
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.* — *amended Aug 23, 2026 (v3.42.0, see `UX-21`): nav order changed to Today · Log It! · Stats · My Plan · Settings — Today and Log It! swapped, as Today becomes the app's landing/engagement page.*
 
 **UX-07 — Tile order on Log It!**
 Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins.
@@ -312,6 +312,20 @@ matches the pattern most existing settings already use. The header-icon-only ent
 nav bar's 5 tabs unchanged and treats Profile as a personal-settings destination rather than a
 core navigation destination.
 *Status:* **Locked** · Aug 23, 2026 · v3.41.0
+
+**UX-21 — Today becomes the app's landing/initial-engagement page; nav order swapped.**
+Today is promoted from a secondary daily-review tab to the app's primary landing page. Three
+changes, all explicit calls by Rob: (1) the Voice Tracker tile (from Log It!, `UX-19`) is copied
+onto Today as the first thing under the page title; (2) a new "Tracked So Far" section — one card,
+one detailed row per currently-enabled tracker (goal/consumed/remaining, category-color-coded) —
+is inserted between the Voice Tracker tile and the existing "To Do Today" section, which in turn
+still sits above "Today's Log"; (3) the bottom nav order swaps Today and Log It!, so Today is now
+the leftmost (and by convention, default-most-prominent) tab. Amends `UX-06`'s nav order.
+*Why:* recorded so the reasoning survives past this session — Today consolidating a day's full
+picture (voice-entry preview, detailed per-tracker progress, what's still due, and the raw log) in
+one place is what makes it a genuine landing page rather than just a log viewer; swapping its nav
+position reinforces that it's the primary destination now, not a secondary one.
+*Status:* **Locked** · Aug 23, 2026 · v3.42.0 — amends `UX-06`
 
 ---
 
@@ -442,4 +456,4 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 23, 2026 (UX-21 added for v3.42.0 — Today promoted to landing page, Tracked So Far section, nav order swap, amends UX-06; earlier: UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*

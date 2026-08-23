@@ -20,6 +20,39 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.42.0] — 2026-08-23
+
+Today becomes the app's true landing/engagement page, per Rob's direction.
+
+- **Voice Tracker tile copied onto Today**, as the first thing under "Today's Summary for:" — same
+  visual design and non-functional/decorative state as the Log It! copy (both now render the same
+  `VoiceTrackerTile` component).
+- **New "Tracked So Far" section**, directly below the Voice Tracker tile: one bordered card ("one
+  bubble") listing every currently-enabled tracker as its own row — icon chip and label on the
+  left, a detailed one-line summary on the right (e.g. "32oz of 64oz goal · 32oz to go"), each row's
+  left border tinted in that tracker's category color. Only trackers currently enabled on Log It!
+  appear (matches Log It!'s own on/off behavior). Section order on Today is now: Voice Tracker tile
+  → Tracked So Far → To Do Today → Today's Log.
+- **Refactor: extracted `computeTrackerStats(data, todayKey)`** from Log It!'s tile component (`MO`)
+  into a standalone shared function, so both Log It!'s tiles and Tracked So Far compute every
+  tracker's goal/consumed/remaining numbers from one source instead of two independently-maintained
+  copies of the same logic — avoids the drift/duplication bug class this codebase has hit before.
+  `MO`'s own rendering is unchanged; it now just destructures from the shared function's return.
+- **Bottom nav order swapped**: Today now sits left of Log It! (was Log It!, Today, Stats, My Plan,
+  Settings; now Today, Log It!, Stats, My Plan, Settings).
+- `tools/harness.js`: new checks confirm the Voice Tracker tile renders on Today, "Tracked So Far"
+  appears before "To Do Today" (and both still precede "Today's Log"), all 8 tracker rows render
+  with correct detail text and color-coded borders, and the nav bar's first two buttons are now
+  Today then Log It!.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). All new harness checks pass, including
+an exact 8-row count for the default seed data and the section-ordering assertion. Same one
+pre-existing, unrelated stale harness check still fails, untouched. **Not yet verified on a real
+device** — jsdom has no layout engine, so Tracked So Far's row spacing/wrapping on a real phone
+screen, and how the page reads as a whole with the reordered sections, need Rob's eyes.
+
 ## [3.41.1] — 2026-08-23
 
 Bugfix from Rob's real-device test of v3.41.0.

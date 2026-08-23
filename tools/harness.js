@@ -1128,6 +1128,39 @@ const STEPS = [
     check("wt-topbanner-profile-photo stays within its box (max-width/max-height:100%)", photoRule ? photoRule[0].includes("max-width:100%") && photoRule[0].includes("max-height:100%") : null, "true");
   },
   () => check("no runtime errors after v3.41.1 pass", errors.length, 0),
+
+  // ── v3.42.0: Today becomes the landing page — Voice Tracker tile, Tracked So Far, nav swap ──
+  () => check("nav to Today (v3.42.0 checks)", nav("Today")),
+  () => {
+    const tile = window.document.querySelector(".wt-voice-tile");
+    check("Voice Tracker tile present on Today page", !!tile);
+  },
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
+    check("'Tracked So Far' section present", labels.includes("Tracked So Far"));
+    check("'To Do Today' section still present", labels.includes("To Do Today"));
+    check("'Today's log' section still present", labels.some((l) => l.toLowerCase() === "today's log"));
+    const idxTracked = labels.indexOf("Tracked So Far");
+    const idxToDo = labels.indexOf("To Do Today");
+    check("'Tracked So Far' appears before 'To Do Today'", idxTracked >= 0 && idxToDo >= 0 && idxTracked < idxToDo, "true");
+  },
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
+    check("Tracked So Far has one row per visible tracker (8 in default seed)", rows.length, 8);
+    const waterRow = rows.find((r) => r.textContent.includes("Water"));
+    check("Tracked So Far Water row shows goal + consumed detail", waterRow ? /oz of \d+oz goal/.test(waterRow.textContent) : null, "true");
+  },
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rule = cssText.match(/\.wt-tracked-row \{[^}]*\}/);
+    check("wt-tracked-row has a category-colored left border (border-left)", rule ? rule[0].includes("border-left:3px solid") : null, "true");
+  },
+  () => check("no runtime errors after v3.42.0 Today-page pass", errors.length, 0),
+  () => {
+    const navBtns = [...window.document.querySelectorAll(".wt-nav-btn")].map((b) => b.textContent.trim());
+    check("nav order is now Today, Log It!, Stats, ... (swapped)", navBtns[0].includes("Today") && navBtns[1].includes("Log It!"), "true");
+  },
+  () => check("no runtime errors after v3.42.0 nav-swap pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

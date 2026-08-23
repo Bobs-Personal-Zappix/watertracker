@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.41.1*
+*As of: August 23, 2026 · Deployed version: 3.42.0*
 
 ---
 
@@ -16,7 +16,8 @@
 **Tracked metrics (8 tiles, all with percentage progress rings)**
 Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Vitamins — in that order on the Log It! page.
 
-**Tabs:** Log It! · Today · Stats · My Plan · Settings
+**Tabs:** Today · Log It! · Stats · My Plan · Settings (Today and Log It! swapped v3.42.0 — Today is
+now the app's landing/engagement page)
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -121,6 +122,22 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.42.0)
+
+Today becomes the app's landing/engagement page, per Rob's direction:
+- Voice Tracker tile copied onto Today (same non-functional component as Log It!'s copy), first
+  thing under the page title.
+- New **"Tracked So Far"** section: one card, one row per currently-enabled tracker, each showing a
+  detailed goal/consumed/remaining line, left-border tinted in that tracker's category color.
+  Extracted `computeTrackerStats()` as a shared function so Log It! and Tracked So Far compute from
+  one source instead of duplicated logic.
+- Today's section order is now: Voice Tracker tile → Tracked So Far → To Do Today → Today's Log.
+- **Bottom nav order swapped**: Today · Log It! · Stats · My Plan · Settings (was Log It! · Today ·
+  …).
+- Full 5-step verification pipeline run and passed, including new harness coverage for the tile,
+  section ordering, all 8 tracker rows, and the nav swap. **Not yet verified on a real device** —
+  jsdom can't confirm row spacing/wrapping or how the page reads as a whole on a real screen.
 
 ## What shipped Aug 23, 2026 (v3.41.1)
 
