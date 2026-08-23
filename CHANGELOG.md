@@ -20,6 +20,34 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.40.4] — 2026-08-23
+
+Follow-up polish from Rob's review of v3.40.3.
+
+- **Voice Tracker badge nudged left again.** `margin-right` increased 20px → 26px — still fine-tuning
+  toward alignment with the progress rings below.
+- **"Use Your Presets" and "Manually Log a Meal" buttons restyled: transparent fill, colored
+  outline, tan text.** Both previously had solid-color fills (gold gradient / green). Now
+  `background:transparent` with a 2px border in their respective color (`#F9A825` gold for presets,
+  `var(--protein)` green for manual — same colors, moved from fill to outline) and
+  `color:var(--ink-inverse)` (the standard warm-tan text used everywhere else on dark surfaces) for
+  both the label and icon.
+- **Header profile icon moved further left**, `margin-left:-14px` — since the AI icon's removal
+  (v3.40.0) left the header's centered icon+logo+title group asymmetric, pulling the profile icon
+  further from the logo restores better visual balance.
+- **RX & Vitamins tile: removed "today" from "0 of 2 taken today".** Now reads "0 of 2 taken" —
+  per Rob, the extra word was pushing the tile's format out of line with the other 7 tiles.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed the new badge
+margin, both buttons' transparent/outline/tan styling, the profile icon's margin, and the "taken"
+string (no "today") are all present in the shipped bundle; the old "taken today" string is fully
+gone. Same one pre-existing, unrelated stale harness check still fails, untouched. **Not yet
+verified on a real device** — jsdom has no layout engine, so the badge's alignment, the buttons'
+visual contrast against the page background, the header spacing, and the RX tile's resulting size
+match against the other 7 tiles all need Rob's eyes.
+
 ## [3.40.3] — 2026-08-22
 
 Quick follow-up from Rob's real-device check of v3.40.2.

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 22, 2026 · Deployed version: 3.40.3*
+*As of: August 23, 2026 · Deployed version: 3.40.4*
 
 ---
 
@@ -103,6 +103,22 @@ CHANGELOG.md
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 
 ---
+
+## What shipped Aug 23, 2026 (v3.40.4)
+
+Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
+- Voice Tracker badge nudged left again (`margin-right` 20px → 26px), still fine-tuning toward
+  alignment with the rings below.
+- "Use Your Presets"/"Manually Log a Meal" buttons restyled: transparent background, 2px colored
+  outline (gold / protein-green respectively, same colors moved from fill to outline), tan
+  (`var(--ink-inverse)`) text and icon color.
+- Header profile icon moved further left (`margin-left:-14px`) to rebalance the header now that the
+  AI icon is gone.
+- RX & Vitamins tile: "0 of 2 taken today" → "0 of 2 taken" — the extra word was pushing that tile's
+  layout out of alignment with the other 7.
+- Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
+  yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
+  spacing, or the RX tile's resulting size match.
 
 ## What shipped Aug 22, 2026 (v3.40.3)
 
