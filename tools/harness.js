@@ -630,7 +630,8 @@ const STEPS = [
     const cssText = window.document.querySelector("style").textContent;
     const rule = cssText.match(/\.wt-trackers-grid \{[^}]*\}/);
     check("Log It! tile container is single-column flex (item 2)", rule ? rule[0].includes("display:flex") && rule[0].includes("flex-direction:column") : null, "true");
-    check("Log It! tile container uses var(--s3) gap", rule ? rule[0].includes("gap:var(--s3)") : null, "true");
+    // v3.46.0: gap bumped var(--s3)->var(--s6) to match the Voice-tile-to-Water spacing across all tiles.
+    check("Log It! tile container uses var(--s6) gap (bumped from s3 in v3.46.0)", rule ? rule[0].includes("gap:var(--s6)") : null, "true");
   },
   () => {
     // Item 4: ring fill color uses the category token (not the old shared mS/hS/gS/yS constants).
@@ -1283,6 +1284,126 @@ const STEPS = [
     check("editing the date input updates TestRx's nextDueOverride (the capability lost when To Do Today was removed)", r ? r.nextDueOverride : null, DAYS_AGO(-5));
   },
   () => check("no runtime errors after Self-Managed RX pass", errors.length, 0),
+
+  // ── v3.46.0: Log It! tile trims (Weight/Treatments/RX drop their redundant sub-text now that ──
+  // the hero number covers it), tighter tile height + bigger inter-tile gap, Today's Log row ──
+  // restack (stats under description, actions grouped right), Stats "Subs" removed, new ──
+  // "Remaining RX/Treatments" section on Today ──
+  () => check("nav to Log It! (v3.46.0 tile-trim checks)", nav("Log It!")),
+  () => {
+    // Seed has no treatments and no low-supply/near-expiry alert yet, so no tile should show a
+    // wt-tile-togo row at all right now — Weight's was removed outright, Treatments/RX's only
+    // reappear conditionally when there's an actual inventory alert.
+    const togoRows = [...window.document.querySelectorAll(".wt-tile-togo")];
+    check("no wt-tile-togo rows present with no treatments/alerts yet (Weight/Treatments/RX all trimmed)", togoRows.length, 0);
+  },
+  () => {
+    const weightTile = tiles().find((t) => t.startsWith("Weight"));
+    check("Weight tile no longer repeats the goal-difference text a second time", weightTile ? !/to golbs|lbs to go.*to go/.test(weightTile) : null, "true");
+    const rxTile = tiles().find((t) => t.startsWith("RX & Vitamins"));
+    check("RX & Vitamins tile no longer shows the old 'of N taken' sub-text", rxTile ? !/of \d+ taken/.test(rxTile) : null, "true");
+  },
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const colRule = cssText.match(/\.wt-tracker-col \{[^}]*\}/);
+    check("wt-tracker-col vertical padding trimmed (was uniform var(--s4))", colRule ? colRule[0].includes("padding:10px var(--s4)") : null, "true");
+  },
+  () => check("no runtime errors after v3.46.0 tile-trim pass", errors.length, 0),
+
+  // ── Today's Log row restack ──
+  () => check("nav to Today (log row restack checks)", nav("Today")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const stackRule = cssText.match(/\.wt-log-desc-stack \{[^}]*\}/);
+    check("wt-log-desc-stack rule present (stats now stack under description)", stackRule ? stackRule[0].includes("flex-direction:column") : null, "true");
+    const actionsRule = cssText.match(/\.wt-log-actions \{[^}]*\}/);
+    check("wt-log-actions rule present (edit/delete grouped tight, pushed right)", actionsRule ? actionsRule[0].includes("margin-left:auto") && actionsRule[0].includes("gap:2px") : null, "true");
+  },
+  () => {
+    const row = window.document.querySelector(".wt-log-row");
+    const stack = row ? row.querySelector(".wt-log-desc-stack") : null;
+    check("a Today's Log row has the new desc-stack wrapper", !!stack);
+    const label = stack ? stack.querySelector(".wt-log-label") : null;
+    const metrics = stack ? stack.querySelector(".wt-log-metrics") : null;
+    check("label sits inside the stack", !!label);
+    check("metrics sit inside the same stack, under the label", !!metrics && !!label && label.compareDocumentPosition(metrics) === window.Node.DOCUMENT_POSITION_FOLLOWING, "true");
+    const actions = row ? row.querySelector(".wt-log-actions") : null;
+    check("row has a single grouped actions wrapper", !!actions);
+    check("actions wrapper holds both edit and delete buttons", actions ? actions.querySelectorAll(".wt-icon-btn").length : 0, 2);
+  },
+  () => check("no runtime errors after log-row-restack pass", errors.length, 0),
+
+  // ── Stats "Subs" removed ──
+  () => check("nav to Stats (Subs-removal check)", nav("Stats")),
+  () => {
+    const segBtns = [...window.document.querySelectorAll(".wt-segment button")].map((b) => b.textContent.trim());
+    check("'Subs' button no longer present in Stats chart picker", segBtns.includes("Subs"), false);
+  },
+  () => check("no runtime errors after Subs-removal pass", errors.length, 0),
+
+  // ── New "Remaining RX/Treatments" Today section, fed from My Plan's system-of-record fields ──
+  () => check("nav to My Plan (add a fully-detailed RX + treatment)", nav("My Plan")),
+  () => check("open RX sheet (fill full detail)", clickByText("RX", "button")),
+  () => check("open Add-prescription form", clickByText("Add prescription", "button")),
+  () => check("fill detailed RX name", setInput("e.g. Metformin", "DetailedRx")),
+  () => check("fill DetailedRx pharmacy", setInput("e.g. CVS on Main St", "Corner Pharmacy")),
+  () => check("toggle inventory tracking on for DetailedRx", clickByAria("Toggle inventory tracking")),
+  () => check("set DetailedRx qty low enough to trigger a low-supply alert", setInput("e.g. 30", "2")),
+  () => check("set DetailedRx refills remaining", setInput("e.g. 3", "5")),
+  () => {
+    // Scoped to .wt-modal — the RX PlanSheet underneath may still have its own due-date inputs
+    // mounted (e.g. TestRx's), which would otherwise be matched first by a bare type="date" query.
+    const el = window.document.querySelector('.wt-modal input[type="date"]');
+    check("found DetailedRx expiration date input", !!el);
+    if (el) {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, DAYS_AGO(-90));
+      el.dispatchEvent(new window.Event("input", { bubbles: true }));
+    }
+  },
+  () => check("save DetailedRx", clickByText("Save", "button")),
+  () => {
+    const r = supp("DetailedRx");
+    check("DetailedRx stored with pharmacy", r ? r.pharmacy : null, "Corner Pharmacy");
+    check("DetailedRx stored with refillsRemaining", r ? r.refillsRemaining : null, 5);
+    check("DetailedRx stored with trackInventory on", r ? r.trackInventory : null, "true");
+  },
+  () => check("close RX sheet", clickByAria("Close")),
+  () => check("open Self-Managed Treatments sheet", clickByText("Self-Managed Treatments", "button")),
+  () => check("open Add-a-treatment form", clickByText("Add a treatment", "button")),
+  () => check("fill detailed treatment name", setInput("e.g. B12 Shot, IV Drip, Allergy Shot", "DetailedTreatment")),
+  () => check("fill DetailedTreatment provider", setInput("e.g. Austin Drip Lounge", "Wellness Clinic")),
+  () => check("toggle inventory tracking on for DetailedTreatment", clickByAria("Toggle inventory tracking")),
+  () => check("set DetailedTreatment qty remaining", setInput("e.g. 12", "4")),
+  () => check("save DetailedTreatment", clickByText("Save", "button")),
+  () => {
+    const tr = stored().settings.treatments.find((t) => t.name === "DetailedTreatment");
+    check("DetailedTreatment stored with provider", tr ? tr.provider : null, "Wellness Clinic");
+    check("DetailedTreatment stored with trackInventory on", tr ? tr.trackInventory : null, "true");
+  },
+  () => check("close Self-Managed Treatments sheet", clickByAria("Close")),
+  () => check("no runtime errors after detailed-item setup pass", errors.length, 0),
+  () => check("nav to Today (Remaining RX/Treatments section check)", nav("Today")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
+    check("'Remaining RX/Treatments' section present, between Today at a Glance and Today's log", labels.includes("Remaining RX/Treatments"), "true");
+    const idxGlance = labels.indexOf("Today at a Glance"), idxRemaining = labels.indexOf("Remaining RX/Treatments"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
+    check("section ordering is Today at a Glance -> Remaining RX/Treatments -> Today's log", idxGlance >= 0 && idxRemaining > idxGlance && idxLog > idxRemaining, "true");
+  },
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-card")];
+    const rxCard = cards.find((c) => c.textContent.includes("DetailedRx"));
+    check("DetailedRx card present in Remaining RX/Treatments", !!rxCard);
+    check("DetailedRx card shows where it was filled", rxCard ? rxCard.textContent.includes("Filled at Corner Pharmacy") : null, "true");
+    check("DetailedRx card shows qty remaining", rxCard ? rxCard.textContent.includes("2 remaining") : null, "true");
+    check("DetailedRx card shows refills remaining", rxCard ? rxCard.textContent.includes("5 refills left") : null, "true");
+    check("DetailedRx card shows a renew-by date", rxCard ? /renew by/.test(rxCard.textContent) : null, "true");
+    check("DetailedRx card shows the low-supply alert (PROD-04)", rxCard ? /left$/.test(rxCard.textContent.trim()) || /2 left/.test(rxCard.textContent) : null, "true");
+    const trCard = cards.find((c) => c.textContent.includes("DetailedTreatment"));
+    check("DetailedTreatment card present in Remaining RX/Treatments", !!trCard);
+    check("DetailedTreatment card shows where it's from", trCard ? trCard.textContent.includes("From Wellness Clinic") : null, "true");
+    check("DetailedTreatment card shows qty remaining", trCard ? trCard.textContent.includes("4 remaining") : null, "true");
+  },
+  () => check("no runtime errors after Remaining RX/Treatments pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

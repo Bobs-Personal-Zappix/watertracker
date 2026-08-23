@@ -602,7 +602,7 @@ import {
             o = document.createElement("a");
         o.href = a, o.download = e, document.body.appendChild(o), o.click(), document.body.removeChild(o), URL.revokeObjectURL(a)
     }
-    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; margin-left:-14px; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s3); margin:8px 0 6px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }\n.wt-log-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:9px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-voice-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-voice-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; background:#564216; color:#FFC428; display:flex; align-items:center; justify-content:center; }\n.wt-voice-tile-icon svg { width:20px; height:20px; }\n.wt-voice-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-voice-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-voice-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-voice-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.wt-voice-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.wt-voice-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.wt-voice-tile-badge svg { width:22px; height:22px; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
+    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; margin-left:-14px; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s6); margin:8px 0 6px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:10px var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }\n.wt-log-row { display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:9px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; margin-top:2px; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; padding-top:2px; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-desc-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }\n.wt-log-actions { display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-voice-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-voice-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; background:#564216; color:#FFC428; display:flex; align-items:center; justify-content:center; }\n.wt-voice-tile-icon svg { width:20px; height:20px; }\n.wt-voice-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-voice-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-voice-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-voice-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.wt-voice-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.wt-voice-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.wt-voice-tile-badge svg { width:22px; height:22px; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
 
     function lO({
         pct: e,
@@ -1784,9 +1784,10 @@ import {
         onSave: r
     }) {
         let isVitamin = "vitamin" === catProp,
-            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)("");
+            isRx = "rx" === catProp,
+            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [pharm, setPharm] = (0, React.useState)(""), [refills, setRefills] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""))
+                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setPharm(t && t.pharmacy ? t.pharmacy : ""), setRefills(t && null != t.refillsRemaining ? String(t.refillsRemaining) : ""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0,
             modalTitle = t ? (isVitamin ? "Edit vitamin or supplement" : "rx" === catProp ? "Edit prescription" : "Edit item") : isVitamin ? "Add vitamin or supplement" : "rx" === catProp ? "Add prescription" : "Add supplement or medicine";
@@ -1811,6 +1812,13 @@ import {
             placeholder: isVitamin ? "e.g. Vitamin D, Fish Oil" : "e.g. Metformin",
             value: a,
             onChange: e => o(e.target.value)
+        })), isRx && React.default.createElement("label", {
+            className: "wt-field"
+        }, "Pharmacy / where filled (optional)", React.default.createElement("input", {
+            type: "text",
+            placeholder: "e.g. CVS on Main St",
+            value: pharm,
+            onChange: e => setPharm(e.target.value)
         })), !isVitamin && React.default.createElement("label", {
             className: "wt-field"
         }, "Take every (days)", React.default.createElement("input", {
@@ -1850,6 +1858,15 @@ import {
             placeholder: "e.g. 30",
             value: c,
             onChange: e => f(e.target.value)
+        })), u && isRx && React.default.createElement("label", {
+            className: "wt-field"
+        }, "Refills remaining", React.default.createElement("input", {
+            type: "number",
+            inputMode: "numeric",
+            min: "0",
+            placeholder: "e.g. 3",
+            value: refills,
+            onChange: e => setRefills(e.target.value)
         })), u && React.default.createElement("label", {
             className: "wt-field",
             style: {
@@ -1867,7 +1884,7 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null)
+            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null, pharm.trim() || null, isRx && refills.length > 0 ? Math.max(0, Math.round(Number(refills) || 0)) : null)
         }, "Save")))
     }
 
@@ -1877,9 +1894,9 @@ import {
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)("");
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [prov, setProv] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""))
+                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setProv(t && t.provider ? t.provider : ""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0;
         return React.default.createElement("div", {
@@ -1903,6 +1920,13 @@ import {
             placeholder: "e.g. B12 Shot, IV Drip, Allergy Shot",
             value: a,
             onChange: e => o(e.target.value)
+        })), React.default.createElement("label", {
+            className: "wt-field"
+        }, "Ordered from / provider (optional)", React.default.createElement("input", {
+            type: "text",
+            placeholder: "e.g. Austin Drip Lounge",
+            value: prov,
+            onChange: e => setProv(e.target.value)
         })), React.default.createElement("label", {
             className: "wt-field"
         }, "Repeats every (optional)", React.default.createElement("input", {
@@ -1958,7 +1982,7 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null)
+            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null, prov.trim() || null)
         }, "Save")))
     }
 
@@ -2543,8 +2567,6 @@ import {
         }, "Weight")), React.default.createElement("div", {
             className: "wt-tile-goal"
         }, $ <= 0 ? "Set a goal" : `Goal ${$}lbs`), React.default.createElement("div", {
-            className: "wt-tile-togo"
-        }, W), React.default.createElement("div", {
             className: "wt-tile-logged"
         }, B ? T.value : "—", React.default.createElement("span", {
             className: "unit"
@@ -2627,9 +2649,9 @@ import {
             className: "wt-tile-title"
         }, "Treatments")), React.default.createElement("div", {
             className: "wt-tile-goal"
-        }, 0 === z.length ? "Add in Setup" : G > 0 ? `Goal ${G} today` : "Nothing planned"), React.default.createElement("div", {
+        }, 0 === z.length ? "Add in Setup" : G > 0 ? `Goal ${G} today` : "Nothing planned"), Z && React.default.createElement("div", {
             className: "wt-tile-togo"
-        }, Z ? `${L} · ${Z}` : L), React.default.createElement("div", {
+        }, Z), React.default.createElement("div", {
             className: "wt-tile-logged"
         }, X, " Done")), React.default.createElement("div", {
             className: "wt-tile-mid"
@@ -2667,9 +2689,9 @@ import {
             className: "wt-tile-title"
         }, "RX & Vitamins")), React.default.createElement("div", {
             className: "wt-tile-goal"
-        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), React.default.createElement("div", {
+        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), Q && React.default.createElement("div", {
             className: "wt-tile-togo"
-        }, Q ? `${_} · ${Q}` : _), React.default.createElement("div", {
+        }, Q), React.default.createElement("div", {
             className: "wt-tile-logged"
         }, M.size, " Taken")), React.default.createElement("div", {
             className: "wt-tile-mid"
@@ -2809,6 +2831,59 @@ import {
         }, e.label), React.default.createElement("span", {
             className: "wt-tracked-row-detail"
         }, e.detail)))))
+    }
+
+    function RemainingRxTreatments({
+        data: e
+    }) {
+        let treatments = e.settings.treatments.filter(e => e.trackInventory),
+            rx = e.settings.supplements.filter(e => "rx" === e.category && e.trackInventory),
+            hasAny = treatments.length > 0 || rx.length > 0;
+
+        function renderItem(item, kind) {
+            let alert = QS(item),
+                expiry = item.expirationDate ? YS(MS(item.expirationDate)) : null,
+                source = "treatment" === kind ? item.provider : item.pharmacy;
+            return React.default.createElement("div", {
+                key: item.id,
+                className: "wt-card"
+            }, React.default.createElement("div", {
+                className: "wt-card-title"
+            }, item.name), source && React.default.createElement("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: wD,
+                    marginBottom: 4
+                }
+            }, "treatment" === kind ? `From ${source}` : `Filled at ${source}`), React.default.createElement("div", {
+                style: {
+                    fontSize: 13,
+                    color: wD,
+                    marginBottom: 4
+                }
+            }, `${item.qtyRemaining||0} remaining`, expiry ? ` · ${"treatment" === kind ? "expires" : "renew by"} ${expiry}` : ""), "rx" === kind && null != item.refillsRemaining && React.default.createElement("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: wD,
+                    marginBottom: 4
+                }
+            }, `${item.refillsRemaining} refill${1===item.refillsRemaining?"":"s"} left`), alert && React.default.createElement("div", {
+                style: {
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: bS
+                }
+            }, alert))
+        }
+        return React.default.createElement("div", null, React.default.createElement("div", {
+            className: "wt-section-label wt-section-label-lg"
+        }, "Remaining RX/Treatments"), !hasAny ? React.default.createElement("p", {
+            className: "wt-empty-note"
+        }, "No tracked treatments or prescriptions yet. Turn on \"Track inventory / subscription\" when adding one on My Plan to see it here.") : React.default.createElement(React.default.Fragment, null, treatments.length > 0 && React.default.createElement("div", {
+            className: "wt-section-label wt-section-label-strong"
+        }, "Treatments"), treatments.map(e => renderItem(e, "treatment")), rx.length > 0 && React.default.createElement("div", {
+            className: "wt-section-label wt-section-label-strong"
+        }, "Prescriptions"), rx.map(e => renderItem(e, "rx"))))
     }
 
     function _O({
@@ -3111,7 +3186,9 @@ import {
             className: "wt-log-icon"
         }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), React.default.createElement("span", {
+        }, e.time), React.default.createElement("div", {
+            className: "wt-log-desc-stack"
+        }, React.default.createElement("span", {
             className: "wt-log-label"
         }, "Sleep"), React.default.createElement("span", {
             className: "wt-log-metrics"
@@ -3121,12 +3198,14 @@ import {
                 fontWeight: 700,
                 fontSize: 12
             }
-        }, tO(e.lightsOutMinutes), " → ", tO(e.wokeUpMinutes), " · ", e.hours, "hrs"))) : jS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Weight, {
+        }, tO(e.lightsOutMinutes), " → ", tO(e.wokeUpMinutes), " · ", e.hours, "hrs")))) : jS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Weight, {
             size: 13,
             className: "wt-log-icon"
         }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), React.default.createElement("span", {
+        }, e.time), React.default.createElement("div", {
+            className: "wt-log-desc-stack"
+        }, React.default.createElement("span", {
             className: "wt-log-label"
         }, "Weight"), React.default.createElement("span", {
             className: "wt-log-metrics"
@@ -3135,7 +3214,7 @@ import {
                 color: yS,
                 fontWeight: 700
             }
-        }, e.value, "lbs"))) : NS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Pill, {
+        }, e.value, "lbs")))) : NS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Pill, {
             size: 13,
             className: "wt-log-icon"
         }), React.default.createElement("span", {
@@ -3160,11 +3239,10 @@ import {
             className: "wt-log-icon"
         }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), React.default.createElement("span", {
-            className: "wt-log-label",
-            style: {
-                flex: 2
-            }
+        }, e.time), React.default.createElement("div", {
+            className: "wt-log-desc-stack"
+        }, React.default.createElement("span", {
+            className: "wt-log-label"
         }, e.exerciseType, e.description ? ` — ${e.description}` : ""), React.default.createElement("span", {
             className: "wt-log-metrics"
         }, React.default.createElement("span", {
@@ -3172,12 +3250,14 @@ import {
                 color: gS,
                 fontWeight: 700
             }
-        }, e.minutes, "min"))) : React.default.createElement(React.default.Fragment, null, React.default.createElement(Clock, {
+        }, e.minutes, "min")))) : React.default.createElement(React.default.Fragment, null, React.default.createElement(Clock, {
             size: 13,
             className: "wt-log-icon"
         }), React.default.createElement("span", {
             className: "wt-log-time"
-        }, e.time), React.default.createElement("span", {
+        }, e.time), React.default.createElement("div", {
+            className: "wt-log-desc-stack"
+        }, React.default.createElement("span", {
             className: "wt-log-label"
         }, e.label), React.default.createElement("span", {
             className: "wt-log-metrics"
@@ -3206,7 +3286,9 @@ import {
             style: {
                 color: vS
             }
-        }, " · "), e.amount, e.unit)))), t && React.default.createElement("button", {
+        }, " · "), e.amount, e.unit))))), React.default.createElement("div", {
+            className: "wt-log-actions"
+        }, t && React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: () => n(e),
             "aria-label": "Edit entry"
@@ -3218,7 +3300,7 @@ import {
             "aria-label": "Delete entry"
         }, React.default.createElement(Trash2, {
             size: 14
-        })))
+        }))))
     }
 
     function LO({
@@ -3524,6 +3606,8 @@ import {
         return React.default.createElement("div", null, React.default.createElement(VoiceTrackerTile, null), React.default.createElement(TrackedSoFar, {
             data: e,
             todayKey: t
+        }), React.default.createElement(RemainingRxTreatments, {
+            data: e
         }), React.default.createElement("div", {
             style: {
                 display: "flex",
@@ -3585,75 +3669,6 @@ import {
 
     function BO(e) {
         return `${e%12==0?12:e%12}${e>=12?"p":"a"}`
-    }
-
-    function $O({
-        data: e,
-        onBack: t
-    }) {
-        let n = e.settings.supplements.filter(e => e.trackInventory),
-            r = e.settings.treatments.filter(e => e.trackInventory);
-
-        function a(t, n) {
-            let r = function(t, n) {
-                    let r = [];
-                    return Object.keys(e.logs).sort().reverse().forEach(a => {
-                        (e.logs[a] || []).forEach(e => {
-                            e.type === n && (e.items || []).some(e => ("string" == typeof e ? e : e.name) === t) && r.push(a)
-                        })
-                    }), r
-                }(t.name, n),
-                a = QS(t),
-                o = t.expirationDate ? YS(MS(t.expirationDate)) : null;
-            return React.default.createElement("div", {
-                key: t.id,
-                className: "wt-card"
-            }, React.default.createElement("div", {
-                className: "wt-card-title"
-            }, t.name), React.default.createElement("div", {
-                style: {
-                    fontSize: 13,
-                    color: wD,
-                    marginBottom: 8
-                }
-            }, `${t.qtyRemaining||0} remaining`, o ? ` · expires ${o}` : ""), a && React.default.createElement("div", {
-                style: {
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    color: bS,
-                    marginBottom: 8
-                }
-            }, a), React.default.createElement("div", {
-                style: {
-                    fontSize: 12,
-                    color: wD,
-                    marginBottom: 4,
-                    fontWeight: 600
-                }
-            }, `Used ${r.length} time${1===r.length?"":"s"}`), r.length > 0 && React.default.createElement("div", {
-                style: {
-                    fontSize: 12,
-                    color: wI,
-                    lineHeight: 1.6
-                }
-            }, r.slice(0, 10).map(e => YS(MS(e))).join(", ") + (r.length > 10 ? ` … and ${r.length-10} more` : "")))
-        }
-        return React.default.createElement("div", null, React.default.createElement("div", {
-            className: "wt-segment",
-            style: {
-                marginBottom: 14
-            }
-        }, React.default.createElement("button", {
-            onClick: t
-        }, "← Back to charts")), React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-lg"
-        }, "Subscriptions"), 0 === n.length && 0 === r.length ? React.default.createElement("p", {
-            className: "wt-empty-note"
-        }, "No tracked subscriptions yet. Turn on “Track inventory / subscription” for a supplement or treatment in Setup to see it here.") : React.default.createElement(React.default.Fragment, null, n.length > 0 && React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-strong"
-        }, "RX & Vitamins"), n.map(e => a(e, "supplement")), r.length > 0 && React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-strong"
-        }, "Treatments"), r.map(e => a(e, "treatment"))))
     }
 
     function FO({
@@ -3849,10 +3864,7 @@ import {
             }],
             O = "protein" === n ? "#27AE60" : "calories" === n ? "#E8823A" : "#2F80ED",
             P = u ? 10 * Math.ceil(Math.max(100, ...h.flatMap(e => [e.Water || 0, e.Protein || 0, e.Calories || 0])) / 10) : void 0;
-        return "subscriptions" === n ? React.default.createElement($O, {
-            data: e,
-            onBack: () => d("water")
-        }) : React.default.createElement("div", null, React.default.createElement("div", {
+        return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-segment",
             style: {
                 marginBottom: 8
@@ -3887,10 +3899,7 @@ import {
         }), "Cal"), React.default.createElement("button", {
             className: u ? "active" : "",
             onClick: () => d("combined")
-        }, "All 3"), React.default.createElement("button", {
-            className: "",
-            onClick: () => d("subscriptions")
-        }, "Subs")), React.default.createElement("div", {
+        }, "All 3")), React.default.createElement("div", {
             className: "wt-segment"
         }, !u && React.default.createElement("button", {
             className: "day" === a ? "active" : "",
@@ -5116,22 +5125,22 @@ import {
             category: "vitamin",
             onClose: () => setVitOpen(!1),
             onSave: (e, t, n, r, a) => {
-                vitInitial ? b(vitInitial.id, e, t, n, r, a, "vitamin") : v(e, t, n, r, a, "vitamin"), setVitOpen(!1)
+                vitInitial ? b(vitInitial.id, e, t, n, r, a, "vitamin", null, null) : v(e, t, n, r, a, "vitamin", null, null), setVitOpen(!1)
             }
         }), React.default.createElement(CO, {
             open: I,
             initial: R,
             category: "rx",
             onClose: () => L(!1),
-            onSave: (e, t, n, r, a) => {
-                R ? b(R.id, e, t, n, r, a, "rx") : v(e, t, n, r, a, "rx"), L(!1)
+            onSave: (e, t, n, r, a, ph, rf) => {
+                R ? b(R.id, e, t, n, r, a, "rx", ph, rf) : v(e, t, n, r, a, "rx", ph, rf), L(!1)
             }
         }), React.default.createElement(jO, {
             open: $,
             initial: U,
             onClose: () => F(!1),
-            onSave: (e, t, n, r, a) => {
-                U ? E(U.id, e, t, n, r, a) : x(e, t, n, r, a), F(!1)
+            onSave: (e, t, n, r, a, prov) => {
+                U ? E(U.id, e, t, n, r, a, prov) : x(e, t, n, r, a, prov), F(!1)
             }
         }), React.default.createElement(TrackerSheet, {
             tracker: openTracker,
@@ -6390,7 +6399,7 @@ import {
             onAddPreset: addPreset,
             onEditPreset: editPreset,
             onDeletePreset: deletePreset,
-            onAddSupplement: function(e, t, r, a, o, c) {
+            onAddSupplement: function(e, t, r, a, o, c, ph, rf) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
                     name: e,
@@ -6400,7 +6409,9 @@ import {
                     nextDueOverride: null,
                     trackInventory: !!r,
                     qtyRemaining: a || 0,
-                    expirationDate: o || null
+                    expirationDate: o || null,
+                    pharmacy: ph || null,
+                    refillsRemaining: null == rf ? null : rf
                 };
                 n(e => ({
                     ...e,
@@ -6410,7 +6421,7 @@ import {
                     }
                 }))
             },
-            onEditSupplement: function(e, t, r, a, o, i, c) {
+            onEditSupplement: function(e, t, r, a, o, i, c, ph, rf) {
                 n(n => ({
                     ...n,
                     settings: {
@@ -6422,7 +6433,9 @@ import {
                             intervalDays: r || 1,
                             trackInventory: !!a,
                             qtyRemaining: o || 0,
-                            expirationDate: i || null
+                            expirationDate: i || null,
+                            pharmacy: ph || null,
+                            refillsRemaining: null == rf ? null : rf
                         } : n)
                     }
                 }))
@@ -6436,7 +6449,7 @@ import {
                     }
                 }))
             },
-            onAddTreatment: function(e, t, r, a, o) {
+            onAddTreatment: function(e, t, r, a, o, prov) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
                     name: e,
@@ -6445,7 +6458,8 @@ import {
                     nextDueOverride: null,
                     trackInventory: !!r,
                     qtyRemaining: a || 0,
-                    expirationDate: o || null
+                    expirationDate: o || null,
+                    provider: prov || null
                 };
                 n(e => ({
                     ...e,
@@ -6455,7 +6469,7 @@ import {
                     }
                 }))
             },
-            onEditTreatment: function(e, t, r, a, o, i) {
+            onEditTreatment: function(e, t, r, a, o, i, prov) {
                 n(n => ({
                     ...n,
                     settings: {
@@ -6466,7 +6480,8 @@ import {
                             intervalDays: r,
                             trackInventory: !!a,
                             qtyRemaining: o || 0,
-                            expirationDate: i || null
+                            expirationDate: i || null,
+                            provider: prov || null
                         } : n)
                     }
                 }))

@@ -20,6 +20,70 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.46.0] — 2026-08-23
+
+Log It! tile trim + spacing pass, Today's Log row restack, Stats "Subs" removed, and a new
+"Remaining RX/Treatments" section on Today — all per Rob's direction, closing the loop on the data
+flow he described: My Plan is the system of record (source, qty, expiry/renewal), Today shows
+current-day status, Log It! is where consumption actually happens and updates that status.
+
+- **Log It! tile trims.** Weight, Treatments, and RX & Vitamins each had a middle sub-text line
+  duplicating what the hero number (added in `UX-18`) already shows — Weight's goal-difference
+  text, Treatments' "All caught up"/due-count text, RX & Vitamins' "X of Y taken" text. All three
+  removed, so every one of the 8 tiles now shows exactly 2 left-side data points (Goal + Logged),
+  matching Water/Protein/Calories/Sleep/Exercise's existing shape.
+  - The low-supply/near-expiry inventory alert (`QS()`, `PROD-04` — locked, alerts must show on
+    tiles) that shared that same line on Treatments and RX & Vitamins was **not** dropped — it now
+    renders alone, conditionally, only when an item actually has one. Flagging this since it wasn't
+    explicitly called out in the request but removing it outright would have quietly violated a
+    locked decision.
+- **Tile height reduced, inter-tile gap increased.** `.wt-tracker-col` vertical padding cut from a
+  uniform 16px to 10px top/bottom (left/right unchanged) — the icon/gem bubble on the right
+  (`.wt-tile-right`) is untouched, only the surrounding whitespace shrank. `.wt-trackers-grid`'s
+  gap bumped from `var(--s3)` (12px) to `var(--s6)` (24px) so the spacing between every tile now
+  matches the extra buffer that already existed between the Voice Assistant tile and Water (that
+  gap came from Voice's own `margin-bottom` stacking with the grid's `gap` — now the grid's `gap`
+  alone matches it everywhere).
+- **Today's Log row restack.** Descriptions were getting cut off because stats sat inline to their
+  right, squeezed against the edit/delete buttons. Reworked the 4 metric-bearing entry types
+  (Sleep, Weight, Exercise, the combined Water/Protein/Calories entry) so stats now render on their
+  own line directly under the description (`wt-log-desc-stack`, a column flex wrapper), giving the
+  description the full row width. Edit and delete buttons are now grouped into one `wt-log-actions`
+  wrapper (2px gap between them, `margin-left:auto` to keep them pinned right) instead of sharing
+  the row's uniform 8px gap with everything else.
+- **Stats "Subs" option removed.** The "Subs" chart-picker button and the `$O` Subscriptions-panel
+  component it opened are deleted outright (not relocated) — its job (aggregate inventory/expiry
+  view) is now superseded by the new "Remaining RX/Treatments" section on Today, fed from richer
+  data entered at the source on My Plan. Confirmed with Rob before removing, since it was the
+  *only* way to reach that panel and `PROD-04` names it as one of three required alert surfaces;
+  the other two (Setup/My Plan, tiles) still carry the alert.
+- **New "Remaining RX/Treatments" section on Today**, between "Today at a Glance" and "Today's
+  Log": lists every trackInventory-on Treatment and RX item with its quantity remaining, expiry/
+  renewal date, and the `QS()` low-supply/near-expiry alert when present — plus two new
+  system-of-record fields entered on My Plan:
+  - Treatments gain an optional **"Ordered from / provider"** field (e.g. "Austin Drip Lounge"),
+    shown as "From {provider}".
+  - RX items (category `'rx'` only, not Vitamins & Supplements) gain optional **"Pharmacy / where
+    filled"** and **"Refills remaining"** fields, shown as "Filled at {pharmacy}" and "{n} refills
+    left".
+  - Both `jO` (treatment) and `CO` (supplement) add/edit modals updated with the new fields;
+    `onAddTreatment`/`onEditTreatment`/`onAddSupplement`/`onEditSupplement` all gained the new
+    parameters and store them alongside the existing qty/expiration fields already used for
+    inventory tracking. Vitamins never see the pharmacy/refills fields (not applicable — they're
+    daily items with no fill/refill concept).
+- `tools/harness.js`: added checks for the tile trims (no `wt-tile-togo` rows with no alerts
+  present, tile padding value), the log-row restack (stack wrapper present, metrics render after
+  the label inside it, actions grouped in one wrapper with both buttons), the Subs button's
+  removal, and an end-to-end check that adds a fully-detailed RX item and treatment on My Plan
+  (pharmacy, refills, provider, low qty, future expiration) and confirms all of it surfaces
+  correctly in the new Today section.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 434 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo` water-tile assertion, documented
+  in v3.44.0/v3.45.0 — unrelated, predates this session). **Not yet verified on a real device** —
+  jsdom can't confirm the tighter tile spacing, the restacked log rows, or how the new Remaining
+  RX/Treatments cards actually look.
+
 ## [3.45.0] — 2026-08-23
 
 My Plan's "Self-Managed" tile (which bundled all supplements/prescriptions and self-managed

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.45.0*
+*As of: August 23, 2026 · Deployed version: 3.46.0*
 
 ---
 
@@ -26,10 +26,12 @@ from v3.42.0 remain, only the nav order reverted)
 - Supplements and Treatments, both with recurring schedules. Next-due-date editing lives on My
   Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
   edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
-- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete)
+- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; RX items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on Today's "Remaining RX/Treatments" section.
 - Past-days log viewer (calendar icon on Today); past-day entries are deletable
 - "Enter Missed Items" backfill on any past day (Today → calendar icon → day → button)
-- Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines, Subscriptions panel
+- Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines. The
+  Subscriptions panel was removed in v3.46.0 — superseded by Today's "Remaining RX/Treatments"
+  section, which now covers the same ground with richer detail (provider/pharmacy, refills).
 - Health Summary → printable/PDF doctor summary, plus shareable snapshot links (90-day expiry, no account needed to open) — at the bottom of Stats
 - Push notifications: interval reminders (progress-aware, suppressed if recently logged), bedtime, supplement, treatment
 - In-app feedback form with push alerts to watchers
@@ -130,6 +132,28 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.46.0)
+
+Log It! tile trim/spacing pass, Today's Log row restack, Stats "Subs" removed, new "Remaining
+RX/Treatments" Today section — per Rob's described end-to-end flow (My Plan = system of record →
+Today = daily status → Log It! = the action that updates that status):
+- Weight/Treatments/RX & Vitamins tiles on Log It! each lost a redundant sub-text line now covered
+  by the hero number — every tile now shows exactly 2 left-side data points. The low-supply/
+  near-expiry alert on Treatments/RX & Vitamins tiles is preserved, just shown alone when present
+  (not dropped — `PROD-04` requires it stay visible on tiles).
+- Tile vertical padding trimmed (icon/gem bubble untouched), inter-tile gap increased to match the
+  Voice-Assistant-to-Water spacing across all 8 tiles.
+- Today's Log rows restacked: stats now render under the description instead of squeezing it
+  inline; edit/delete buttons grouped tightly and pinned right.
+- Stats' "Subs" chart option and the Subscriptions panel it opened removed entirely — superseded by
+  the new Today section below.
+- New "Remaining RX/Treatments" section on Today (between Today at a Glance and Today's Log): lists
+  every inventory-tracked Treatment/RX item with qty remaining, expiry/renewal, and its alert if
+  any. Treatments gained an optional provider field; RX items gained optional pharmacy and
+  refills-remaining fields — all entered on My Plan's add/edit forms.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
 
 ## What shipped Aug 23, 2026 (v3.45.0)
 

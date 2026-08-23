@@ -399,6 +399,52 @@ while giving setup-time management the category-specific detail each type actual
 this change — "My Treatments" isn't fully built out yet per Rob). Flagged in
 `docs/CURRENT-STATE.md`'s Known outstanding.
 
+**UX-25 — Log It! tile trim: every tile down to 2 left-side data points, tighter height, bigger gap.**
+Weight, Treatments, and RX & Vitamins each carried a middle sub-text line duplicating what the hero
+number (`UX-18`) already shows on the same tile — Weight's goal-difference, Treatments' "All caught
+up"/due-count, RX & Vitamins' "X of Y taken". All three removed, bringing every one of the 8 tiles
+to the same 2-data-point shape (Goal + Logged) that Water/Protein/Calories/Sleep/Exercise already
+had. The low-supply/near-expiry alert (`QS()`) that shared that line on Treatments/RX & Vitamins is
+kept, rendered alone and only when an item actually has one — dropping it outright would have
+quietly violated `PROD-04` (locked: alerts must show on tiles), so it was preserved even though the
+request didn't call it out by name.
+With the extra line gone, tile vertical padding was trimmed (icon/gem bubble on the right explicitly
+untouched) and the inter-tile gap increased to match the gap that already existed between the Voice
+Assistant tile and Water, applied uniformly across all 8 tiles.
+*Why:* two data points per tile everywhere is a simpler, more scannable Log It!, and the freed
+vertical space funds a bigger, more legible gap between tiles instead of sitting unused as padding.
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0 — amends `UX-02`/`UX-18`
+
+**UX-26 — Today's Log row restack: stats under description, actions grouped and pinned right.**
+Long descriptions were being truncated because per-entry stats sat inline to their right, squeezed
+against the edit/delete buttons sharing the row's uniform gap. Reworked the row so stats now render
+on their own line directly under the description (full row width for the description line), and
+edit/delete buttons are grouped into one tightly-spaced cluster pinned to the row's right edge.
+*Why:* recovers the horizontal space descriptions need without enlarging the row/tile itself.
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0
+
+**PROD-13 — My Plan is the system of record; Today shows status; Log It! is the action that updates
+it. Stats' Subscriptions panel retired in favor of a Today section fed by richer source data.**
+Rob's stated model for the full data flow: items are entered on My Plan (the point where you start
+taking something) — that's where source/provider, quantity, and expiry/renewal data should live.
+Today shows the current-day status of that data. Log It! is where consumption is actually logged,
+which updates what Today shows. Resolved on this basis:
+1. Treatments gain an optional "Ordered from / provider" field; RX items (not Vitamins &
+   Supplements — daily items have no fill/refill concept) gain optional "Pharmacy / where filled"
+   and "Refills remaining" fields. All entered on My Plan's existing add/edit forms.
+2. New Today section, "Remaining RX/Treatments", sits between "Today at a Glance" and "Today's
+   Log": one card per inventory-tracked Treatment/RX item showing quantity remaining, expiry/
+   renewal date, provider/pharmacy when set, and the low-supply/near-expiry alert when present.
+3. Stats' "Subs" chart-picker option and the Subscriptions panel it opened (aggregate view of the
+   same underlying data) are removed entirely, not relocated — its function is fully superseded by
+   point 2, and it was Stats' only entry point (confirmed with Rob before deleting, since `PROD-04`
+   names the Subscriptions view as one of three required alert-visibility surfaces; the other two,
+   Setup/My Plan and tiles, still carry it).
+*Why:* keeps each page's role distinct and avoids two views doing the same job with different
+levels of detail — a design smell now resolved by making My Plan authoritative and Today the single
+place to check status.
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0
+
 ---
 
 ## Legal & compliance
@@ -528,7 +574,10 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (UX-24 added for v3.45.0 — Self-Managed RX split on My Plan
+*Last updated: August 23, 2026 (PROD-13 added for v3.46.0 — My Plan as system of record / Today as
+status view / Log It! as the logging action, Subscriptions panel retired for a new "Remaining
+RX/Treatments" Today section; UX-25/UX-26 added for v3.46.0 — Log It! tile trim/spacing, Today's
+Log row restack; earlier: UX-24 added for v3.45.0 — Self-Managed RX split on My Plan
 (Vitamins & Supplements / RX), next-due-date editing restored for RX items; UX-23 added for v3.44.0
 — "To Do Today" removed, Today is now exec-summary-at-top/full-log-below; earlier: UX-22 added for
 v3.43.0 — "Tracked So Far" replaced with "Today at
