@@ -195,8 +195,8 @@ Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STAT
 *Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.* — *amended Aug 23, 2026 (v3.42.0, see `UX-21`): nav order briefly changed to Today · Log It! · Stats · My Plan · Settings, then reverted the same day (v3.42.1) back to the original Log It! · Today · Stats · My Plan · Settings order per Rob after real-device testing.*
 
 **UX-07 — Tile order on Log It!**
-Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Vitamins.
-*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).*
+Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).* — *amended Aug 23, 2026: renamed back to "RX & Supplements" throughout, explicit call by Rob, v3.47.0.*
 
 **UX-08 — Health Summary and doctor share live at the bottom of Stats.**
 Moved off Settings.
@@ -413,7 +413,12 @@ untouched) and the inter-tile gap increased to match the gap that already existe
 Assistant tile and Water, applied uniformly across all 8 tiles.
 *Why:* two data points per tile everywhere is a simpler, more scannable Log It!, and the freed
 vertical space funds a bigger, more legible gap between tiles instead of sitting unused as padding.
-*Status:* **Locked** · Aug 23, 2026 · v3.46.0 — amends `UX-02`/`UX-18`
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0 — amends `UX-02`/`UX-18` — *amended Aug 23, 2026,
+v3.47.0: the bigger inter-tile gap was applied to the CSS rule governing gaps within each of Log
+It!'s two tile-grid containers, but the seam between the two containers themselves (Sleep→Weight)
+kept relying on their separate margin values, landing at 14px instead of 24px — missed in the first
+pass, fixed with a `.wt-trackers-grid + .wt-trackers-grid` override. The same fix pattern was
+applied to the RX & Supplements→"Use Your Presets" seam, which had the same gap shortfall.*
 
 **UX-26 — Today's Log row restack: stats under description, actions grouped and pinned right.**
 Long descriptions were being truncated because per-entry stats sat inline to their right, squeezed
@@ -421,7 +426,9 @@ against the edit/delete buttons sharing the row's uniform gap. Reworked the row 
 on their own line directly under the description (full row width for the description line), and
 edit/delete buttons are grouped into one tightly-spaced cluster pinned to the row's right edge.
 *Why:* recovers the horizontal space descriptions need without enlarging the row/tile itself.
-*Status:* **Locked** · Aug 23, 2026 · v3.46.0
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0 — *amended Aug 23, 2026, v3.47.0: the restack left
+noticeable extra vertical space under the stacked amounts — row padding, row-to-row gap, and the
+description/stats stack's own internal gap all tightened per Rob's follow-up review.*
 
 **PROD-13 — My Plan is the system of record; Today shows status; Log It! is the action that updates
 it. Stats' Subscriptions panel retired in favor of a Today section fed by richer source data.**
@@ -443,7 +450,11 @@ which updates what Today shows. Resolved on this basis:
 *Why:* keeps each page's role distinct and avoids two views doing the same job with different
 levels of detail — a design smell now resolved by making My Plan authoritative and Today the single
 place to check status.
-*Status:* **Locked** · Aug 23, 2026 · v3.46.0
+*Status:* **Locked** · Aug 23, 2026 · v3.46.0 — *amended Aug 23, 2026, v3.47.0: "Remaining
+RX/Treatments" gained its own section-wide card border (matching "Today at a Glance"'s `wt-card`
+treatment) per Rob's follow-up review — the section label now sits inside the bubble at the top,
+with each item's own smaller card nested inside it, rather than floating without a border of its
+own.*
 
 ---
 
@@ -574,7 +585,10 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (PROD-13 added for v3.46.0 — My Plan as system of record / Today as
+*Last updated: August 23, 2026 (v3.47.0 follow-ups: UX-07 amended — "RX & Vitamins" renamed back to
+"RX & Supplements"; UX-25/UX-26/PROD-13 amended — Sleep→Weight and RX & Supplements→presets gaps
+fixed, Today's Log rows tightened further, Remaining RX/Treatments given its own card border;
+earlier: PROD-13 added for v3.46.0 — My Plan as system of record / Today as
 status view / Log It! as the logging action, Subscriptions panel retired for a new "Remaining
 RX/Treatments" Today section; UX-25/UX-26 added for v3.46.0 — Log It! tile trim/spacing, Today's
 Log row restack; earlier: UX-24 added for v3.45.0 — Self-Managed RX split on My Plan

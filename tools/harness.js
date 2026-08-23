@@ -279,7 +279,7 @@ const STEPS = [
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
     check("My Plan always renders all 8 cards (Water off, Treatments off seeded)", cards.length, 8);
     const titles = cards.map((c) => c.querySelector(".wt-plan-card-title").textContent);
-    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX & Vitamins,Treatments");
+    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX & Supplements,Treatments");
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water card renders dimmed (off class)", waterCard ? waterCard.classList.contains("off") : null, "true");
   },
@@ -337,7 +337,9 @@ const STEPS = [
   () => check("nav to Log It! (for grid-to-button spacing check)", nav("Log It!")),
   () => {
     const cssText = window.document.querySelector("style").textContent;
-    const rule = cssText.match(/\.wt-action-btns\s*\{[^}]*\}/);
+    // Negative lookbehind skips the v3.47.0 compound ".wt-trackers-grid + .wt-action-btns" rule,
+    // which also matches a naive ".wt-action-btns {" search since it ends with that same text.
+    const rule = cssText.match(/(?<!\+ )\.wt-action-btns\s*\{[^}]*\}/);
     check("wt-action-btns has margin-top:16px (matches existing 16px spacing scale)", rule ? rule[0].includes("margin-top:16px") : null, "true");
   },
 
@@ -456,8 +458,8 @@ const STEPS = [
   },
   () => check("nav to Log It! (verify today's RX tile ring unaffected)", nav("Log It!")),
   () => {
-    const rxTile = tiles().find((t) => t.startsWith("RX & Vitamins"));
-    check("today's RX & Vitamins tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
+    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
+    check("today's RX & Supplements tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
   },
   () => check("nav back to Today (to delete the backfilled dose)", nav("Today")),
   () => check("re-open All Past Days", clickByAria("View past days")),
@@ -544,8 +546,8 @@ const STEPS = [
   // (surface moved from the removed "To Do Today" section to "Today at a Glance" in v3.43.0/v3.44.0)
   () => check("nav to Today (for overdue icon check)", nav("Today")),
   () => {
-    const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("RX & Vitamins"));
-    check("seeded OverdueMed is reflected in the RX & Vitamins due callout", !!medsRow);
+    const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("RX & Supplements"));
+    check("seeded OverdueMed is reflected in the RX & Supplements due callout", !!medsRow);
     const icon = medsRow ? medsRow.querySelector(".wt-tracked-row-chip svg") : null;
     check("due callout has an icon glyph alongside color (not color alone)", !!icon, "true");
     check("due callout text still states the due count", medsRow ? /due today/.test(medsRow.textContent) : null, "true");
@@ -596,7 +598,7 @@ const STEPS = [
       ["Weight", "var(--weight)", "var(--weight-chip)"],
       ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
       ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
-      ["RX & Vitamins", "var(--meds)", "var(--meds-chip)"],
+      ["RX & Supplements", "var(--meds)", "var(--meds-chip)"],
     ];
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
     let allOk = true;
@@ -756,7 +758,7 @@ const STEPS = [
       ["Sleep", "var(--sleep)", "var(--sleep-chip)"],
       ["Weight", "var(--weight)", "var(--weight-chip)"],
       ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
-      ["RX & Vitamins", "var(--meds)", "var(--meds-chip)"],
+      ["RX & Supplements", "var(--meds)", "var(--meds-chip)"],
       ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
     ];
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
@@ -1189,7 +1191,7 @@ const STEPS = [
     check("Today at a Glance shows at most 4 callout rows", rows.length <= 4, "true");
     // Default seed has 2 supplements due and nothing else logged yet, so it should surface the
     // meds-due callout plus the single most-behind tracker — not one row per tracker.
-    check("Today at a Glance surfaces the RX & Vitamins due-count callout", rows.some((r) => /RX & Vitamins/.test(r.textContent) && /due today/.test(r.textContent)), "true");
+    check("Today at a Glance surfaces the RX & Supplements due-count callout", rows.some((r) => /RX & Supplements/.test(r.textContent) && /due today/.test(r.textContent)), "true");
     check("Today at a Glance does not list every enabled tracker (no Water/Calories/Sleep/Exercise noise in default seed)", rows.some((r) => /Water|Calories|Sleep|Exercise/.test(r.textContent)), false);
   },
   () => check("no runtime errors after v3.43.0 Today-at-a-Glance pass", errors.length, 0),
@@ -1300,8 +1302,8 @@ const STEPS = [
   () => {
     const weightTile = tiles().find((t) => t.startsWith("Weight"));
     check("Weight tile no longer repeats the goal-difference text a second time", weightTile ? !/to golbs|lbs to go.*to go/.test(weightTile) : null, "true");
-    const rxTile = tiles().find((t) => t.startsWith("RX & Vitamins"));
-    check("RX & Vitamins tile no longer shows the old 'of N taken' sub-text", rxTile ? !/of \d+ taken/.test(rxTile) : null, "true");
+    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
+    check("RX & Supplements tile no longer shows the old 'of N taken' sub-text", rxTile ? !/of \d+ taken/.test(rxTile) : null, "true");
   },
   () => {
     const cssText = window.document.querySelector("style").textContent;
@@ -1404,6 +1406,56 @@ const STEPS = [
     check("DetailedTreatment card shows qty remaining", trCard ? trCard.textContent.includes("4 remaining") : null, "true");
   },
   () => check("no runtime errors after Remaining RX/Treatments pass", errors.length, 0),
+
+  // ── v3.47.0: Sleep→Weight gap fixed to match the rest, RX & Supplements→presets-button gap ──
+  // added, "RX & Vitamins" renamed "RX & Supplements", Remaining RX/Treatments gets its own card ──
+  // border, Today's Log rows tightened ──
+  () => check("nav to Log It! (v3.47.0 spacing/rename checks)", nav("Log It!")),
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const seamRule = cssText.match(/\.wt-trackers-grid \+ \.wt-trackers-grid \{[^}]*\}/);
+    check("Sleep→Weight seam now has its own margin-top override (was relying on default 6px+8px=14px, now matches the 24px gap used elsewhere)", seamRule ? seamRule[0].includes("margin-top:18px") : null, "true");
+    const btnSeamRule = cssText.match(/\.wt-trackers-grid \+ \.wt-action-btns \{[^}]*\}/);
+    check("RX & Supplements→presets-button seam also gets the matching margin-top override", btnSeamRule ? btnSeamRule[0].includes("margin-top:18px") : null, "true");
+  },
+  () => {
+    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
+    check("Log It! tile renamed 'RX & Vitamins' -> 'RX & Supplements'", !!rxTile);
+    const oldName = tiles().find((t) => t.startsWith("RX & Vitamins"));
+    check("old 'RX & Vitamins' tile name is gone", !!oldName, false);
+  },
+  () => check("no runtime errors after v3.47.0 Log It! pass", errors.length, 0),
+  () => check("nav to My Plan (rename check)", nav("My Plan")),
+  () => {
+    const cardTitles = [...window.document.querySelectorAll(".wt-plan-card-title")].map((el) => el.textContent);
+    check("My Plan tracker card renamed to 'RX & Supplements'", cardTitles.includes("RX & Supplements"), "true");
+    check("My Plan tracker card old name gone", cardTitles.includes("RX & Vitamins"), false);
+  },
+  () => check("no runtime errors after My Plan rename check", errors.length, 0),
+
+  // ── Remaining RX/Treatments now has its own section-wide card border ──
+  () => check("nav to Today (Remaining RX/Treatments card-border check)", nav("Today")),
+  () => {
+    const labelEl = [...window.document.querySelectorAll(".wt-section-label-lg")].find((el) => el.textContent === "Remaining RX/Treatments");
+    check("'Remaining RX/Treatments' label found", !!labelEl);
+    const outerCard = labelEl ? labelEl.closest(".wt-card") : null;
+    check("the label sits inside its own wt-card wrapper (section-wide bubble border, like Today at a Glance)", !!outerCard);
+    const rxItemCard = outerCard ? [...outerCard.querySelectorAll(".wt-card")].find((c) => c.textContent.includes("DetailedRx")) : null;
+    check("individual item cards (e.g. DetailedRx) nest inside that outer section card", !!rxItemCard);
+  },
+  () => check("no runtime errors after Remaining RX/Treatments card-border check", errors.length, 0),
+
+  // ── Today's Log rows tightened (less wasted space under the stacked amounts) ──
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const rowRule = cssText.match(/\.wt-log-row \{[^}]*\}/);
+    check("wt-log-row padding tightened (was 9px 10px)", rowRule ? rowRule[0].includes("padding:7px 10px") : null, "true");
+    const listRule = cssText.match(/\.wt-log-list \{[^}]*\}/);
+    check("wt-log-list row-to-row gap tightened (was 6px)", listRule ? listRule[0].includes("gap:4px") : null, "true");
+    const stackRule = cssText.match(/\.wt-log-desc-stack \{[^}]*\}/);
+    check("wt-log-desc-stack internal gap tightened (was 2px)", stackRule ? stackRule[0].includes("gap:1px") : null, "true");
+  },
+  () => check("no runtime errors after Today's-Log-tightening check", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

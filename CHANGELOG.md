@@ -20,6 +20,43 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.47.0] — 2026-08-23
+
+Follow-up tweaks from Rob's review of v3.46.0: fixed a spacing gap that was missed, added another
+one, a naming change, a card border, and tighter Today's Log rows.
+
+- **Sleep→Weight tile gap fixed.** Log It!'s two tile grids (Water/Protein/Calories/Sleep, then
+  Weight/Exercise/Treatments/RX & Supplements) each have their own `margin: 8px 0 6px`, so the seam
+  between them was only getting 14px (6px + 8px) instead of the 24px gap used between every other
+  pair of tiles. Added `.wt-trackers-grid + .wt-trackers-grid { margin-top: 18px; }` so that specific
+  seam totals 24px (6px + 18px) like the rest.
+- **RX & Supplements→"Use Your Presets" gap added.** Same fix pattern applied to the seam between
+  the second tile grid and the action buttons below it: `.wt-trackers-grid + .wt-action-btns {
+  margin-top: 18px; }` brings that gap to 24px too, matching the Voice-Assistant-to-Water spacing
+  used everywhere else on the page.
+- **"RX & Vitamins" renamed "RX & Supplements"** everywhere it appears in the app (Log It! tile,
+  My Plan tracker toggle row, Today at a Glance's due-count callout, the manual-log sheet header,
+  and the backfill disclaimer text). Pure label change — no behavior change, no schema change (the
+  supplement `category` field added in v3.45.0 is still `'rx'`/`'vitamin'` internally).
+- **"Remaining RX/Treatments" gets its own section-wide card border**, matching "Today at a
+  Glance"'s `wt-card` treatment — the section label now sits inside the bubble at the top, with
+  each item's own smaller card nested inside it, rather than the section floating with no border of
+  its own.
+- **Today's Log rows tightened** — extra vertical space had opened up under the stacked
+  amounts since v3.46.0's row restack. `wt-log-row` padding cut 9px→7px, `wt-log-list`'s
+  row-to-row gap cut 6px→4px, and `wt-log-desc-stack`'s internal label/metrics gap cut 2px→1px.
+- `tools/harness.js`: renamed all "RX & Vitamins" string assertions to "RX & Supplements"; fixed one
+  test (`wt-action-btns` margin check) that was accidentally matching the new compound
+  `.wt-trackers-grid + .wt-action-btns` selector instead of the original standalone rule (both
+  contain the substring `.wt-action-btns {`) — added a negative lookbehind to skip the compound
+  match. Added checks for both new grid-seam margins, the rename (Log It! tile + My Plan card),
+  the Remaining RX/Treatments section's new card wrapper (and that item cards nest inside it), and
+  the tightened log-row/list/stack CSS values.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 453 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo` water-tile assertion, documented
+  since v3.44.0 — unrelated, predates this session). **Not yet verified on a real device.**
+
 ## [3.46.0] — 2026-08-23
 
 Log It! tile trim + spacing pass, Today's Log row restack, Stats "Subs" removed, and a new

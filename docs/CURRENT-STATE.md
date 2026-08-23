@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.46.0*
+*As of: August 23, 2026 · Deployed version: 3.47.0*
 
 ---
 
@@ -14,7 +14,7 @@
 - Worker on its own `workers.dev` domain — deliberately ungated, which is what makes doctor-share links reachable without a login.
 
 **Tracked metrics (8 tiles, all with percentage progress rings)**
-Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Vitamins — in that order on the Log It! page.
+Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Supplements — in that order on the Log It! page. (Renamed from "RX & Vitamins" in v3.47.0.)
 
 **Tabs:** Log It! · Today · Stats · My Plan · Settings (v3.42.0 swapped Today first; v3.42.1
 reverted that swap per Rob after real-device testing — Today's landing-page content additions
@@ -132,6 +132,19 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.47.0)
+
+Follow-up tweaks from Rob's review of v3.46.0:
+- Fixed the Sleep→Weight tile gap (was only 14px, now matches the 24px used everywhere else) and
+  added the same-size gap between RX & Supplements and "Use Your Presets" below it.
+- Renamed "RX & Vitamins" to "RX & Supplements" everywhere in the app.
+- "Remaining RX/Treatments" now has its own section-wide card border (matching "Today at a
+  Glance"), with each item's own smaller card nested inside it.
+- Today's Log rows tightened (padding, row-to-row gap, and the description/stats stack's internal
+  gap all reduced) to remove the extra vertical space the v3.46.0 row restack had left behind.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
 
 ## What shipped Aug 23, 2026 (v3.46.0)
 
@@ -408,7 +421,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 - **Footer-hide is backdrop-based, not state-based** (v3.38.1): the footer is visually covered by a near-opaque sheet backdrop rather than removed, because there's no single "a sheet is open" flag (would mean touching ~15 scattered open/close variables). If the footer peeks through on an untested sheet, that's why. Candidate for a proper fix if it recurs.
 - **UX-OPEN-01 Phase 2** (not started): Settings consolidation — six status rows, "Your data" backed-up/not status, Reminders grouped by intent, tutorial on first run.
 - **UX-OPEN-01 Phase 3** (not started): Clinic onboarding ramp — overlaps with the roadmap's protocol-code work.
-- **"Add in Setup" stale copy** on Treatments/RX & Vitamins empty-state CTAs on Log It! — quick copy fix, not yet addressed.
+- **"Add in Setup" stale copy** on Treatments/RX & Supplements empty-state CTAs on Log It! — quick copy fix, not yet addressed.
 - **Some lucide glyphs filled may look odd** (v3.38.2): icons with internal negative space (e.g. Battery) render differently when filled vs. stroked. Flag any that look wrong for individual adjustment.
 - **Treatments have no next-due-date editing UI anywhere in the app** (since v3.44.0 removed "To Do
   Today," the only place it lived). v3.45.0 restored this for RX items on My Plan, but "Self-Managed
