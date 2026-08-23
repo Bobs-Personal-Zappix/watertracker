@@ -61,6 +61,9 @@ after this deploy, the WebKit-filter theory is wrong and the investigation needs
 Rob's on-device repro steps (exact sequence of taps, iOS version, whether it's Safari or a PWA
 homescreen install).
 
+**Update (same day):** Rob confirmed on real device — the black-box artifact has not recurred since
+this deploy. The `filter:drop-shadow` removal is the confirmed fix, not just a hypothesis.
+
 ## [3.42.0] — 2026-08-23
 
 Today becomes the app's true landing/engagement page, per Rob's direction.

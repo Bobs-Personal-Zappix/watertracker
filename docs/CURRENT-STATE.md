@@ -105,14 +105,11 @@ CHANGELOG.md
 6. ~~**Schema fragility.**~~ **RESOLVED** — `ARCH-OPEN-05` complete Aug 20. `migrate()`/`deepMergeDefaults` replaced the hand-maintained field whitelists. New fields require one line in defaults, not four scattered additions.
 7. **Legal/compliance unaddressed.** FTC Health Breach Notification Rule and state consumer-health-privacy laws apply to consumer health apps; the clinic path may trigger HIPAA obligations. PROD-09 (backfill provenance) is the first field added specifically for clinic reporting — legal consult should precede clinic pilot. → `LEGAL-OPEN-01`
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
-9. **Unconfirmed header rendering bug (v3.42.1).** A black-box artifact intermittently covered the
+9. ~~**Header rendering bug.**~~ **RESOLVED** — a black-box artifact intermittently covered the
    header (profile icon, logo, app name) after uploading a profile photo, clearing on tab switch
-   then randomly recurring. Root cause not confirmed — jsdom cannot reproduce real-device paint
-   bugs. A CSS `filter:drop-shadow` on the logo (a known WebKit repaint-artifact trigger class) was
-   removed as the leading hypothesis, and the profile photo is now downscaled/compressed
-   client-side regardless. **Needs Rob to confirm on the exact device/repro path that the artifact
-   is actually gone** — if it recurs, the filter theory is wrong and this needs a fresh
-   investigation with exact repro steps (iOS version, Safari vs. PWA install, tap sequence).
+   then randomly recurring. Root cause: `filter:drop-shadow` on the logo badge, a known WebKit
+   repaint-artifact trigger. Removed in v3.42.1; Rob confirmed on real device (Aug 23) the artifact
+   has not recurred since.
 
 ---
 
@@ -144,8 +141,8 @@ Follow-up from Rob's real-device test of v3.42.0, all in `CHANGELOG.md`:
 - Profile photo now downscaled/compressed client-side (canvas, capped 240px longest side, JPEG 85%)
   regardless of the filter theory — a smaller stored image is strictly safer either way.
 - Tracked So Far row text enlarged and recolored tan throughout, per Rob's request.
-- Full 5-step verification pipeline re-run and passed. **The header-artifact fix specifically still
-  needs Rob's on-device confirmation** — jsdom cannot reproduce or verify real-device paint bugs.
+- Full 5-step verification pipeline re-run and passed. **Header-artifact fix confirmed by Rob on
+  real device (Aug 23)** — not reproduced since the `drop-shadow` filter was removed.
 
 ## What shipped Aug 23, 2026 (v3.42.0)
 
