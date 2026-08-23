@@ -329,7 +329,36 @@ position reinforces that it's the primary destination now, not a secondary one.
 the nav-order swap (point 3) was reverted per Rob after real-device testing — nav order is back to
 Log It! · Today · Stats · My Plan · Settings. Points 1 and 2 (Voice Tracker tile on Today, "Tracked
 So Far" section) remain in place; Today's content is still the landing-page-style expanded content
-from this decision, only its nav position reverted.*
+from this decision, only its nav position reverted.* — *amended Aug 23, 2026, v3.43.0: the "Tracked
+So Far" section (point 2) is replaced by a compact "Today at a Glance" needs-attention summary —
+Rob's call, after noting the original one-row-per-tracker version duplicated Log It!'s tiles and
+took up too much of the page. Shows at most 4 callouts (due/overdue meds & treatments, plus the
+single most-behind consumable tracker if room remains) or "Great work, you're all caught up for
+now! 🎉" when nothing qualifies. See `UX-22`.*
+
+**UX-22 — "Tracked So Far" replaced with "Today at a Glance," a needs-attention summary.**
+Rob flagged that the v3.42.0 "Tracked So Far" section (one detailed row per enabled tracker) was
+too much info, took up too much screen, and duplicated what Log It!'s tiles already show. Agreed
+direction: turn it into an executive-summary-style section that calls out only what the user needs
+to know for the day, sitting above To Do Today and Today's Log as a genuine summary rather than a
+second detail view.
+Resolved shape, both explicit calls by Rob:
+1. Callout triggers: due/overdue RX & Vitamins or Treatments (shown as a due-count, e.g. "2 due
+   today"), and — if room remains — the single most-behind consumable/time tracker (water,
+   protein, calories, sleep, exercise), chosen by largest fraction of goal still remaining. Weight
+   is excluded from "most behind" since it's an off-target amount, not a consumption goal.
+   Goals-already-met and an active sleep session were considered as triggers and explicitly left
+   out — this section is for what still needs doing, not a status board.
+2. Capped at 4 rows.
+3. Empty state: when nothing qualifies, show "Great work, you're all caught up for now! 🎉" rather
+   than an empty or "nothing to see" card. Rob's reasoning: a user who's done most of their
+   tracking should see that reflected positively, not have the section just go blank or read like
+   something's missing.
+*Why:* keeps the section genuinely skimmable and distinct from Log It!'s per-tracker detail, and
+turns "nothing left to flag" into positive reinforcement instead of a dead-looking section —
+consistent with the app's existing "state facts, don't manufacture celebration" tone (see `UX-04`)
+while still making an honest "you're caught up" status feel rewarding rather than empty.
+*Status:* **Locked** · Aug 23, 2026 · v3.43.0 — amends `UX-21` point 2
 
 ---
 
@@ -460,4 +489,5 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (UX-21 amended for v3.42.1 — nav-order swap reverted per Rob after real-device testing, Today's content changes retained; earlier: UX-21 added for v3.42.0 — Today promoted to landing page, Tracked So Far section, nav order swap, amends UX-06; earlier: UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*
+*Last updated: August 23, 2026 (UX-22 added for v3.43.0 — "Tracked So Far" replaced with "Today at
+a Glance" needs-attention summary, amends UX-21; earlier: UX-21 amended for v3.42.1 — nav-order swap reverted per Rob after real-device testing, Today's content changes retained; earlier: UX-21 added for v3.42.0 — Today promoted to landing page, Tracked So Far section, nav order swap, amends UX-06; earlier: UX-20 added for v3.41.0 — Profile page header-icon-only entry point and local-only storage; earlier: UX-19 added for v3.40.0 — Log It! preset/manual split, Voice Tracker tile, header AI icon removed; earlier: UX-18 amended for v3.39.1 — My Plan sheet color-match, centered hero number, bigger caption; earlier: UX-18 added for tracker-sheet color-matching and Log It! tile hero-number restructure; UX-15–17 for dark-theme completion, support tokens, and form-control reset; STRAT-11, PROD-10–12, UX-11a, UX-12–14 for Smart Entry and design-system decisions; earlier: UX-10, UX-11, PROD-06–09, UX-OPEN-02, UX-02 amendment, ARCH-OPEN-01/05/06 closed)*

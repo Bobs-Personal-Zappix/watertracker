@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.42.1*
+*As of: August 23, 2026 · Deployed version: 3.43.0*
 
 ---
 
@@ -128,6 +128,23 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.43.0)
+
+Today's "Tracked So Far" section reworked into a compact "Today at a Glance" needs-attention
+summary, per Rob's direction:
+- Instead of one detailed row per enabled tracker (duplicating Log It!'s tiles and pushing To Do
+  Today/Today's Log below the fold), the section now shows at most 4 callout rows: due/overdue RX
+  & Vitamins or Treatments (due-count), plus — if room remains — the single most-behind consumable
+  tracker (water/protein/calories/sleep/exercise, by largest fraction of goal remaining). Weight is
+  excluded from "most behind" since it isn't a consumption goal.
+- When nothing qualifies, shows "Great work, you're all caught up for now! 🎉" instead of an empty
+  card.
+- `tools/harness.js` updated: old 8-row/label checks replaced with checks for the new name,
+  ordering, 4-row cap, and default-seed behavior.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device** — jsdom can't confirm how the shorter section reads at a glance, or
+  how the "all caught up" empty state feels on a genuinely done day.
 
 ## What shipped Aug 23, 2026 (v3.42.1)
 

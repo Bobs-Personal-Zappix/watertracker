@@ -1137,18 +1137,8 @@ const STEPS = [
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    check("'Tracked So Far' section present", labels.includes("Tracked So Far"));
     check("'To Do Today' section still present", labels.includes("To Do Today"));
     check("'Today's log' section still present", labels.some((l) => l.toLowerCase() === "today's log"));
-    const idxTracked = labels.indexOf("Tracked So Far");
-    const idxToDo = labels.indexOf("To Do Today");
-    check("'Tracked So Far' appears before 'To Do Today'", idxTracked >= 0 && idxToDo >= 0 && idxTracked < idxToDo, "true");
-  },
-  () => {
-    const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
-    check("Tracked So Far has one row per visible tracker (8 in default seed)", rows.length, 8);
-    const waterRow = rows.find((r) => r.textContent.includes("Water"));
-    check("Tracked So Far Water row shows goal + consumed detail", waterRow ? /oz of \d+oz goal/.test(waterRow.textContent) : null, "true");
   },
   () => {
     const cssText = window.document.querySelector("style").textContent;
@@ -1168,12 +1158,32 @@ const STEPS = [
     const badgeRule = cssText.match(/\.wt-topbanner-badge \{[^}]*\}/);
     check("wt-topbanner-badge no longer has a CSS filter (drop-shadow removed)", badgeRule ? !badgeRule[0].includes("filter:") : null, "true");
     const labelRule = cssText.match(/\.wt-tracked-row-label \{[^}]*\}/);
-    check("Tracked So Far label font bumped to 15px", labelRule ? labelRule[0].includes("font-size:15px") : null, "true");
+    check("Tracked row label font bumped to 15px", labelRule ? labelRule[0].includes("font-size:15px") : null, "true");
     const detailRule = cssText.match(/\.wt-tracked-row-detail \{[^}]*\}/);
-    check("Tracked So Far detail font bumped to 14px", detailRule ? detailRule[0].includes("font-size:14px") : null, "true");
-    check("Tracked So Far detail text now tan (var(--ink-inverse)), not muted-gray", detailRule ? detailRule[0].includes("color:var(--ink-inverse)") : null, "true");
+    check("Tracked row detail font bumped to 14px", detailRule ? detailRule[0].includes("font-size:14px") : null, "true");
+    check("Tracked row detail text now tan (var(--ink-inverse)), not muted-gray", detailRule ? detailRule[0].includes("color:var(--ink-inverse)") : null, "true");
   },
   () => check("no runtime errors after v3.42.1 pass", errors.length, 0),
+
+  // ── v3.43.0: Tracked So Far replaced with a compact "Today at a Glance" needs-attention summary ──
+  () => check("nav to Today (v3.43.0 checks)", nav("Today")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
+    check("'Today at a Glance' section present (renamed from 'Tracked So Far')", labels.includes("Today at a Glance"), "true");
+    check("old 'Tracked So Far' label is gone", labels.includes("Tracked So Far"), false);
+    const idxGlance = labels.indexOf("Today at a Glance");
+    const idxToDo = labels.indexOf("To Do Today");
+    check("'Today at a Glance' appears before 'To Do Today'", idxGlance >= 0 && idxToDo >= 0 && idxGlance < idxToDo, "true");
+  },
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
+    check("Today at a Glance shows at most 4 callout rows", rows.length <= 4, "true");
+    // Default seed has 2 supplements due and nothing else logged yet, so it should surface the
+    // meds-due callout plus the single most-behind tracker — not one row per tracker.
+    check("Today at a Glance surfaces the RX & Vitamins due-count callout", rows.some((r) => /RX & Vitamins/.test(r.textContent) && /due today/.test(r.textContent)), "true");
+    check("Today at a Glance does not list every enabled tracker (no Water/Calories/Sleep/Exercise noise in default seed)", rows.some((r) => /Water|Calories|Sleep|Exercise/.test(r.textContent)), false);
+  },
+  () => check("no runtime errors after v3.43.0 Today-at-a-Glance pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

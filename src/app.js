@@ -2705,65 +2705,75 @@ import {
         todayKey: t
     }) {
         let {
-            s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, B, $, U, W, F, R, A, _, H, G, X, z, L, K
+            p, m, h, g, y, v, b, w, x, E, k, S, j, H, I, F, R
         } = computeTrackerStats(e, t), rows = [];
-        x && rows.push({
+        H > 0 && rows.push({
+            key: "meds",
+            color: "var(--meds)",
+            chip: "var(--meds-chip)",
+            icon: AlertCircle,
+            label: "RX & Vitamins",
+            detail: `${H} due today`
+        }), I > 0 && rows.push({
+            key: "treatments",
+            color: "var(--treatment)",
+            chip: "var(--treatment-chip)",
+            icon: AlertCircle,
+            label: "Treatments",
+            detail: `${I} due today`
+        });
+        let candidates = [{
             key: "water",
             color: "var(--water)",
             chip: "var(--water-chip)",
             icon: Droplet,
             label: "Water",
-            detail: p <= 0 ? "No goal set" : `${s}oz of ${p}oz goal · ${y > 0 ? `${y}oz to go` : "goal met 🎉"}`
-        }), E && rows.push({
+            enabled: x,
+            goal: p,
+            remaining: y,
+            detail: `${y}oz to go toward your ${p}oz goal`
+        }, {
             key: "protein",
             color: "var(--protein)",
             chip: "var(--protein-chip)",
             icon: Battery,
             label: "Protein",
-            detail: m <= 0 ? "No goal set" : `${c}g of ${m}g goal · ${v > 0 ? `${v}g to go` : "goal met 🎉"}`
-        }), k && rows.push({
+            enabled: E,
+            goal: m,
+            remaining: v,
+            detail: `${v}g to go toward your ${m}g goal`
+        }, {
             key: "calories",
             color: "var(--calories)",
             chip: "var(--calories-chip)",
             icon: Flame,
             label: "Calories",
-            detail: h <= 0 ? "No goal set" : `${f}cal of ${h}cal goal · ${b > 0 ? `${b}cal left` : "goal met"}`
-        }), S && rows.push({
+            enabled: k,
+            goal: h,
+            remaining: b,
+            detail: `${b}cal left toward your ${h}cal goal`
+        }, {
             key: "sleep",
             color: "var(--sleep)",
             chip: "var(--sleep-chip)",
             icon: Bed,
             label: "Sleep",
-            detail: e.activeSleepSession ? "Sleeping…" : g <= 0 ? "No goal set" : `${d}hrs of ${g}hrs goal · ${w > 0 ? `${w}hrs to go` : "goal met 🎉"}`
-        }), O && rows.push({
-            key: "weight",
-            color: "var(--weight)",
-            chip: "var(--weight-chip)",
-            icon: Weight,
-            label: "Weight",
-            detail: $ <= 0 ? "No goal set" : B ? `${U}lbs today · goal ${$}lbs · ${W}` : `Goal ${$}lbs · not logged today`
-        }), j && rows.push({
+            enabled: S,
+            goal: g,
+            remaining: w,
+            detail: `${w}hrs to go toward your ${g}hrs goal`
+        }, {
             key: "exercise",
             color: "var(--exercise)",
             chip: "var(--exercise-chip)",
             icon: Dumbbell,
             label: "Exercise",
-            detail: F <= 0 ? "No goal set" : `${R}min of ${F}min goal · ${F - R > 0 ? `${F-R}min to go` : "goal met 🎉"}`
-        }), C && rows.push({
-            key: "treatments",
-            color: "var(--treatment)",
-            chip: "var(--treatment-chip)",
-            icon: Syringe,
-            label: "Treatments",
-            detail: 0 === z.length ? "None set up" : `${X} of ${G} done today · ${G - X > 0 ? `${G-X} left` : "all caught up"}`
-        }), P && rows.push({
-            key: "meds",
-            color: "var(--meds)",
-            chip: "var(--meds-chip)",
-            icon: Pill,
-            label: "RX & Vitamins",
-            detail: 0 === A ? "None set up" : `${_} · ${H > 0 ? `${H} due` : "all caught up"}`
-        });
+            enabled: j,
+            goal: F,
+            remaining: F - R,
+            detail: `${F-R}min to go toward your ${F}min goal`
+        }].filter(e => e.enabled && e.goal > 0 && e.remaining > 0).sort((e, t) => t.remaining / t.goal - e.remaining / e.goal);
+        candidates.length > 0 && rows.length < 4 && rows.push(candidates[0]), rows = rows.slice(0, 4);
         return React.default.createElement("div", {
             className: "wt-card"
         }, React.default.createElement("div", {
@@ -2771,9 +2781,9 @@ import {
             style: {
                 margin: "0 0 12px"
             }
-        }, "Tracked So Far"), 0 === rows.length ? React.default.createElement("p", {
+        }, "Today at a Glance"), 0 === rows.length ? React.default.createElement("p", {
             className: "wt-empty-note"
-        }, "All trackers are hidden. Turn one back on in My Plan.") : rows.map(e => React.default.createElement("div", {
+        }, "Great work, you're all caught up for now! 🎉") : rows.map(e => React.default.createElement("div", {
             key: e.key,
             className: "wt-tracked-row",
             style: {

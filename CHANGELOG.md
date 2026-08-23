@@ -20,6 +20,36 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.43.0] — 2026-08-23
+
+Today's "Tracked So Far" section replaced with a compact "Today at a Glance" needs-attention
+summary, per Rob's direction — the old section duplicated every tracker's detail already shown on
+Log It! and pushed To Do Today/Today's Log below the fold.
+
+- **"Tracked So Far" → "Today at a Glance."** `TrackedSoFar` (`src/app.js`) no longer renders one
+  row per enabled tracker. It now surfaces only what needs attention, capped at 4 rows:
+  - Any due/overdue RX & Vitamins or Treatments, shown as a due-count callout (e.g. "2 due today").
+  - If room remains, the single most-behind consumable/time tracker (water, protein, calories,
+    sleep, exercise) — whichever has the largest fraction of its goal still remaining — shown as
+    e.g. "40oz to go toward your 120oz goal." Weight is excluded (it's an off-target amount, not a
+    consumption goal, so "most behind" doesn't apply to it).
+  - Goals-already-met and an active sleep session were considered as callout triggers and explicitly
+    left out per Rob — the summary is for what still needs doing, not a status board.
+- **Empty state changed from a warning to a reward.** When nothing qualifies (all due items handled,
+  no tracker meaningfully behind), the section shows "Great work, you're all caught up for now! 🎉"
+  instead of an empty card — Rob's call: a quiet section reads as broken, a positive message reads as
+  earned.
+- `computeTrackerStats()` unchanged — this reuses the same shared computation Log It! and the old
+  Tracked So Far both already depended on; only what `TrackedSoFar` selects and renders from it
+  changed.
+- `tools/harness.js`: replaced the old 8-row/label-text checks with checks for the new section name,
+  ordering, the 4-row cap, and that the default seed (2 supplements due, nothing else logged) surfaces
+  the RX & Vitamins due-callout without listing every other tracker.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` (harness
+  clean, 0 runtime errors; lint unchanged at the 11-error vendor baseline). **Not yet verified on a
+  real device** — jsdom can't confirm how the shorter section reads at a glance on an actual phone,
+  or how the "all caught up" empty state feels in practice on a day where everything really is done.
+
 ## [3.42.1] — 2026-08-23
 
 Follow-up from Rob's real-device test of v3.42.0 — nav swap reverted, header black-box artifact
