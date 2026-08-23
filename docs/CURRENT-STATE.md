@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.42.0*
+*As of: August 23, 2026 · Deployed version: 3.42.1*
 
 ---
 
@@ -16,8 +16,9 @@
 **Tracked metrics (8 tiles, all with percentage progress rings)**
 Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Vitamins — in that order on the Log It! page.
 
-**Tabs:** Today · Log It! · Stats · My Plan · Settings (Today and Log It! swapped v3.42.0 — Today is
-now the app's landing/engagement page)
+**Tabs:** Log It! · Today · Stats · My Plan · Settings (v3.42.0 swapped Today first; v3.42.1
+reverted that swap per Rob after real-device testing — Today's landing-page content additions
+from v3.42.0 remain, only the nav order reverted)
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -104,6 +105,14 @@ CHANGELOG.md
 6. ~~**Schema fragility.**~~ **RESOLVED** — `ARCH-OPEN-05` complete Aug 20. `migrate()`/`deepMergeDefaults` replaced the hand-maintained field whitelists. New fields require one line in defaults, not four scattered additions.
 7. **Legal/compliance unaddressed.** FTC Health Breach Notification Rule and state consumer-health-privacy laws apply to consumer health apps; the clinic path may trigger HIPAA obligations. PROD-09 (backfill provenance) is the first field added specifically for clinic reporting — legal consult should precede clinic pilot. → `LEGAL-OPEN-01`
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
+9. **Unconfirmed header rendering bug (v3.42.1).** A black-box artifact intermittently covered the
+   header (profile icon, logo, app name) after uploading a profile photo, clearing on tab switch
+   then randomly recurring. Root cause not confirmed — jsdom cannot reproduce real-device paint
+   bugs. A CSS `filter:drop-shadow` on the logo (a known WebKit repaint-artifact trigger class) was
+   removed as the leading hypothesis, and the profile photo is now downscaled/compressed
+   client-side regardless. **Needs Rob to confirm on the exact device/repro path that the artifact
+   is actually gone** — if it recurs, the filter theory is wrong and this needs a fresh
+   investigation with exact repro steps (iOS version, Safari vs. PWA install, tap sequence).
 
 ---
 
@@ -122,6 +131,21 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 23, 2026 (v3.42.1)
+
+Follow-up from Rob's real-device test of v3.42.0, all in `CHANGELOG.md`:
+- Nav order reverted to Log It! · Today · Stats · My Plan · Settings (Today's content changes from
+  v3.42.0 stay in place, only the nav position reverted).
+- Investigated a recurring black-box header artifact after profile-photo upload — memory pressure
+  ruled out as implausible; leading hypothesis is a WebKit `filter`-triggered repaint bug (the logo
+  badge's `drop-shadow` filter), now removed. **This is a hypothesis, not a confirmed fix** — see
+  Standing risk #9 above.
+- Profile photo now downscaled/compressed client-side (canvas, capped 240px longest side, JPEG 85%)
+  regardless of the filter theory — a smaller stored image is strictly safer either way.
+- Tracked So Far row text enlarged and recolored tan throughout, per Rob's request.
+- Full 5-step verification pipeline re-run and passed. **The header-artifact fix specifically still
+  needs Rob's on-device confirmation** — jsdom cannot reproduce or verify real-device paint bugs.
 
 ## What shipped Aug 23, 2026 (v3.42.0)
 

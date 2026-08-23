@@ -1158,9 +1158,22 @@ const STEPS = [
   () => check("no runtime errors after v3.42.0 Today-page pass", errors.length, 0),
   () => {
     const navBtns = [...window.document.querySelectorAll(".wt-nav-btn")].map((b) => b.textContent.trim());
-    check("nav order is now Today, Log It!, Stats, ... (swapped)", navBtns[0].includes("Today") && navBtns[1].includes("Log It!"), "true");
+    check("nav order is Log It!, Today, Stats, ... (swapped back per v3.42.1)", navBtns[0].includes("Log It!") && navBtns[1].includes("Today"), "true");
   },
   () => check("no runtime errors after v3.42.0 nav-swap pass", errors.length, 0),
+
+  // ── v3.42.1: header drop-shadow removed (suspected WebKit repaint-artifact trigger), Tracked So Far text bumped ──
+  () => {
+    const cssText = window.document.querySelector("style").textContent;
+    const badgeRule = cssText.match(/\.wt-topbanner-badge \{[^}]*\}/);
+    check("wt-topbanner-badge no longer has a CSS filter (drop-shadow removed)", badgeRule ? !badgeRule[0].includes("filter:") : null, "true");
+    const labelRule = cssText.match(/\.wt-tracked-row-label \{[^}]*\}/);
+    check("Tracked So Far label font bumped to 15px", labelRule ? labelRule[0].includes("font-size:15px") : null, "true");
+    const detailRule = cssText.match(/\.wt-tracked-row-detail \{[^}]*\}/);
+    check("Tracked So Far detail font bumped to 14px", detailRule ? detailRule[0].includes("font-size:14px") : null, "true");
+    check("Tracked So Far detail text now tan (var(--ink-inverse)), not muted-gray", detailRule ? detailRule[0].includes("color:var(--ink-inverse)") : null, "true");
+  },
+  () => check("no runtime errors after v3.42.1 pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

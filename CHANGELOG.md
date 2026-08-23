@@ -20,6 +20,47 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.42.1] — 2026-08-23
+
+Follow-up from Rob's real-device test of v3.42.0 — nav swap reverted, header black-box artifact
+investigated and mitigated, profile photo now downscaled, Tracked So Far text bumped.
+
+- **Bottom nav order reverted to Log It!, Today, Stats, My Plan, Settings** — Rob asked to swap it
+  back after testing v3.42.0's Today-first order.
+- **Investigated a recurring black-box artifact over the header** (profile icon, logo, and app
+  name — not just the profile photo as first reported). It appeared inconsistently after uploading
+  a profile photo and cleared on switching tabs, then would randomly recur. Ruled out memory
+  pressure as the cause — a single compressed photo is far too small to plausibly exhaust page
+  memory on a modern phone. The strongest suspect is a known WebKit/iOS Safari class of bug where a
+  CSS `filter` on one element (here, `filter:drop-shadow(...)` on the logo badge) causes a stray
+  repaint artifact over sibling elements after certain re-renders — this matches the
+  "intermittent, clears on navigation" symptom exactly and is not reproducible in jsdom (no real
+  layout/paint engine), so this is a strong hypothesis, not a confirmed root cause.
+  - **Mitigation shipped:** removed the `drop-shadow` filter from `.wt-topbanner-badge` entirely —
+    purely cosmetic, low risk to drop.
+- **Profile photo is now downscaled and compressed client-side before storage**, regardless of the
+  root cause above — a smaller, normalized image is strictly safer and was worth doing either way.
+  On upload, the image loads into an offscreen `<img>`, is drawn to a canvas capped at 240px on its
+  longest side, and re-exported as JPEG at 85% quality — so the stored `photoDataUri` is now
+  reliably tiny (tens of KB) regardless of the original photo's resolution. Raw file-size gate
+  raised from 2MB to 8MB (generous headroom for an unprocessed phone photo) since the real
+  constraint is now post-processing size, not the original upload.
+- **Tracked So Far text made larger and consistently tan**, per Rob's request: row label 13px → 15px
+  (already tan), row detail 12.5px → 14px and recolored from muted-gray (`var(--muted-dark)`) to
+  tan (`var(--ink-inverse)`) to match.
+- `tools/harness.js`: nav-order check inverted to match the reverted order; new checks confirm the
+  filter is gone and the Tracked So Far font/color changes are present.
+
+**Verification:** full 5-step pipeline (esbuild → harness clean, 0 runtime errors → `eslint` on
+`bundle.build.js`, 11-error vendor baseline unchanged → copy to `site/app/bundle.js` → harness +
+lint re-run against the exact shipped file, same results). End-state audit confirmed the filter
+removal, the canvas-downscale code, and the raised size cap are all present in the shipped bundle.
+**Not yet verified on a real device — this is the important caveat.** The drop-shadow removal is a
+hypothesis-driven fix for a bug jsdom cannot reproduce or confirm; if the black-box artifact recurs
+after this deploy, the WebKit-filter theory is wrong and the investigation needs to continue with
+Rob's on-device repro steps (exact sequence of taps, iOS version, whether it's Safari or a PWA
+homescreen install).
+
 ## [3.42.0] — 2026-08-23
 
 Today becomes the app's true landing/engagement page, per Rob's direction.
