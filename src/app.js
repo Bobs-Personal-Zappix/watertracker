@@ -25,6 +25,7 @@ import {
   Battery,
   Bed,
   Bell,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -2359,14 +2360,16 @@ import {
         onOpenTreatmentSheet: i,
         onOpenExerciseSheet: l,
         onOpenPresetSheet,
-        onOpenManualSheet
+        onOpenManualSheet,
+        hideVoiceTile = !1,
+        hideActionButtons = !1
     }) {
         let {
             u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z
         } = computeTrackerStats(e, t);
         return React.default.createElement("div", null, React.default.createElement("div", {
             className: "wt-trackers-grid"
-        }, React.default.createElement(VoiceTrackerTile, null), x && React.default.createElement("div", {
+        }, !hideVoiceTile && React.default.createElement(VoiceTrackerTile, null), x && React.default.createElement("div", {
             className: "wt-tracker-col wt-tracker-col-clickable",
             style: {
                 border: "2px solid var(--water)"
@@ -2708,7 +2711,7 @@ import {
             style: {
                 width: "100%"
             }
-        }, "All of these trackers are hidden from this screen. Turn one back on in Setup.")), React.default.createElement("div", {
+        }, "All of these trackers are hidden from this screen. Turn one back on in Setup.")), !hideActionButtons && React.default.createElement("div", {
             className: "wt-action-btns"
         }, React.default.createElement("button", {
             className: "wt-action-btn presets",
@@ -3604,72 +3607,43 @@ import {
         todayKey: t,
         onDeleteLog: n,
         onEditLogEntry: r,
-        onDeleteLogForDate: onDeleteLogForDate,
-        onSaveBackfill: onSaveBackfill
+        onOpenQuickDial,
+        onOpenSleepSheet,
+        onOpenWeightDial,
+        onOpenSupplementSheet,
+        onOpenTreatmentSheet,
+        onOpenExerciseSheet,
+        onOpenPresetSheet,
+        onOpenManualSheet
     }) {
-        let [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), [backfillOpen, setBackfillOpen] = (0, React.useState)(!1), s = Object.keys(e.logs).filter(n => n !== t && (e.logs[n] || []).length > 0).sort().reverse(), c = e.logs[t] || [];
-        return React.default.createElement("div", null, React.default.createElement(VoiceTrackerTile, null), React.default.createElement(TrackedSoFar, {
+        let c = e.logs[t] || [];
+        return React.default.createElement("div", null, React.default.createElement(TrackedSoFar, {
             data: e,
             todayKey: t
         }), React.default.createElement(RemainingRxTreatments, {
             data: e
+        }), React.default.createElement(MO, {
+            data: e,
+            todayKey: t,
+            onOpenQuickDial,
+            onOpenSleepSheet,
+            onOpenWeightDial,
+            onOpenSupplementSheet,
+            onOpenTreatmentSheet,
+            onOpenExerciseSheet,
+            onOpenPresetSheet,
+            onOpenManualSheet,
+            hideVoiceTile: !0,
+            hideActionButtons: !0
         }), React.default.createElement("div", {
-            style: {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between"
-            }
-        }, React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"
         }, "Today's log"), React.default.createElement("div", {
-            style: {
-                display: "flex",
-                alignItems: "center",
-                gap: 6
-            }
-        }, React.default.createElement("span", {
-            style: {
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--ink-inverse)"
-            }
-        }, "Prior Days:"), React.default.createElement("button", {
-            className: "wt-icon-btn",
-            style: {
-                color: "#fff",
-                minWidth: 40,
-                minHeight: 40,
-                justifyContent: "center"
-            },
-            onClick: () => {
-                u(null), i(!0)
-            },
-            "aria-label": "View past days"
-        }, React.default.createElement(Clock, {
-            size: 24
-        })))), React.default.createElement("div", {
             className: "wt-today-log-scroll"
         }, 0 === c.length ? React.default.createElement("p", {
             className: "wt-empty-note"
         }, "Nothing logged yet today — head to the Log tab to get started.") : React.default.createElement("ul", {
             className: "wt-log-list"
-        }, c.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !0, r, n)))), React.default.createElement(LO, {
-            open: o,
-            historyDate: l,
-            dates: s,
-            entriesForDate: l && e.logs[l] || [],
-            onClose: () => i(!1),
-            onSelectDate: e => u(e),
-            onBack: () => u(null),
-            onEnterMissed: () => setBackfillOpen(!0),
-            onDeleteEntry: t => onDeleteLogForDate(l, t)
-        }), React.default.createElement(BackfillSheet, {
-            open: backfillOpen,
-            initialDate: l || t,
-            data: e,
-            onClose: () => setBackfillOpen(!1),
-            onSave: onSaveBackfill
-        }))
+        }, c.slice().sort((e, t) => rO(t) - rO(e)).map(e => IO(e, !0, r, n)))))
     }
 
     function BO(e) {
@@ -3678,9 +3652,11 @@ import {
 
     function FO({
         data: e,
-        onDrShare: t
+        onDrShare: t,
+        onDeleteLogForDate,
+        onSaveBackfill
     }) {
-        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
+        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), [priorDaysOpen, setPriorDaysOpen] = (0, React.useState)(!1), [priorDaysHistoryDate, setPriorDaysHistoryDate] = (0, React.useState)(null), [priorDaysBackfillOpen, setPriorDaysBackfillOpen] = (0, React.useState)(!1), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
 
         function d(e) {
             r(e), "combined" === e && "day" === a && o("week")
@@ -4205,6 +4181,45 @@ import {
                 fill: "#7B61FF"
             }
         })))), React.default.createElement("div", {
+            className: "wt-card wt-tracker-col-clickable",
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                marginBottom: 16
+            },
+            role: "button",
+            tabIndex: 0,
+            onClick: () => {
+                setPriorDaysHistoryDate(null), setPriorDaysOpen(!0)
+            },
+            "aria-label": "Edit Prior Days Logs"
+        }, React.default.createElement(Calendar, {
+            size: 32,
+            color: "var(--ink-inverse)"
+        }), React.default.createElement("span", {
+            style: {
+                fontSize: 20,
+                fontWeight: 700,
+                color: "var(--ink-inverse)"
+            }
+        }, "Edit Prior Days Logs")), React.default.createElement(LO, {
+            open: priorDaysOpen,
+            historyDate: priorDaysHistoryDate,
+            dates: Object.keys(e.logs).filter(dk => dk !== HS(new Date) && (e.logs[dk] || []).length > 0).sort().reverse(),
+            entriesForDate: priorDaysHistoryDate && e.logs[priorDaysHistoryDate] || [],
+            onClose: () => setPriorDaysOpen(!1),
+            onSelectDate: dk => setPriorDaysHistoryDate(dk),
+            onBack: () => setPriorDaysHistoryDate(null),
+            onEnterMissed: () => setPriorDaysBackfillOpen(!0),
+            onDeleteEntry: entryId => onDeleteLogForDate(priorDaysHistoryDate, entryId)
+        }), React.default.createElement(BackfillSheet, {
+            open: priorDaysBackfillOpen,
+            initialDate: priorDaysHistoryDate || HS(new Date),
+            data: e,
+            onClose: () => setPriorDaysBackfillOpen(!1),
+            onSave: onSaveBackfill
+        }), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-strong"
         }, "Health Summary"), React.default.createElement("div", {
             className: "wt-card"
@@ -6255,11 +6270,35 @@ import {
                     dateKeyStr: HS(new Date)
                 }), j(!0)) : IS(e) ? (M(e), T(!0)) : (u(e), setManualSheetOpen(!0))
             },
-            onDeleteLogForDate: me,
-            onSaveBackfill: saveBackfill
+            onOpenQuickDial: function(e) {
+                d(e), m(0)
+            },
+            onOpenSleepSheet: () => {
+                $(null), R(!0)
+            },
+            onOpenWeightDial: function() {
+                v(0), w(JS()), E(null), g(!0)
+            },
+            onOpenSupplementSheet: () => {
+                P(null), S(!0)
+            },
+            onOpenTreatmentSheet: () => {
+                I(null), j(!0)
+            },
+            onOpenExerciseSheet: () => {
+                M(null), T(!0)
+            },
+            onOpenPresetSheet: () => {
+                i(!0)
+            },
+            onOpenManualSheet: () => {
+                u(null), c(null), setManualSheetOpen(!0)
+            }
         }), "reports" === r && React.default.createElement(FO, {
             data: t,
-            onDrShare: () => D(!0)
+            onDrShare: () => D(!0),
+            onDeleteLogForDate: me,
+            onSaveBackfill: saveBackfill
         }), "setup" === r && React.default.createElement(WO, {
             data: t,
             todayKey: Ee,

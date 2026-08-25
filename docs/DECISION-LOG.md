@@ -456,6 +456,29 @@ treatment) per Rob's follow-up review — the section label now sits inside the 
 with each item's own smaller card nested inside it, rather than floating without a border of its
 own.*
 
+**UX-27 — Voice Assistant tile removed from Today; Log It!'s 8 tracker tiles duplicated onto Today;
+"Prior Days" relocated to Stats and renamed "Edit Prior Days Logs."**
+Three explicit calls by Rob:
+1. The Voice Assistant tile (non-functional preview, `UX-19`) is removed from Today — it stays on
+   Log It! only. This amends `UX-21` point 1, which had copied it onto Today.
+2. Log It!'s full 8-tile tracker grid (`MO`) is duplicated onto Today, between "Remaining
+   RX/Treatments" and "Today's log," reusing the exact same component, tap handlers, and entry
+   sheets — so behavior is identical between the two pages, including per-tracker visibility
+   respecting My Plan's `settings.show*` toggles. The grid's own "Use Your Presets"/"Manually Log a
+   Meal" action buttons are deliberately not duplicated — Rob's request was for the 8 tiles only.
+3. The "Prior Days" past-days/backfill entry point (small label + calendar-icon button) moves off
+   Today entirely, onto Stats — positioned between "Sleep Over Time" and "Health Summary" — and is
+   renamed "Edit Prior Days Logs." It becomes a single large tappable card (bigger label text and
+   calendar icon) rather than a small icon button; tapping anywhere on the card opens the same
+   past-days list/backfill flow as before.
+*Why:* Today was carrying a second copy of Log It!'s summary content (Voice tile) that added no
+information, while the day's actual tracked-metric tiles — arguably the most useful content — only
+lived on Log It!. Surfacing the same tile grid on Today makes it a genuine one-stop daily view.
+Moving Prior Days to Stats groups it with the app's other historical/reporting views (trend charts,
+Health Summary) rather than sitting awkwardly next to the live "Today's log" list it doesn't
+describe.
+*Status:* **Locked** · Aug 24, 2026 · v3.48.0 — amends `UX-19`/`UX-21` (Voice Assistant on Today)
+
 ---
 
 ## Legal & compliance
@@ -585,7 +608,9 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 23, 2026 (v3.47.0 follow-ups: UX-07 amended — "RX & Vitamins" renamed back to
+*Last updated: August 24, 2026 (v3.48.0: UX-27 added — Voice Assistant tile removed from Today,
+Log It!'s 8 tracker tiles duplicated onto Today, "Prior Days" moved to Stats and renamed "Edit
+Prior Days Logs", amends UX-19/UX-21; earlier: v3.47.0 follow-ups: UX-07 amended — "RX & Vitamins" renamed back to
 "RX & Supplements"; UX-25/UX-26/PROD-13 amended — Sleep→Weight and RX & Supplements→presets gaps
 fixed, Today's Log rows tightened further, Remaining RX/Treatments given its own card border;
 earlier: PROD-13 added for v3.46.0 — My Plan as system of record / Today as

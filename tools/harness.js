@@ -383,7 +383,9 @@ const STEPS = [
     const preLen = logsToday().length;
     check("today's log starts empty before any backfill", preLen, 0);
   },
-  () => check("open All Past Days", clickByAria("View past days")),
+  // Prior Days moved to Stats in v3.48.0 (renamed "Edit Prior Days Logs").
+  () => check("nav to Stats (to open Prior Days)", nav("Stats")),
+  () => check("open All Past Days", clickByAria("Edit Prior Days Logs")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")];
     check("seeded past day appears in All Past Days list", rows.length, 1);
@@ -461,8 +463,8 @@ const STEPS = [
     const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
     check("today's RX & Supplements tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
   },
-  () => check("nav back to Today (to delete the backfilled dose)", nav("Today")),
-  () => check("re-open All Past Days", clickByAria("View past days")),
+  () => check("nav back to Stats (to delete the backfilled dose)", nav("Stats")),
+  () => check("re-open All Past Days", clickByAria("Edit Prior Days Logs")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")];
     check("newly backfilled day now appears in All Past Days list", rows.length, 2);
@@ -493,17 +495,8 @@ const STEPS = [
   },
 
   // ── v3.34.0 item 2: "Prior Days:" label + brighter/bigger calendar icon on Today ──
-  () => check("nav to Today (for Prior Days label check)", nav("Today")),
-  () => {
-    const label = [...window.document.querySelectorAll("span")].find((s) => s.textContent === "Prior Days:");
-    check("\"Prior Days:\" label present", !!label);
-    const btn = window.document.querySelector('[aria-label="View past days"]');
-    check("calendar icon button found", !!btn);
-    check("calendar icon button sits immediately after the label in the same row", label && btn ? label.nextElementSibling === btn : null, "true");
-    const svg = btn ? btn.querySelector("svg") : null;
-    check("calendar icon size increased to 24 (was 18)", svg ? svg.getAttribute("width") : null, "24");
-    check("calendar icon color brightened to #fff (was faint var(--muted))", btn ? btn.style.color : null, "rgb(255, 255, 255)");
-  },
+  // Moved off Today entirely in v3.48.0 — see that section below for the current location
+  // (Stats page, renamed "Edit Prior Days Logs").
 
   // ── v3.34.0 item 5: nav bar dark retheme, present + correctly styled on all 5 tabs ──
   () => {
@@ -553,10 +546,14 @@ const STEPS = [
     check("due callout text still states the due count", medsRow ? /due today/.test(medsRow.textContent) : null, "true");
   },
 
-  // ── v3.34.0 item 6a: touch targets — Today's Log edit/delete buttons ≥48px ──
+  // ── v3.34.0 item 6a: touch targets — icon buttons (pencil/trash/close) ≥48px ──
+  // The "View past days" button used to guarantee a .wt-icon-btn on an otherwise-empty Today
+  // page; that button moved to Stats in v3.48.0, so open its replacement here instead.
+  () => check("nav to Stats (to find a guaranteed .wt-icon-btn instance)", nav("Stats")),
+  () => check("open Edit Prior Days Logs", clickByAria("Edit Prior Days Logs")),
   () => {
     const iconBtn = window.document.querySelector(".wt-icon-btn");
-    check("wt-icon-btn (pencil/trash/close everywhere, incl. Today's Log) found", !!iconBtn);
+    check("wt-icon-btn (pencil/trash/close everywhere, incl. the past-days sheet's Close button) found", !!iconBtn);
     const cssText = window.document.querySelector("style").textContent;
     const rule = cssText.match(/\.wt-icon-btn \{[^}]*\}/);
     check("wt-icon-btn min-width reaches var(--touch)=48px", rule ? rule[0].includes("min-width:var(--touch)") : null, "true");
@@ -738,11 +735,7 @@ const STEPS = [
     // the v3.37.0 low-contrast fix flagged in that session's summary and addressed here.
     check("sheet field labels use the AA-contrast var(--muted-dark), not the old var(--muted)", fieldLabelRule ? fieldLabelRule[0].includes("color:var(--muted-dark)") : null, "true");
   },
-  () => check("nav to Today (to re-check the Prior Days label color)", nav("Today")),
-  () => {
-    const label = [...window.document.querySelectorAll("span")].find((s) => s.textContent === "Prior Days:");
-    check("\"Prior Days:\" label updated to var(--ink-inverse) (item 2)", label ? label.style.color : null, "var(--ink-inverse)");
-  },
+  // "Prior Days:" label moved off Today in v3.48.0 — see that section below.
   () => check("nav to My Plan (item 3 checks)", nav("My Plan")),
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
@@ -927,10 +920,10 @@ const STEPS = [
     const titleRule = cssText.match(/\.wt-topbanner-title \{[^}]*\}/);
     check("title font-size resized down from 27px", titleRule ? /font-size:(\d+)px/.exec(titleRule[0])[1] < 27 : null, "true");
   },
-  () => check("nav to Today (Past Days popup check)", nav("Today")),
+  () => check("nav to Stats (Past Days popup check, moved off Today in v3.48.0)", nav("Stats")),
   () => {
-    const btn = window.document.querySelector('button[aria-label="View past days"]');
-    check("found 'View past days' button", !!btn);
+    const btn = window.document.querySelector('[aria-label="Edit Prior Days Logs"]');
+    check("found 'Edit Prior Days Logs' tile", !!btn);
     if (btn) fire(btn);
   },
   () => {
@@ -1024,9 +1017,9 @@ const STEPS = [
     check("My Plan Water tile icon found", !!svg);
     check("My Plan Water tile icon is filled, not transparent-inside", svg ? svg.getAttribute("fill") : null, "var(--water)");
   },
-  () => check("nav to Today (Past Days text-color regression check)", nav("Today")),
+  () => check("nav to Stats (Past Days text-color regression check, moved off Today in v3.48.0)", nav("Stats")),
   () => {
-    const btn = window.document.querySelector('button[aria-label="View past days"]');
+    const btn = window.document.querySelector('[aria-label="Edit Prior Days Logs"]');
     if (btn) fire(btn);
   },
   () => {
@@ -1142,11 +1135,8 @@ const STEPS = [
   () => check("no runtime errors after v3.41.1 pass", errors.length, 0),
 
   // ── v3.42.0: Today becomes the landing page — Voice Tracker tile, Tracked So Far, nav swap ──
+  // Voice Tracker tile was removed from Today again in v3.48.0 (see that section below).
   () => check("nav to Today (v3.42.0 checks)", nav("Today")),
-  () => {
-    const tile = window.document.querySelector(".wt-voice-tile");
-    check("Voice Tracker tile present on Today page", !!tile);
-  },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
     check("'Today's log' section still present", labels.some((l) => l.toLowerCase() === "today's log"));
@@ -1208,12 +1198,7 @@ const STEPS = [
   () => {
     check("wt-todo-today-sticky / wt-todo-today-scroll classes no longer used", !window.document.querySelector(".wt-todo-today-sticky") && !window.document.querySelector(".wt-todo-today-scroll"), "true");
   },
-  () => {
-    const tile = window.document.querySelector(".wt-voice-tile");
-    check("Voice tile present on Today page", !!tile);
-    check("Voice tile now labeled 'Voice Assistant' (renamed from 'Voice Tracker')", tile ? tile.textContent.includes("Voice Assistant") : null, "true");
-    check("old 'Voice Tracker' label is gone", tile ? tile.textContent.includes("Voice Tracker") : null, false);
-  },
+  // Voice tile presence on Today is checked in the v3.48.0 section below (removed there).
   () => check("no runtime errors after v3.44.0 Today-page pass", errors.length, 0),
   () => {
     const cssText = window.document.querySelector("style").textContent;
@@ -1456,6 +1441,80 @@ const STEPS = [
     check("wt-log-desc-stack internal gap tightened (was 2px)", stackRule ? stackRule[0].includes("gap:1px") : null, "true");
   },
   () => check("no runtime errors after Today's-Log-tightening check", errors.length, 0),
+
+  // ── v3.48.0: Voice Assistant tile removed from Today; Log It!'s 8 tiles duplicated onto
+  // Today (between Remaining RX/Treatments and Today's log, respecting My Plan's per-tracker
+  // toggles, without re-adding the presets/manual-log action buttons); "Prior Days" moved to
+  // Stats, renamed "Edit Prior Days Logs", bigger text/icon, in its own clickable tile ──
+  () => check("nav to Today (v3.48.0 checks)", nav("Today")),
+  () => {
+    check("Voice Assistant tile removed from Today", !window.document.querySelector(".wt-voice-tile"), "true");
+  },
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
+    const idxRemaining = labels.indexOf("Remaining RX/Treatments"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
+    check("Remaining RX/Treatments still sits above Today's log with the duplicated tile grid between them", idxRemaining >= 0 && idxLog > idxRemaining, "true");
+    const t = tiles();
+    check("Today shows all 8 Log It! tiles (duplicated grid, current toggle state all-on)", t.length, 8);
+    check("Today's duplicated grid includes Water", t.some((x) => x.startsWith("Water")), "true");
+    check("Today's duplicated grid includes RX & Supplements", t.some((x) => x.startsWith("RX & Supplements")), "true");
+    check("duplicated grid does not also duplicate Log It!'s presets/manual-log action buttons", !window.document.querySelector(".wt-action-btns"), "true");
+  },
+  () => {
+    const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((x) => x.textContent.includes("Water"));
+    check("found Today's duplicated Water tile", !!waterTile);
+    if (waterTile) fire(waterTile);
+  },
+  () => {
+    const dialOpen = !!window.document.querySelector(".wt-sheet, .wt-backdrop");
+    check("tapping Today's duplicated Water tile opens the same entry sheet Log It!'s Water tile opens", dialOpen, "true");
+  },
+  () => check("close the sheet opened from Today's duplicated grid", clickByAria("Close")),
+  () => check("nav to My Plan (toggle Water off, to verify Today's duplicated grid honors the toggle)", nav("My Plan")),
+  () => {
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    check("found Water toggle on My Plan", !!waterToggle);
+    if (waterToggle) fire(waterToggle);
+  },
+  () => check("nav to Today (verify Water tile hidden)", nav("Today")),
+  () => {
+    check("Water tile no longer shown on Today's duplicated grid once toggled off on My Plan", tiles().some((t) => t.startsWith("Water")), false);
+  },
+  () => check("nav to My Plan (restore Water toggle)", nav("My Plan")),
+  () => {
+    const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
+    if (waterToggle) fire(waterToggle);
+  },
+  () => check("nav to Today (Water tile restored)", nav("Today")),
+  () => {
+    check("Water tile restored on Today's duplicated grid", tiles().some((t) => t.startsWith("Water")), "true");
+  },
+  () => check("no runtime errors after v3.48.0 Today-page pass", errors.length, 0),
+  () => check("nav to Stats (Prior Days relocation checks)", nav("Stats")),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label, .wt-section-label-strong")].map((el) => el.textContent);
+    const idxHealth = labels.indexOf("Health Summary");
+    check("'Health Summary' section still present on Stats", idxHealth >= 0, "true");
+  },
+  () => {
+    const tile = window.document.querySelector('[aria-label="Edit Prior Days Logs"]');
+    check("'Edit Prior Days Logs' tile found on Stats", !!tile);
+    const span = tile ? [...tile.querySelectorAll("span")].find((s) => s.textContent === "Edit Prior Days Logs") : null;
+    check("tile text reads 'Edit Prior Days Logs'", !!span);
+    check("label font size bumped up (20px, bigger than Today's old 13px label)", span ? span.style.fontSize : null, "20px");
+    const svg = tile ? tile.querySelector("svg") : null;
+    check("calendar icon present", !!svg);
+    check("calendar icon size bumped up (32, bigger than Today's old 24)", svg ? svg.getAttribute("width") : null, "32");
+    const healthSummaryLabel = [...window.document.querySelectorAll(".wt-section-label-strong")].find((el) => el.textContent === "Health Summary");
+    check("'Edit Prior Days Logs' tile sits before 'Health Summary' in document order", tile && healthSummaryLabel ? !!(tile.compareDocumentPosition(healthSummaryLabel) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
+  },
+  () => check("tap the Edit Prior Days Logs tile", clickByAria("Edit Prior Days Logs")),
+  () => {
+    const sheet = [...window.document.querySelectorAll(".wt-sheet")].find((s) => s.textContent.includes("Past days") || s.textContent.includes("Enter Missed Items"));
+    check("tapping the tile opens the past-days list", !!sheet);
+  },
+  () => check("close the past-days sheet", clickByAria("Close")),
+  () => check("no runtime errors after v3.48.0 Stats-page pass", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 23, 2026 · Deployed version: 3.47.0*
+*As of: August 24, 2026 · Deployed version: 3.48.0*
 
 ---
 
@@ -18,7 +18,10 @@ Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX 
 
 **Tabs:** Log It! · Today · Stats · My Plan · Settings (v3.42.0 swapped Today first; v3.42.1
 reverted that swap per Rob after real-device testing — Today's landing-page content additions
-from v3.42.0 remain, only the nav order reverted)
+from v3.42.0 remain, only the nav order reverted). Today's Voice Assistant tile was removed in
+v3.48.0 (Log It! keeps its own copy); Today now also shows Log It!'s full 8-tile tracker grid
+(same component, same toggles, same tap behavior), inserted between "Remaining RX/Treatments" and
+"Today's log."
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -27,8 +30,10 @@ from v3.42.0 remain, only the nav order reverted)
   Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
   edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
 - Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; RX items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on Today's "Remaining RX/Treatments" section.
-- Past-days log viewer (calendar icon on Today); past-day entries are deletable
-- "Enter Missed Items" backfill on any past day (Today → calendar icon → day → button)
+- Past-days log viewer ("Edit Prior Days Logs" tile on Stats, between Sleep Over Time and Health
+  Summary, as of v3.48.0 — moved off Today, where it used to live behind a small calendar-icon
+  button); past-day entries are deletable
+- "Enter Missed Items" backfill on any past day (Stats → Edit Prior Days Logs → day → button)
 - Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines. The
   Subscriptions panel was removed in v3.46.0 — superseded by Today's "Remaining RX/Treatments"
   section, which now covers the same ground with richer detail (provider/pharmacy, refills).
@@ -132,6 +137,22 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 24, 2026 (v3.48.0)
+
+Three Today/Stats changes per Rob's direction (`UX-27`):
+- Voice Assistant tile removed from Today (stays on Log It! only); the sections below it shift up.
+- Log It!'s 8-tile tracker grid duplicated onto Today, between "Remaining RX/Treatments" and
+  "Today's log" — same component, tap handlers, entry sheets, and per-tracker My Plan toggle
+  behavior as Log It!, without duplicating Log It!'s presets/manual-log action buttons.
+- "Prior Days" moved from Today to Stats (between Sleep Over Time and Health Summary), renamed
+  "Edit Prior Days Logs," rebuilt as one large tappable card with bigger label text (13px → 20px)
+  and a bigger calendar icon (24px → 32px, clock glyph swapped for an actual calendar glyph).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 474 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0). **Not
+  yet verified on a real device** — jsdom can't confirm how the duplicated tile grid reads visually
+  on Today next to Log It!, or how the new Stats card looks/feels.
 
 ## What shipped Aug 23, 2026 (v3.47.0)
 
@@ -447,7 +468,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient.
+**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient. v3.41.0 through v3.48.0 were all further Rob-directed detours in the same vein (Today/Stats/My Plan layout and content changes); the queued sequence above still hasn't been started.
 
 See `docs/ROADMAP-v3.md` (HydroPro-Master-Roadmap) for the full version-by-version plan.
 

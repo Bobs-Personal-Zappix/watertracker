@@ -20,6 +20,43 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.48.0] — 2026-08-24
+
+Three changes to Today and Stats, per Rob's direction:
+
+- **Voice Assistant tile removed from Today.** The non-functional preview tile (still present on
+  Log It!) no longer appears at the top of Today; the sections below it (Today at a Glance,
+  Remaining RX/Treatments, the tile grid below, Today's log) shift up to fill the space.
+- **Log It!'s 8 tracker tiles duplicated onto Today**, inserted between "Remaining RX/Treatments"
+  and "Today's log". Same component (`MO`), same tap handlers, same entry sheets, same per-tracker
+  visibility toggles as Log It! — a tracker turned off on My Plan disappears from both pages
+  identically, since both read the same `settings.show*` flags. The duplicated grid does not also
+  duplicate Log It!'s "Use Your Presets"/"Manually Log a Meal" action buttons underneath it — only
+  the 8 tiles, as requested. (`MO` gained two optional props, `hideVoiceTile` and
+  `hideActionButtons`, to support reuse without touching Log It!'s own rendering.)
+- **"Prior Days" moved from Today to Stats**, positioned above "Health Summary" and below "Sleep
+  Over Time". Renamed **"Edit Prior Days Logs"**, and rebuilt as a single large tappable card
+  (`wt-card`) rather than a small label + icon button — tapping anywhere on the card opens the same
+  past-days list/backfill flow that used to live behind the small calendar-icon button on Today.
+  Label text bumped 13px → 20px; calendar icon bumped 24px → 32px (and changed from a clock glyph
+  to an actual calendar glyph, matching the feature's name).
+- `tools/harness.js`: updated every check that depended on Today's now-removed Voice Assistant tile
+  or Prior Days button (several were relocated to Stats or rewritten to find their guaranteed
+  element elsewhere, since removing Prior Days from Today also removed the only element that
+  guaranteed a `.wt-icon-btn` existed on an otherwise-empty Today page for the v3.34.0 touch-target
+  check). Added a new v3.48.0 section covering: Voice Assistant tile absence on Today, the
+  duplicated 8-tile grid's presence/count/ordering and its respect for My Plan's toggles (tested by
+  toggling Water off and back on), that the action buttons are NOT duplicated, that tapping a
+  duplicated tile opens the real entry sheet, and the new "Edit Prior Days Logs" tile's label text,
+  icon size, position (before Health Summary), and click-to-open behavior on Stats.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 474 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo` water-tile assertion, documented
+  since v3.44.0 — unrelated, predates this session). **Not yet verified on a real device** — jsdom
+  can't confirm how the duplicated tile grid reads visually on Today (whether it feels redundant
+  next to Log It!, spacing/wrapping) or how the new "Edit Prior Days Logs" card looks/feels on
+  Stats.
+
 ## [3.47.0] — 2026-08-23
 
 Follow-up tweaks from Rob's review of v3.46.0: fixed a spacing gap that was missed, added another
