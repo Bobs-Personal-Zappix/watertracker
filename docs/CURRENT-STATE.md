@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 24, 2026 · Deployed version: 3.48.0*
+*As of: August 25, 2026 · Deployed version: 3.49.0*
 
 ---
 
@@ -16,12 +16,14 @@
 **Tracked metrics (8 tiles, all with percentage progress rings)**
 Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Supplements — in that order on the Log It! page. (Renamed from "RX & Vitamins" in v3.47.0.)
 
-**Tabs:** Log It! · Today · Stats · My Plan · Settings (v3.42.0 swapped Today first; v3.42.1
-reverted that swap per Rob after real-device testing — Today's landing-page content additions
-from v3.42.0 remain, only the nav order reverted). Today's Voice Assistant tile was removed in
-v3.48.0 (Log It! keeps its own copy); Today now also shows Log It!'s full 8-tile tracker grid
-(same component, same toggles, same tap behavior), inserted between "Remaining RX/Treatments" and
-"Today's log."
+**Tabs:** Log It! · Today · **RX** · Stats · My Plan · Settings — 6 tabs as of v3.49.0, which added
+"RX" (icon `Pill`) between Today and Stats (v3.42.0 swapped Today first; v3.42.1 reverted that swap
+per Rob after real-device testing — Today's landing-page content additions from v3.42.0 remain,
+only the nav order reverted). Today's Voice Assistant tile was removed in v3.48.0 (Log It! keeps
+its own copy); Today now also shows Log It!'s full 8-tile tracker grid (same component, same
+toggles, same tap behavior). As of v3.49.0, Today's order is "Today at a Glance" → the 8-tile grid
+→ "Today's log" — the "Remaining RX/Treatments" section that used to sit between them was removed
+from Today entirely and moved to the new RX page (see below).
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -29,14 +31,21 @@ v3.48.0 (Log It! keeps its own copy); Today now also shows Log It!'s full 8-tile
 - Supplements and Treatments, both with recurring schedules. Next-due-date editing lives on My
   Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
   edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
-- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; RX items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on Today's "Remaining RX/Treatments" section.
+- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; RX items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on the RX page (moved there from Today's "Remaining RX/Treatments" section in v3.49.0).
+- **RX page (v3.49.0)** — titled "SCRIPTS FOR: {date}", the single place to see everything a user
+  is subscribed to or prescribed. Three sections: Treatments, Prescriptions, Vitamins &
+  Supplements (reusing the `category` field split from v3.45.0) — lists every item of that type,
+  not just inventory-tracked ones. Treatments and RX-category prescriptions can carry an optional
+  partner logo + link (entered on My Plan next to provider/pharmacy); when both a name and a logo
+  are set, the item renders as a partner-branded card instead of plain text — the first step
+  toward the "promote our partners" direction. Vitamins & Supplements have no partner concept.
 - Past-days log viewer ("Edit Prior Days Logs" tile on Stats, between Sleep Over Time and Health
   Summary, as of v3.48.0 — moved off Today, where it used to live behind a small calendar-icon
   button); past-day entries are deletable
 - "Enter Missed Items" backfill on any past day (Stats → Edit Prior Days Logs → day → button)
 - Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines. The
-  Subscriptions panel was removed in v3.46.0 — superseded by Today's "Remaining RX/Treatments"
-  section, which now covers the same ground with richer detail (provider/pharmacy, refills).
+  Subscriptions panel was removed in v3.46.0 — superseded first by Today's "Remaining
+  RX/Treatments" section, then by the RX page as of v3.49.0.
 - Health Summary → printable/PDF doctor summary, plus shareable snapshot links (90-day expiry, no account needed to open) — at the bottom of Stats
 - Push notifications: interval reminders (progress-aware, suppressed if recently logged), bedtime, supplement, treatment
 - In-app feedback form with push alerts to watchers
@@ -111,7 +120,7 @@ CHANGELOG.md
 3. **No error monitoring.** Crashes are discovered only when a tester reports them. A blank white screen is otherwise invisible.
 4. **No analytics.** D1/D7/D30 retention — the only metric that matters for a tracker — cannot currently be measured.
 5. **Single-blob data model.** History is one JSON blob in `account_backups.data`. Cannot answer any aggregate or per-clinic question, which is the entire B2B proposition. → `ARCH-OPEN-02`
-6. ~~**Schema fragility.**~~ **RESOLVED** — `ARCH-OPEN-05` complete Aug 20. `migrate()`/`deepMergeDefaults` replaced the hand-maintained field whitelists. New fields require one line in defaults, not four scattered additions.
+6. ~~**Schema fragility.**~~ **RESOLVED** — `ARCH-OPEN-05` complete Aug 20. `migrate()`/`deepMergeDefaults` replaced the hand-maintained field whitelists. New fields require one line in defaults, not four scattered additions. *Addendum Aug 25 (v3.49.0):* found and fixed a second-level instance of the same bug class — the per-item array normalizers (`US()`, `normalizeTreatments()`) had their own hand-maintained whitelists that were silently dropping `category`/`pharmacy`/`refillsRemaining`/`provider` on every boot and backup restore. `deepMergeDefaults` doesn't reach into arrays field-by-field, so these normalizers remain a manual whitelist — any future field added to a supplement or treatment item must be added there too, not just in the add/edit handler. See `docs/DECISION-LOG.md` `ARCH-OPEN-05` addendum.
 7. **Legal/compliance unaddressed.** FTC Health Breach Notification Rule and state consumer-health-privacy laws apply to consumer health apps; the clinic path may trigger HIPAA obligations. PROD-09 (backfill provenance) is the first field added specifically for clinic reporting — legal consult should precede clinic pilot. → `LEGAL-OPEN-01`
 8. **Cloudflare Access can't scale** past an invited list. Magic-link auth is built but Access is still the gate. → `ARCH-OPEN-04`
 9. ~~**Header rendering bug.**~~ **RESOLVED** — a black-box artifact intermittently covered the
@@ -137,6 +146,31 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 25, 2026 (v3.49.0)
+
+New "RX" nav page (`UX-28`) per Rob's direction, plus a data-loss bug fix found while building it:
+- New 6th bottom-nav tab "RX" (icon `Pill`, between Today and Stats), titled "SCRIPTS FOR: {date}".
+  Three sections — Treatments, Prescriptions, Vitamins & Supplements — listing every item of that
+  type (not just inventory-tracked ones, a real scope increase over the section it replaces).
+- "Remaining RX/Treatments" removed from Today entirely; its content moved to and expanded into
+  the new page. Today's order is now "Today at a Glance" → 8-tile grid → "Today's log".
+- New optional "Partner logo" (image upload, same canvas-downscale pipeline as the Profile photo)
+  and "Partner link" (URL) fields on Treatments and RX-category prescriptions (not offered on
+  Vitamins & Supplements). When both a provider/pharmacy name and a logo are set, the item renders
+  as a partner-branded card on the RX page instead of plain text.
+- **Bug fix:** the settings normalizer run on every app boot and backup restore (`US()` for
+  supplements, `normalizeTreatments()` for treatments) was silently stripping `category`,
+  `pharmacy`, `refillsRemaining` (supplements) and `provider` (treatments) on every reload —
+  confirmed present in the previously-deployed bundle. Fixed; see `docs/DECISION-LOG.md`
+  (`ARCH-OPEN-05` addendum). `tools/harness.js` now seeds a pre-existing RX item and treatment
+  with these fields already set, so the harness's normal boot doubles as the reload-persistence
+  regression test.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 495 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0). **Not
+  yet verified on a real device** — jsdom can't confirm 6-tab nav crowding at the 420px max nav
+  width, partner logo crop/scale, or general visual/spacing of the new page.
 
 ## What shipped Aug 24, 2026 (v3.48.0)
 
@@ -449,6 +483,12 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   Treatments" wasn't in scope for that fix — a wrong next-due date on a treatment currently can't be
   corrected without deleting and re-adding the item. Worth raising with Rob before "My Treatments"
   gets built out further.
+- **"Add Partner"/"Add Treatment Provider" sheet on My Plan is still a design-review placeholder**
+  (name, protocol code, contact, sessions, appointment date — none wired to any data model). This is
+  a separate concern from the per-item "Partner logo"/"Partner link" fields added in v3.49.0 (which
+  attach to an existing Treatment/RX item's provider/pharmacy name) — the placeholder sheet is for
+  onboarding a whole new partner relationship, not decorating an existing item. Not touched by
+  v3.49.0; still needs a real spec and data model before it can be wired up.
 
 ---
 

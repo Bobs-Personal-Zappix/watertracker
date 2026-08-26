@@ -479,6 +479,48 @@ Health Summary) rather than sitting awkwardly next to the live "Today's log" lis
 describe.
 *Status:* **Locked** · Aug 24, 2026 · v3.48.0 — amends `UX-19`/`UX-21` (Voice Assistant on Today)
 
+**UX-28 — New "RX" page: consolidated Treatments/Prescriptions/Vitamins & Supplements view,
+titled "SCRIPTS FOR:"; partner-branded cards; "Remaining RX/Treatments" retired from Today.**
+A 6th bottom-nav tab, "RX" (icon `Pill`, positioned Log It! → Today → **RX** → Stats → My Plan →
+Settings), becomes the single place to see everything a user is subscribed to or prescribed by a
+wellness center (e.g. DripBar), doctor's office, pharmacy, or insurer. Explicit calls by Rob:
+1. Page title reads "SCRIPTS FOR: {today's date}", following the same title-plus-date pattern
+   every other tab already uses.
+2. Three full sections — **Treatments**, **Prescriptions**, **Vitamins & Supplements** — reusing
+   the `category` field split from `UX-24`. Unlike the retired Today section, each lists **every**
+   item of that type, not only inventory-tracked ones; inventory detail (qty remaining, expiry,
+   refills, the `QS()` low-supply/near-expiry alert) still shows inline only when
+   `trackInventory` is on. This is a real scope increase over a straight relocation.
+3. **Partner branding, confirmed as real cards, not just surfacing existing text fields:** two new
+   optional fields, `partnerLogoDataUri` and `partnerLink`, added to both Treatments (paired with
+   the existing `provider` field) and RX-category supplements (paired with `pharmacy`) — not
+   offered on Vitamins & Supplements, which have no organizational "filled by" field to attach a
+   partner to. When both a provider/pharmacy name and a logo are set, the item renders as a
+   partner card (reusing the `.wt-regimen-card` styling already used for the Austin Drip Lounge
+   demo on My Plan) with the logo and an outbound link; otherwise it falls back to the existing
+   plain "From {provider}" / "Filled at {pharmacy}" text. Logo upload reuses the Profile-photo
+   pattern exactly (canvas-downscaled to 240px longest side, JPEG 85%, base64 data URI, 8 MB cap
+   before downscale).
+4. The "Remaining RX/Treatments" section (`PROD-13`, v3.46.0/v3.47.0) is removed from Today
+   entirely — its content moves to and expands into this page. Today's order is now "Today at a
+   Glance" → the duplicated 8-tile grid (`UX-27`) → "Today's log".
+*Bug found and fixed as part of this work:* the settings normalizer that runs on every app boot and
+backup restore (`US()` for supplements, `normalizeTreatments()` for treatments, both invoked from
+`migrate()`) rebuilt each item from a field whitelist that excluded `category`, `pharmacy`,
+`refillsRemaining` (supplements) and `provider` (treatments) — confirmed present in the deployed
+bundle too. Every reload or backup restore was silently reverting these fields to blank/default.
+Fixed by adding the missing fields to both normalizers; the new `partnerLogoDataUri`/`partnerLink`
+fields were added to the same whitelists from the start so they don't repeat the bug. See the
+`ARCH-OPEN-05` addendum below for the full record — this is the same bug class that decision
+already exists to prevent.
+*Why:* keeps day-to-day logging (Log It!, Today) unchanged while giving RX its own dedicated
+"everything I'm on" view — the natural place to also make partner organizations visible, which
+supports the clinic-distribution direction (`STRAT-10`) by giving a partner like DripBar a
+branded presence inside the app.
+*Status:* **Locked** · Aug 25, 2026 · v3.49.0 — amends `UX-06` (nav order), `PROD-13` (Today's
+status-view role), `UX-27` point 2 (tile-grid position, now directly after "Today at a Glance"
+instead of after "Remaining RX/Treatments")
+
 ---
 
 ## Legal & compliance
@@ -595,6 +637,19 @@ Replace the hand-maintained field whitelists in the load path (`One()`, `vj()`, 
 *Status: **Locked — complete** · Aug 20, 2026*
 Replaced three hand-maintained field whitelists in the load path with a single `migrate(stored)` function using `deepMergeDefaults` against `defaultSettings`. Export inverted from allowlist to denylist. `SCHEMA_VERSION=2` stamped with a migration-chain hook for future breaking changes. Fixes `goalWeight`/`goalExerciseMinutes` silent-drop bug in `src/app.js` (shipped v3.20.0); same bug patched in deployed `site/app/bundle.js` separately (v3.21.0, real-device verified Aug 20).
 *Why:* the silent-field-loss bug had already bitten sleep, weight, and supplements. The fix retires the whole bug class rather than patching it once more.
+*Addendum (Aug 25, 2026, v3.49.0):* the array-item normalizers this decision introduced —
+`US()` for supplements, `normalizeTreatments()` for treatments, both called from
+`migrateSettingsShape()` on every `migrate()` pass — turned out to have their own hand-maintained
+field whitelists, the exact same bug class one level down: `category`, `pharmacy`,
+`refillsRemaining` (supplements) and `provider` (treatments) were all missing from those
+whitelists and so were silently stripped on every app boot and backup restore, confirmed present
+in the deployed bundle. `deepMergeDefaults` doesn't help here because it treats arrays specially
+(passes the incoming array through as-is rather than merging field-by-field), so the per-item
+normalizers are still a manual whitelist that must be kept current by hand. Found and fixed while
+building the RX page (`UX-28`) — the fields are now included, and a dedicated boot-time
+reload-persistence check was added to `tools/harness.js`. Flagging this as a standing pattern to
+check any time a new field is added to a supplement or treatment item: it must go in the relevant
+normalizer's whitelist, not just the add/edit handler, or it repeats this bug.
 
 **ARCH-OPEN-06 — Retention analytics via the Worker.**
 *Status: **Fully deployed and verified** · Aug 20, 2026*
@@ -608,7 +663,12 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 24, 2026 (v3.48.0: UX-27 added — Voice Assistant tile removed from Today,
+*Last updated: August 25, 2026 (v3.49.0: UX-28 added — new "RX" nav page consolidating
+Treatments/Prescriptions/Vitamins & Supplements ("SCRIPTS FOR:"), partner-branded logo/link cards,
+"Remaining RX/Treatments" retired from Today, amends UX-06/PROD-13/UX-27; ARCH-OPEN-05 addendum —
+fixed a second-level normalizer bug (`US()`/`normalizeTreatments()`) that was silently stripping
+category/pharmacy/refillsRemaining/provider on every app boot and backup restore; earlier: v3.48.0:
+UX-27 added — Voice Assistant tile removed from Today,
 Log It!'s 8 tracker tiles duplicated onto Today, "Prior Days" moved to Stats and renamed "Edit
 Prior Days Logs", amends UX-19/UX-21; earlier: v3.47.0 follow-ups: UX-07 amended — "RX & Vitamins" renamed back to
 "RX & Supplements"; UX-25/UX-26/PROD-13 amended — Sleep→Weight and RX & Supplements→presets gaps

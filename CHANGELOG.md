@@ -20,6 +20,54 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.49.0] — 2026-08-25
+
+New "RX" nav page consolidating everything a user is subscribed to or prescribed, per Rob's
+direction — plus a data-loss bug fix found while building it:
+
+- **New "RX" bottom-nav tab** (icon `Pill`), positioned Log It! → Today → **RX** → Stats → My Plan
+  → Settings. Titled **"SCRIPTS FOR: {today's date}"**, following the same title-plus-date pattern
+  every other tab already uses.
+- **Three sections** — **Treatments**, **Prescriptions**, **Vitamins & Supplements** — reusing the
+  `category` field split introduced in v3.45.0. Unlike the Today section it replaces, each section
+  lists **every** item of that type, not only inventory-tracked ones; qty remaining, expiry,
+  refills, and the low-supply/near-expiry alert still show inline only when inventory tracking is
+  on for that item.
+- **"Remaining RX/Treatments" removed from Today entirely** (v3.46.0/v3.47.0) — its content moves
+  to and expands into the new RX page. Today's order is now "Today at a Glance" → the duplicated
+  8-tile grid (v3.48.0) → "Today's log".
+- **Partner-branded cards, per Rob's explicit request to help promote partners:** two new optional
+  fields, "Partner logo" (image upload) and "Partner link" (URL), added to the My Plan add/edit
+  forms for Treatments (next to "Ordered from / provider") and RX-category prescriptions (next to
+  "Pharmacy / where filled") — shown once that name field is filled in. Not offered on Vitamins &
+  Supplements, which have no organizational "filled by" field. When both a provider/pharmacy name
+  and a logo are set, the RX page renders that item as a partner card (reusing the existing
+  clinic-card styling from the Austin Drip Lounge demo on My Plan) with the logo and an outbound
+  link; otherwise it falls back to the existing plain "From {provider}" / "Filled at {pharmacy}"
+  text. Logo upload reuses the Profile page's photo pipeline exactly: canvas-downscaled to 240px
+  longest side, JPEG 85%, stored as a base64 data URI, 8 MB cap before downscale.
+- **Bug fix found and fixed while building this:** the settings normalizer that runs on every app
+  boot and backup restore (`US()` for supplements, `normalizeTreatments()` for treatments) rebuilt
+  each item from a field whitelist that excluded `category`, `pharmacy`, `refillsRemaining`
+  (supplements) and `provider` (treatments) — confirmed present in the previously-deployed
+  `bundle.js` too. Every reload or backup restore was silently reverting these fields to
+  blank/default, meaning any RX item would drift back toward showing as a plain vitamin, and any
+  pharmacy/provider/refills detail would disappear, on the very next app open. Fixed by adding the
+  missing fields (plus the two new partner fields) to both normalizers' whitelists. See
+  `docs/DECISION-LOG.md` (`ARCH-OPEN-05` addendum, `UX-28`) for the full record.
+- `tools/harness.js`: seed data now includes a pre-existing RX supplement and treatment with
+  category/pharmacy/refills/provider/partner fields already set (as if saved in a prior session) —
+  this doubles as the dedicated reload-persistence regression test for the bug fix above, since the
+  harness's one-time boot already exercises the exact `migrate()` code path production hits on
+  every app open. Also updated: every check that referenced the now-removed "Remaining
+  RX/Treatments" Today section, either repointed at the new RX page or rewritten to confirm the
+  section's absence from Today.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 495 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0). **Not
+  yet verified on a real device** — jsdom can't confirm 6-tab nav crowding/wrapping at the 420px
+  max nav width, partner logo crop/scale, or general visual/spacing of the new page.
+
 ## [3.48.0] — 2026-08-24
 
 Three changes to Today and Stats, per Rob's direction:

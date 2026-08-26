@@ -100,6 +100,23 @@ const SEED = makeSeed({
       { id: "s2", name: "OverdueMed", intervalDays: 1, lastTakenDate: null,
         nextDueOverride: DAYS_AGO(3), trackInventory: false, qtyRemaining: 0,
         expirationDate: null },
+      // Pre-existing RX item with category/pharmacy/refills/partner fields already set, as if
+      // saved in a prior session — proves the migrate()-on-load normalizer bug fix (v3.49.0):
+      // these fields used to be silently stripped by US() every time the app booted.
+      { id: "s3", name: "SeedRx", category: "rx", intervalDays: 1, lastTakenDate: null,
+        nextDueOverride: null, trackInventory: true, qtyRemaining: 5,
+        expirationDate: null, pharmacy: "Seed Pharmacy", refillsRemaining: 2,
+        partnerLogoDataUri: "data:image/jpeg;base64,SEEDRXLOGO", partnerLink: "https://example.com/seedrx" },
+    ],
+    treatments: [
+      // Same reload-persistence proof for treatments' `provider`/partner fields. intervalDays:0
+      // (history-only) and qtyRemaining above the low-supply threshold deliberately avoid
+      // triggering due-callouts or QS() alerts elsewhere in the suite — this seed item exists
+      // only to prove field survival through the boot-time migrate() pass.
+      { id: "t1", name: "SeedTreatment", intervalDays: 0, lastTakenDate: null,
+        nextDueOverride: null, trackInventory: true, qtyRemaining: 12,
+        expirationDate: null, provider: "Seed Provider",
+        partnerLogoDataUri: "data:image/jpeg;base64,SEEDTREATMENTLOGO", partnerLink: "https://example.com/seedtreatment" },
     ],
   },
 });
@@ -269,9 +286,11 @@ const STEPS = [
     const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
       .find((el) => el.textContent === "RX");
     check("RX sheet title found", !!title);
-    // Sheet went dark in v3.37.0 — empty-note text must stay on the dark-safe token, not invisible.
-    const note = window.document.querySelector(".wt-empty-note");
-    check("RX sheet empty-note present and dark-theme styled", !!note);
+    // SeedRx (category "rx", pharmacy/refills/partner fields pre-set in the seed, as if saved in
+    // a prior session) appearing here proves those fields survived the boot-time migrate() pass —
+    // the v3.49.0 regression check for the normalizer bug that used to silently strip them.
+    const row = [...window.document.querySelectorAll(".wt-preset-row")].find((r) => r.textContent.includes("SeedRx"));
+    check("seeded SeedRx (category/pharmacy/refills pre-set) survived boot and appears in the RX list", !!row);
   },
   () => check("close RX sheet", clickByAria("Close")),
   // Add assertions for whatever changed this session.
@@ -1337,6 +1356,7 @@ const STEPS = [
   () => check("toggle inventory tracking on for DetailedRx", clickByAria("Toggle inventory tracking")),
   () => check("set DetailedRx qty low enough to trigger a low-supply alert", setInput("e.g. 30", "2")),
   () => check("set DetailedRx refills remaining", setInput("e.g. 3", "5")),
+  () => check("Partner link field appears once pharmacy is filled", setInput("https://...", "https://corner-pharmacy.example.com")),
   () => {
     // Scoped to .wt-modal — the RX PlanSheet underneath may still have its own due-date inputs
     // mounted (e.g. TestRx's), which would otherwise be matched first by a bare type="date" query.
@@ -1353,6 +1373,8 @@ const STEPS = [
     check("DetailedRx stored with pharmacy", r ? r.pharmacy : null, "Corner Pharmacy");
     check("DetailedRx stored with refillsRemaining", r ? r.refillsRemaining : null, 5);
     check("DetailedRx stored with trackInventory on", r ? r.trackInventory : null, "true");
+    check("DetailedRx stored with partnerLink even with no logo uploaded", r ? r.partnerLink : null, "https://corner-pharmacy.example.com");
+    check("DetailedRx has no partnerLogoDataUri (none uploaded)", r ? r.partnerLogoDataUri : "MISSING", null);
   },
   () => check("close RX sheet", clickByAria("Close")),
   () => check("open Self-Managed Treatments sheet", clickByText("Self-Managed Treatments", "button")),
@@ -1369,28 +1391,70 @@ const STEPS = [
   },
   () => check("close Self-Managed Treatments sheet", clickByAria("Close")),
   () => check("no runtime errors after detailed-item setup pass", errors.length, 0),
-  () => check("nav to Today (Remaining RX/Treatments section check)", nav("Today")),
+
+  // ── v3.49.0: "Remaining RX/Treatments" retired from Today; new "RX" page ("SCRIPTS FOR:")
+  // takes over and expands it into three full groups — Treatments / Prescriptions / Vitamins &
+  // Supplements — listing every item (not just inventory-tracked ones), plus partner-branded
+  // cards (logo + link) for items with both a provider/pharmacy and a partner logo set ──
+  () => check("nav to Today (Remaining RX/Treatments retired check)", nav("Today")),
   () => {
-    const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    check("'Remaining RX/Treatments' section present, between Today at a Glance and Today's log", labels.includes("Remaining RX/Treatments"), "true");
-    const idxGlance = labels.indexOf("Today at a Glance"), idxRemaining = labels.indexOf("Remaining RX/Treatments"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
-    check("section ordering is Today at a Glance -> Remaining RX/Treatments -> Today's log", idxGlance >= 0 && idxRemaining > idxGlance && idxLog > idxRemaining, "true");
+    const labels = [...window.document.querySelectorAll(".wt-section-label, .wt-section-label-lg")].map((el) => el.textContent);
+    check("'Remaining RX/Treatments' no longer present on Today (moved to the RX page)", labels.includes("Remaining RX/Treatments"), false);
+  },
+  () => check("nav button 'RX' present in bottom nav", [...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.trim() === "RX"), "true"),
+  () => check("nav to RX page", nav("RX")),
+  () => check("RX page title starts with 'SCRIPTS FOR:'", (headerText() || "").startsWith("SCRIPTS FOR:"), "true"),
+  () => {
+    const labels = [...window.document.querySelectorAll(".wt-section-label-lg")].map((el) => el.textContent);
+    check("RX page has 'Treatments' section", labels.includes("Treatments"), "true");
+    check("RX page has 'Prescriptions' section", labels.includes("Prescriptions"), "true");
+    check("RX page has 'Vitamins & Supplements' section", labels.includes("Vitamins & Supplements"), "true");
+    const idxT = labels.indexOf("Treatments"), idxP = labels.indexOf("Prescriptions"), idxV = labels.indexOf("Vitamins & Supplements");
+    check("sections ordered Treatments -> Prescriptions -> Vitamins & Supplements", idxT >= 0 && idxP > idxT && idxV > idxP, "true");
   },
   () => {
-    const cards = [...window.document.querySelectorAll(".wt-card")];
+    const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
     const rxCard = cards.find((c) => c.textContent.includes("DetailedRx"));
-    check("DetailedRx card present in Remaining RX/Treatments", !!rxCard);
+    check("DetailedRx card present on RX page", !!rxCard);
     check("DetailedRx card shows where it was filled", rxCard ? rxCard.textContent.includes("Filled at Corner Pharmacy") : null, "true");
     check("DetailedRx card shows qty remaining", rxCard ? rxCard.textContent.includes("2 remaining") : null, "true");
     check("DetailedRx card shows refills remaining", rxCard ? rxCard.textContent.includes("5 refills left") : null, "true");
     check("DetailedRx card shows a renew-by date", rxCard ? /renew by/.test(rxCard.textContent) : null, "true");
     check("DetailedRx card shows the low-supply alert (PROD-04)", rxCard ? /left$/.test(rxCard.textContent.trim()) || /2 left/.test(rxCard.textContent) : null, "true");
     const trCard = cards.find((c) => c.textContent.includes("DetailedTreatment"));
-    check("DetailedTreatment card present in Remaining RX/Treatments", !!trCard);
+    check("DetailedTreatment card present on RX page", !!trCard);
     check("DetailedTreatment card shows where it's from", trCard ? trCard.textContent.includes("From Wellness Clinic") : null, "true");
     check("DetailedTreatment card shows qty remaining", trCard ? trCard.textContent.includes("4 remaining") : null, "true");
   },
-  () => check("no runtime errors after Remaining RX/Treatments pass", errors.length, 0),
+  () => {
+    // Items with no inventory tracking still appear on the RX page (a real scope increase over
+    // the old Today section, which only listed trackInventory items) — TestVit (vitamin, no
+    // inventory tracking in the seed) must show up in Vitamins & Supplements.
+    const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
+    check("non-inventory-tracked item (TestVit) still listed on the RX page", cards.some((c) => c.textContent.includes("TestVit")));
+  },
+  () => {
+    // Reload-persistence regression check (v3.49.0 normalizer bug fix): SeedRx/SeedTreatment were
+    // seeded directly into localStorage with category/pharmacy/refillsRemaining/provider/partner
+    // fields already set, as if saved in a prior session. Their surviving the boot-time migrate()
+    // pass and rendering correctly here proves US()/normalizeTreatments() no longer strip them.
+    const seedRx = supp("SeedRx");
+    check("SeedRx category survived boot-time migrate()", seedRx ? seedRx.category : null, "rx");
+    check("SeedRx pharmacy survived boot-time migrate()", seedRx ? seedRx.pharmacy : null, "Seed Pharmacy");
+    check("SeedRx refillsRemaining survived boot-time migrate()", seedRx ? seedRx.refillsRemaining : null, 2);
+    check("SeedRx partnerLogoDataUri survived boot-time migrate()", seedRx ? seedRx.partnerLogoDataUri : null, "data:image/jpeg;base64,SEEDRXLOGO");
+    check("SeedRx partnerLink survived boot-time migrate()", seedRx ? seedRx.partnerLink : null, "https://example.com/seedrx");
+    const seedTr = stored().settings.treatments.find((t) => t.name === "SeedTreatment");
+    check("SeedTreatment provider survived boot-time migrate()", seedTr ? seedTr.provider : null, "Seed Provider");
+    check("SeedTreatment partnerLogoDataUri survived boot-time migrate()", seedTr ? seedTr.partnerLogoDataUri : null, "data:image/jpeg;base64,SEEDTREATMENTLOGO");
+    check("SeedTreatment partnerLink survived boot-time migrate()", seedTr ? seedTr.partnerLink : null, "https://example.com/seedtreatment");
+    const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
+    const seedRxCard = cards.find((c) => c.textContent.includes("SeedRx"));
+    check("SeedRx renders as a partner-branded card (has a logo image and outbound link)", seedRxCard ? !!seedRxCard.querySelector("img") && !!seedRxCard.querySelector('a[href="https://example.com/seedrx"]') : null, "true");
+    const seedTrCard = cards.find((c) => c.textContent.includes("SeedTreatment"));
+    check("SeedTreatment renders as a partner-branded card (has a logo image and outbound link)", seedTrCard ? !!seedTrCard.querySelector("img") && !!seedTrCard.querySelector('a[href="https://example.com/seedtreatment"]') : null, "true");
+  },
+  () => check("no runtime errors after RX page pass", errors.length, 0),
 
   // ── v3.47.0: Sleep→Weight gap fixed to match the rest, RX & Supplements→presets-button gap ──
   // added, "RX & Vitamins" renamed "RX & Supplements", Remaining RX/Treatments gets its own card ──
@@ -1418,17 +1482,21 @@ const STEPS = [
   },
   () => check("no runtime errors after My Plan rename check", errors.length, 0),
 
-  // ── Remaining RX/Treatments now has its own section-wide card border ──
-  () => check("nav to Today (Remaining RX/Treatments card-border check)", nav("Today")),
+  // ── RX page sections each get their own section-wide card border (carried over from the ──
+  // retired Today section's styling, now per-group on the RX page) ──
+  // Route through Today first: from My Plan, clickByText("RX") would instead hit My Plan's own
+  // "RX" RegimenSummaryCard button (same literal text, earlier in document order).
+  () => check("nav to Today (before RX, to avoid My Plan's own 'RX' button)", nav("Today")),
+  () => check("nav to RX (section card-border check)", nav("RX")),
   () => {
-    const labelEl = [...window.document.querySelectorAll(".wt-section-label-lg")].find((el) => el.textContent === "Remaining RX/Treatments");
-    check("'Remaining RX/Treatments' label found", !!labelEl);
+    const labelEl = [...window.document.querySelectorAll(".wt-section-label-lg")].find((el) => el.textContent === "Prescriptions");
+    check("'Prescriptions' label found", !!labelEl);
     const outerCard = labelEl ? labelEl.closest(".wt-card") : null;
-    check("the label sits inside its own wt-card wrapper (section-wide bubble border, like Today at a Glance)", !!outerCard);
+    check("the label sits inside its own wt-card wrapper (section-wide bubble border)", !!outerCard);
     const rxItemCard = outerCard ? [...outerCard.querySelectorAll(".wt-card")].find((c) => c.textContent.includes("DetailedRx")) : null;
     check("individual item cards (e.g. DetailedRx) nest inside that outer section card", !!rxItemCard);
   },
-  () => check("no runtime errors after Remaining RX/Treatments card-border check", errors.length, 0),
+  () => check("no runtime errors after RX section card-border check", errors.length, 0),
 
   // ── Today's Log rows tightened (less wasted space under the stacked amounts) ──
   () => {
@@ -1452,8 +1520,10 @@ const STEPS = [
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    const idxRemaining = labels.indexOf("Remaining RX/Treatments"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
-    check("Remaining RX/Treatments still sits above Today's log with the duplicated tile grid between them", idxRemaining >= 0 && idxLog > idxRemaining, "true");
+    const idxGlance = labels.indexOf("Today at a Glance"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
+    // v3.49.0: Remaining RX/Treatments retired from Today (moved to the RX page) — Today's order
+    // is now Today at a Glance -> duplicated tile grid -> Today's log.
+    check("Today at a Glance sits above Today's log with the duplicated tile grid between them", idxGlance >= 0 && idxLog > idxGlance, "true");
     const t = tiles();
     check("Today shows all 8 Log It! tiles (duplicated grid, current toggle state all-on)", t.length, 8);
     check("Today's duplicated grid includes Water", t.some((x) => x.startsWith("Water")), "true");

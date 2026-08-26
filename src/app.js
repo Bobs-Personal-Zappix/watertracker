@@ -439,12 +439,17 @@ import {
         return (e && Array.isArray(e.supplements) ? e.supplements : []).map(e => ({
             id: e.id,
             name: e.name,
+            category: "rx" === e.category ? "rx" : "vitamin",
             intervalDays: "number" == typeof e.intervalDays ? e.intervalDays : 1,
             lastTakenDate: e.lastTakenDate || null,
             nextDueOverride: e.nextDueOverride || null,
             trackInventory: !!e.trackInventory,
             qtyRemaining: e.qtyRemaining || 0,
-            expirationDate: e.expirationDate || null
+            expirationDate: e.expirationDate || null,
+            pharmacy: e.pharmacy || null,
+            refillsRemaining: null == e.refillsRemaining ? null : e.refillsRemaining,
+            partnerLogoDataUri: e.partnerLogoDataUri || null,
+            partnerLink: e.partnerLink || null
         }))
     }
 
@@ -457,8 +462,34 @@ import {
             nextDueOverride: e.nextDueOverride || null,
             trackInventory: !!e.trackInventory,
             qtyRemaining: e.qtyRemaining || 0,
-            expirationDate: e.expirationDate || null
+            expirationDate: e.expirationDate || null,
+            provider: e.provider || null,
+            partnerLogoDataUri: e.partnerLogoDataUri || null,
+            partnerLink: e.partnerLink || null
         }))
+    }
+
+    function readPartnerLogo(file, onDone, onError) {
+        if (file.size > 8388608) return void onError("That image is too large. Please choose a smaller one.");
+        let reader = new FileReader;
+        reader.onload = () => {
+            let img = new Image;
+            img.onload = () => {
+                let max = 240,
+                    w = img.width,
+                    h = img.height,
+                    scale = Math.min(1, max / Math.max(w, h)),
+                    sw = Math.max(1, Math.round(w * scale)),
+                    sh = Math.max(1, Math.round(h * scale)),
+                    canvas = document.createElement("canvas");
+                canvas.width = sw, canvas.height = sh;
+                canvas.getContext("2d").drawImage(img, 0, 0, sw, sh), onDone(canvas.toDataURL("image/jpeg", .85))
+            }, img.onerror = () => {
+                onError("Couldn't read that image. Please try a different file.")
+            }, img.src = reader.result
+        }, reader.onerror = () => {
+            onError("Couldn't read that image. Please try a different file.")
+        }, reader.readAsDataURL(file)
     }
 
     function migrateSettingsShape(e) {
@@ -1786,9 +1817,9 @@ import {
     }) {
         let isVitamin = "vitamin" === catProp,
             isRx = "rx" === catProp,
-            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [pharm, setPharm] = (0, React.useState)(""), [refills, setRefills] = (0, React.useState)("");
+            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [pharm, setPharm] = (0, React.useState)(""), [refills, setRefills] = (0, React.useState)(""), [partnerLogo, setPartnerLogo] = (0, React.useState)(null), [partnerLink, setPartnerLink] = (0, React.useState)(""), [logoError, setLogoError] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setPharm(t && t.pharmacy ? t.pharmacy : ""), setRefills(t && null != t.refillsRemaining ? String(t.refillsRemaining) : ""))
+                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setPharm(t && t.pharmacy ? t.pharmacy : ""), setRefills(t && null != t.refillsRemaining ? String(t.refillsRemaining) : ""), setPartnerLogo(t && t.partnerLogoDataUri ? t.partnerLogoDataUri : null), setPartnerLink(t && t.partnerLink ? t.partnerLink : ""), setLogoError(""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0,
             modalTitle = t ? (isVitamin ? "Edit vitamin or supplement" : "rx" === catProp ? "Edit prescription" : "Edit item") : isVitamin ? "Add vitamin or supplement" : "rx" === catProp ? "Add prescription" : "Add supplement or medicine";
@@ -1820,7 +1851,58 @@ import {
             placeholder: "e.g. CVS on Main St",
             value: pharm,
             onChange: e => setPharm(e.target.value)
-        })), !isVitamin && React.default.createElement("label", {
+        })), isRx && pharm.trim().length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("label", {
+            className: "wt-field"
+        }, "Partner link (optional)", React.default.createElement("input", {
+            type: "url",
+            placeholder: "https://...",
+            value: partnerLink,
+            onChange: e => setPartnerLink(e.target.value)
+        })), React.default.createElement("div", {
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14
+            }
+        }, partnerLogo && React.default.createElement("img", {
+            src: partnerLogo,
+            alt: "",
+            style: {
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                objectFit: "cover"
+            }
+        }), React.default.createElement("label", {
+            className: "wt-btn-secondary",
+            style: {
+                cursor: "pointer"
+            }
+        }, partnerLogo ? "Change Partner Logo" : "Upload Partner Logo (optional)", React.default.createElement("input", {
+            type: "file",
+            accept: "image/*",
+            style: {
+                display: "none"
+            },
+            onChange: e => {
+                let t = e.target.files && e.target.files[0];
+                t && readPartnerLogo(t, e => {
+                    setPartnerLogo(e), setLogoError("")
+                }, setLogoError)
+            }
+        })), partnerLogo && React.default.createElement("button", {
+            className: "wt-btn-text wt-btn-text-danger",
+            type: "button",
+            onClick: () => setPartnerLogo(null)
+        }, "Remove")), logoError && React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: bS,
+                marginTop: -8,
+                marginBottom: 14
+            }
+        }, logoError)), !isVitamin && React.default.createElement("label", {
             className: "wt-field"
         }, "Take every (days)", React.default.createElement("input", {
             type: "number",
@@ -1885,7 +1967,7 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null, pharm.trim() || null, isRx && refills.length > 0 ? Math.max(0, Math.round(Number(refills) || 0)) : null)
+            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null, pharm.trim() || null, isRx && refills.length > 0 ? Math.max(0, Math.round(Number(refills) || 0)) : null, isRx ? partnerLogo : null, isRx ? partnerLink.trim() || null : null)
         }, "Save")))
     }
 
@@ -1895,9 +1977,9 @@ import {
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [prov, setProv] = (0, React.useState)("");
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [prov, setProv] = (0, React.useState)(""), [partnerLogo, setPartnerLogo] = (0, React.useState)(null), [partnerLink, setPartnerLink] = (0, React.useState)(""), [logoError, setLogoError] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setProv(t && t.provider ? t.provider : ""))
+                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setProv(t && t.provider ? t.provider : ""), setPartnerLogo(t && t.partnerLogoDataUri ? t.partnerLogoDataUri : null), setPartnerLink(t && t.partnerLink ? t.partnerLink : ""), setLogoError(""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0;
         return React.default.createElement("div", {
@@ -1928,7 +2010,58 @@ import {
             placeholder: "e.g. Austin Drip Lounge",
             value: prov,
             onChange: e => setProv(e.target.value)
-        })), React.default.createElement("label", {
+        })), prov.trim().length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("label", {
+            className: "wt-field"
+        }, "Partner link (optional)", React.default.createElement("input", {
+            type: "url",
+            placeholder: "https://...",
+            value: partnerLink,
+            onChange: e => setPartnerLink(e.target.value)
+        })), React.default.createElement("div", {
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14
+            }
+        }, partnerLogo && React.default.createElement("img", {
+            src: partnerLogo,
+            alt: "",
+            style: {
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                objectFit: "cover"
+            }
+        }), React.default.createElement("label", {
+            className: "wt-btn-secondary",
+            style: {
+                cursor: "pointer"
+            }
+        }, partnerLogo ? "Change Partner Logo" : "Upload Partner Logo (optional)", React.default.createElement("input", {
+            type: "file",
+            accept: "image/*",
+            style: {
+                display: "none"
+            },
+            onChange: e => {
+                let t = e.target.files && e.target.files[0];
+                t && readPartnerLogo(t, e => {
+                    setPartnerLogo(e), setLogoError("")
+                }, setLogoError)
+            }
+        })), partnerLogo && React.default.createElement("button", {
+            className: "wt-btn-text wt-btn-text-danger",
+            type: "button",
+            onClick: () => setPartnerLogo(null)
+        }, "Remove")), logoError && React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: bS,
+                marginTop: -8,
+                marginBottom: 14
+            }
+        }, logoError)), React.default.createElement("label", {
             className: "wt-field"
         }, "Repeats every (optional)", React.default.createElement("input", {
             type: "number",
@@ -1983,7 +2116,7 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null, prov.trim() || null)
+            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null, prov.trim() || null, partnerLogo, partnerLink.trim() || null)
         }, "Save")))
     }
 
@@ -2836,21 +2969,39 @@ import {
         }, e.detail)))))
     }
 
-    function RemainingRxTreatments({
+    function RxPage({
         data: e
     }) {
-        let treatments = e.settings.treatments.filter(e => e.trackInventory),
-            rx = e.settings.supplements.filter(e => "rx" === e.category && e.trackInventory),
-            hasAny = treatments.length > 0 || rx.length > 0;
+        let treatments = e.settings.treatments,
+            rx = e.settings.supplements.filter(e => "rx" === e.category),
+            vitamins = e.settings.supplements.filter(e => "rx" !== e.category);
 
         function renderItem(item, kind) {
             let alert = QS(item),
                 expiry = item.expirationDate ? YS(MS(item.expirationDate)) : null,
-                source = "treatment" === kind ? item.provider : item.pharmacy;
+                source = "treatment" === kind ? item.provider : "rx" === kind ? item.pharmacy : null,
+                sourceLabel = "treatment" === kind ? "From" : "Filled at",
+                isPartnerCard = !!(source && item.partnerLogoDataUri);
             return React.default.createElement("div", {
                 key: item.id,
-                className: "wt-card"
-            }, React.default.createElement("div", {
+                className: isPartnerCard ? "wt-regimen-card clinic" : "wt-card",
+                style: isPartnerCard ? {} : {
+                    marginBottom: 10
+                }
+            }, isPartnerCard ? React.default.createElement("div", {
+                className: "wt-regimen-card-title"
+            }, React.default.createElement("img", {
+                src: item.partnerLogoDataUri,
+                alt: "",
+                style: {
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    objectFit: "cover",
+                    marginRight: 8,
+                    verticalAlign: "middle"
+                }
+            }), React.default.createElement("span", null, item.name)) : React.default.createElement("div", {
                 className: "wt-card-title"
             }, item.name), source && React.default.createElement("div", {
                 style: {
@@ -2858,7 +3009,20 @@ import {
                     color: wD,
                     marginBottom: 4
                 }
-            }, "treatment" === kind ? `From ${source}` : `Filled at ${source}`), React.default.createElement("div", {
+            }, item.partnerLink ? React.default.createElement("a", {
+                href: item.partnerLink,
+                target: "_blank",
+                rel: "noopener noreferrer",
+                style: {
+                    color: "inherit"
+                }
+            }, `${sourceLabel} ${source}`) : `${sourceLabel} ${source}`), item.intervalDays > 0 && React.default.createElement("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: wD,
+                    marginBottom: 4
+                }
+            }, `Every ${item.intervalDays} day${1===item.intervalDays?"":"s"}`), item.trackInventory && React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
                 style: {
                     fontSize: 13,
                     color: wD,
@@ -2876,22 +3040,25 @@ import {
                     fontWeight: 700,
                     color: bS
                 }
-            }, alert))
+            }, alert)))
         }
-        return React.default.createElement("div", {
-            className: "wt-card"
-        }, React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-lg",
-            style: {
-                margin: "0 0 12px"
-            }
-        }, "Remaining RX/Treatments"), !hasAny ? React.default.createElement("p", {
-            className: "wt-empty-note"
-        }, "No tracked treatments or prescriptions yet. Turn on \"Track inventory / subscription\" when adding one on My Plan to see it here.") : React.default.createElement(React.default.Fragment, null, treatments.length > 0 && React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-strong"
-        }, "Treatments"), treatments.map(e => renderItem(e, "treatment")), rx.length > 0 && React.default.createElement("div", {
-            className: "wt-section-label wt-section-label-strong"
-        }, "Prescriptions"), rx.map(e => renderItem(e, "rx"))))
+
+        function renderSection(label, items, kind, emptyText) {
+            return React.default.createElement("div", {
+                className: "wt-card",
+                style: {
+                    marginBottom: 16
+                }
+            }, React.default.createElement("div", {
+                className: "wt-section-label wt-section-label-lg",
+                style: {
+                    margin: "0 0 12px"
+                }
+            }, label), 0 === items.length ? React.default.createElement("p", {
+                className: "wt-empty-note"
+            }, emptyText) : items.map(e => renderItem(e, kind)))
+        }
+        return React.default.createElement("div", null, renderSection("Treatments", treatments, "treatment", "No treatments added yet. Add one on My Plan."), renderSection("Prescriptions", rx, "rx", "No prescriptions added yet. Add one on My Plan."), renderSection("Vitamins & Supplements", vitamins, "vitamin", "No vitamins or supplements added yet. Add one on My Plan."))
     }
 
     function _O({
@@ -3620,8 +3787,6 @@ import {
         return React.default.createElement("div", null, React.default.createElement(TrackedSoFar, {
             data: e,
             todayKey: t
-        }), React.default.createElement(RemainingRxTreatments, {
-            data: e
         }), React.default.createElement(MO, {
             data: e,
             todayKey: t,
@@ -5145,22 +5310,22 @@ import {
             category: "vitamin",
             onClose: () => setVitOpen(!1),
             onSave: (e, t, n, r, a) => {
-                vitInitial ? b(vitInitial.id, e, t, n, r, a, "vitamin", null, null) : v(e, t, n, r, a, "vitamin", null, null), setVitOpen(!1)
+                vitInitial ? b(vitInitial.id, e, t, n, r, a, "vitamin", null, null, null, null) : v(e, t, n, r, a, "vitamin", null, null, null, null), setVitOpen(!1)
             }
         }), React.default.createElement(CO, {
             open: I,
             initial: R,
             category: "rx",
             onClose: () => L(!1),
-            onSave: (e, t, n, r, a, ph, rf) => {
-                R ? b(R.id, e, t, n, r, a, "rx", ph, rf) : v(e, t, n, r, a, "rx", ph, rf), L(!1)
+            onSave: (e, t, n, r, a, ph, rf, logo, link) => {
+                R ? b(R.id, e, t, n, r, a, "rx", ph, rf, logo, link) : v(e, t, n, r, a, "rx", ph, rf, logo, link), L(!1)
             }
         }), React.default.createElement(jO, {
             open: $,
             initial: U,
             onClose: () => F(!1),
-            onSave: (e, t, n, r, a, prov) => {
-                U ? E(U.id, e, t, n, r, a, prov) : x(e, t, n, r, a, prov), F(!1)
+            onSave: (e, t, n, r, a, prov, logo, link) => {
+                U ? E(U.id, e, t, n, r, a, prov, logo, link) : x(e, t, n, r, a, prov, logo, link), F(!1)
             }
         }), React.default.createElement(TrackerSheet, {
             tracker: openTracker,
@@ -6225,7 +6390,7 @@ import {
             className: "wt-date"
         }, React.default.createElement("span", {
             className: "wt-date-label"
-        }, "today" === r ? "Today's Summary for:" : "reports" === r ? "CURRENT STATS FOR:" : "setup" === r ? "My Plan for:" : "settings" === r ? "Settings" : "profile" === r ? "Profile" : "Tracking for:"), "settings" !== r && "profile" !== r && React.default.createElement(React.default.Fragment, null, " ", function(e) {
+        }, "today" === r ? "Today's Summary for:" : "rx" === r ? "SCRIPTS FOR:" : "reports" === r ? "CURRENT STATS FOR:" : "setup" === r ? "My Plan for:" : "settings" === r ? "Settings" : "profile" === r ? "Profile" : "Tracking for:"), "settings" !== r && "profile" !== r && React.default.createElement(React.default.Fragment, null, " ", function(e) {
             return e.toLocaleDateString(void 0, {
                 weekday: "long",
                 month: "short",
@@ -6294,6 +6459,8 @@ import {
             onOpenManualSheet: () => {
                 u(null), c(null), setManualSheetOpen(!0)
             }
+        }), "rx" === r && React.default.createElement(RxPage, {
+            data: t
         }), "reports" === r && React.default.createElement(FO, {
             data: t,
             onDrShare: () => D(!0),
@@ -6443,7 +6610,7 @@ import {
             onAddPreset: addPreset,
             onEditPreset: editPreset,
             onDeletePreset: deletePreset,
-            onAddSupplement: function(e, t, r, a, o, c, ph, rf) {
+            onAddSupplement: function(e, t, r, a, o, c, ph, rf, logo, link) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
                     name: e,
@@ -6455,7 +6622,9 @@ import {
                     qtyRemaining: a || 0,
                     expirationDate: o || null,
                     pharmacy: ph || null,
-                    refillsRemaining: null == rf ? null : rf
+                    refillsRemaining: null == rf ? null : rf,
+                    partnerLogoDataUri: logo || null,
+                    partnerLink: link || null
                 };
                 n(e => ({
                     ...e,
@@ -6465,7 +6634,7 @@ import {
                     }
                 }))
             },
-            onEditSupplement: function(e, t, r, a, o, i, c, ph, rf) {
+            onEditSupplement: function(e, t, r, a, o, i, c, ph, rf, logo, link) {
                 n(n => ({
                     ...n,
                     settings: {
@@ -6479,7 +6648,9 @@ import {
                             qtyRemaining: o || 0,
                             expirationDate: i || null,
                             pharmacy: ph || null,
-                            refillsRemaining: null == rf ? null : rf
+                            refillsRemaining: null == rf ? null : rf,
+                            partnerLogoDataUri: logo || null,
+                            partnerLink: link || null
                         } : n)
                     }
                 }))
@@ -6493,7 +6664,7 @@ import {
                     }
                 }))
             },
-            onAddTreatment: function(e, t, r, a, o, prov) {
+            onAddTreatment: function(e, t, r, a, o, prov, logo, link) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
                     name: e,
@@ -6503,7 +6674,9 @@ import {
                     trackInventory: !!r,
                     qtyRemaining: a || 0,
                     expirationDate: o || null,
-                    provider: prov || null
+                    provider: prov || null,
+                    partnerLogoDataUri: logo || null,
+                    partnerLink: link || null
                 };
                 n(e => ({
                     ...e,
@@ -6513,7 +6686,7 @@ import {
                     }
                 }))
             },
-            onEditTreatment: function(e, t, r, a, o, i, prov) {
+            onEditTreatment: function(e, t, r, a, o, i, prov, logo, link) {
                 n(n => ({
                     ...n,
                     settings: {
@@ -6525,7 +6698,9 @@ import {
                             trackInventory: !!a,
                             qtyRemaining: o || 0,
                             expirationDate: i || null,
-                            provider: prov || null
+                            provider: prov || null,
+                            partnerLogoDataUri: logo || null,
+                            partnerLink: link || null
                         } : n)
                     }
                 }))
@@ -7400,6 +7575,12 @@ import {
         }, React.default.createElement(ClipboardList, {
             size: 18
         }), " Today"), React.default.createElement("button", {
+            className: "wt-nav-btn " + ("rx" === r ? "active" : ""),
+            "aria-current": "rx" === r ? "page" : undefined,
+            onClick: () => a("rx")
+        }, React.default.createElement(Pill, {
+            size: 18
+        }), " RX"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("reports" === r ? "active" : ""),
             "aria-current": "reports" === r ? "page" : undefined,
             onClick: () => a("reports")
