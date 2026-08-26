@@ -20,6 +20,48 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.50.0] — 2026-08-25
+
+Log It! becomes pure fast-entry: compact 3x3 tile grid, new "Meals" tile, restyled Presets tile,
+per Rob's direction — now that Today and the RX page both show full tracked-metric detail, Log
+It!'s tiles duplicating that same detail was redundant:
+
+- **Log It!'s 8 tracker tiles are now compact** — icon/progress-ring + tracker name only, no
+  goal/logged text, no hero number, no low-supply/near-expiry alert row. Arranged in a 3x3 grid:
+  Water/Protein/Calories, Sleep/Weight/Exercise, Treatments/RX & Supplements/**Meals** (9th tile).
+  **Today's duplicated tile grid is unaffected** — it still shows the full detail (goal, logged,
+  hero number, alerts) exactly as before; only Log It! changed. `MO` (the shared tile-grid
+  component) gained a `compact` prop for this — Today's call site never sets it, so its rendering
+  path is untouched code.
+- **New "Meals" tile** absorbs "Manually Log a Meal" — tapping it opens the same
+  `ManualMealSheet`, unchanged. Its ring is a hand-built placeholder (a static circle, not tied to
+  a real percentage — "isn't connected for now" per Rob's request) with a `Utensils` icon in
+  Protein green (`var(--protein)`/`var(--protein-chip)`, reusing the existing token rather than
+  adding a new one). **Flagged to Rob:** the other 8 tiles each use a real illustrated PNG "gem"
+  image; Meals doesn't have one yet, so this is a vector-icon placeholder, the same
+  placeholder-now/real-asset-later path the Voice tile itself took in v3.40.0/v3.40.1.
+- **"Use Your Presets" removed as a button, reborn as a "Use Presets" tile** below the 3x3 grid,
+  full-width, matching the layout of the tile at the top (icon chip, title, subtitle, circular
+  badge) but keeping its own blue/water-colored treatment rather than gold. "Manually Log a Meal"
+  as a button is gone entirely (see Meals tile above).
+- **Top tile renamed "Voice Assistant" → "Voice Entry"** (display text and `aria-label` only, no
+  behavior change — still a non-functional design preview). Generalized the tile's component into
+  a shared `FeatureTile` (gold variant for Voice Entry, blue variant for Use Presets) so both
+  full-width tiles share one implementation instead of two near-duplicates.
+- `tools/harness.js`: the `tiles()` helper now matches both the full-detail (`.wt-tracker-col`,
+  Today) and compact (`.wt-tracker-col-compact`, Log It!) tile classes, so existing "does tile X
+  appear" checks keep working on whichever page they run on. Checks that inspect full-detail-only
+  markup (chip/goal/logged/hero-number/ring-fill-percentage) were redirected to run against Today
+  instead of Log It!, since that's where this now-shared, otherwise-unchanged code path lives;
+  checks specific to Log It!'s own content (Voice Entry tile, the Meals/Use Presets triggers) were
+  updated for the new structure.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 498 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`/ring-percentage water-tile
+  assertion, documented since v3.44.0). **Not yet verified on a real device** — jsdom can't confirm
+  the 3x3 grid's actual sizing/spacing on a phone screen, the Meals placeholder ring's look, or
+  whether the Use Presets tile reads clearly against Voice Entry's gold treatment.
+
 ## [3.49.0] — 2026-08-25
 
 New "RX" nav page consolidating everything a user is subscribed to or prescribed, per Rob's

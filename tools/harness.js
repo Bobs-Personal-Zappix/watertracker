@@ -200,7 +200,10 @@ const headerText = () => {
   return el ? el.textContent.trim() : null;
 };
 function tiles() {
-  return [...window.document.querySelectorAll(".wt-tracker-col")]
+  // v3.50.0: Log It! renders compact tiles (.wt-tracker-col-compact); Today still renders the
+  // full-detail tiles (.wt-tracker-col). Only one of the two exists on any given page, so a plain
+  // union keeps every existing "does tile X appear" check working regardless of which page it runs on.
+  return [...window.document.querySelectorAll(".wt-tracker-col, .wt-tracker-col-compact")]
     .map((e) => e.textContent.trim().slice(0, 60));
 }
 const check = (label, actual, expected) => {
@@ -212,7 +215,9 @@ const check = (label, actual, expected) => {
 const STEPS = [
   () => {
     check("app mounted", html().length > 1000);
-    check("tile count (Water+Treatments off in seed)", [...window.document.querySelectorAll(".wt-tracker-col")].length, 6);
+    // v3.50.0: app boots on Log It!, now a compact grid — 6 real trackers (Water+Treatments off
+    // in seed) plus the always-on Meals tile = 7.
+    check("tile count (Water+Treatments off in seed, plus the always-on Meals tile)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 7);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => check("nav to Stats", nav("Stats")),
@@ -229,17 +234,12 @@ const STEPS = [
   },
   () => check("nav to Today", nav("Today")),
   () => check("nav to Log It!", nav("Log It!")),
-  () => {
-    const actionBtns = window.document.querySelector(".wt-action-btns");
-    const prev = actionBtns ? actionBtns.previousElementSibling : null;
-    check("no divider line above action buttons", !(prev && prev.classList.contains("wt-divider")));
-  },
-  () => check("open presets/log sheet", clickByText("Use Your Presets")),
+  () => check("open presets/log sheet", clickByText("Use Presets", "div")),
   () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
   () => {
     const headers = [...window.document.querySelectorAll(".wt-sheet-header h3")].map((h) => h.textContent);
     check("My Presets sheet opened inline", headers.includes("My Presets"));
-    check("still on Log It! (no nav away)", !!window.document.querySelector(".wt-tracker-col"));
+    check("still on Log It! (no nav away)", !!window.document.querySelector(".wt-tracker-col-compact"));
     const header = [...window.document.querySelectorAll(".wt-sheet-header")].find((h) => h.textContent.includes("My Presets"));
     const sheet = header ? header.closest(".wt-sheet") : null;
     check("My Presets sheet escapes parent via position:fixed", sheet ? sheet.style.position : null, "fixed");
@@ -363,7 +363,7 @@ const STEPS = [
   },
 
   // ── v3.33.0 Part A: OO (add/edit preset) modal must portal to document.body ──
-  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Your Presets")),
+  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Presets", "div")),
   () => check("open My Presets sheet (for OO portal check)", clickByText("✏ Edit Presets")),
   () => check("click Add Preset (opens OO modal)", clickByText("Add Preset")),
   () => {
@@ -477,7 +477,9 @@ const STEPS = [
     check("TestVit lastTakenDate untouched by backfill (rule 2: schedule never recalculates)", s ? s.lastTakenDate : "MISSING", null);
     check("TestVit nextDueOverride untouched by backfill (rule 2)", s ? s.nextDueOverride : "MISSING", null);
   },
-  () => check("nav to Log It! (verify today's RX tile ring unaffected)", nav("Log It!")),
+  // v3.50.0: Log It!'s tiles are now compact (icon/ring/name only, no goal/logged text) — this
+  // check needs the full-detail markup, which now lives on Today (same MO component, unchanged).
+  () => check("nav to Today (verify today's RX tile ring unaffected)", nav("Today")),
   () => {
     const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
     check("today's RX & Supplements tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
@@ -598,7 +600,9 @@ const STEPS = [
     check("found Water toggle to re-enable it", !!waterToggle);
     if (waterToggle) fire(waterToggle);
   },
-  () => check("nav to Log It! (item 3/4 tile restructure checks)", nav("Log It!")),
+  // v3.50.0: this whole block inspects full-detail tile markup (chip/border/mid/ring) — Log It!
+  // is compact now, so it runs against Today's tile grid (same MO component, unchanged there).
+  () => check("nav to Today (item 3/4 tile restructure checks)", nav("Today")),
   () => {
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
     check("all 8 Log It! tiles mount with all trackers enabled", tiles.length, 8);
@@ -708,7 +712,8 @@ const STEPS = [
   () => check("no runtime errors across the full v3.35.0 pass", errors.length, 0),
 
   // ── v3.36.0: Log It! icon fill + font sizes, warm-tan dark-bg text, My Plan tile updates ──
-  () => check("nav to Log It! (item 1a/1b checks)", nav("Log It!")),
+  // v3.50.0: chip-icon-color and tile-text font-size checks need full-detail markup (now Today).
+  () => check("nav to Today (item 1a/1b checks)", nav("Today")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     const icon = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
@@ -866,7 +871,9 @@ const STEPS = [
   () => check("no runtime errors after the v3.36.1 fixes", errors.length, 0),
 
   // ── v3.37.0: manual entry input fix + dark tiles/sheets ────────────────────────
-  () => check("nav to Log It! (v3.37.0 manual entry check)", nav("Log It!")),
+  // v3.50.0: Water tile lookup here needs full-detail markup (now Today); the presets-sheet
+  // flow later in this block still needs Log It! specifically and navs there itself below.
+  () => check("nav to Today (v3.37.0 manual entry check)", nav("Today")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     check("found Water tile to open manual entry", !!waterTile);
@@ -901,13 +908,17 @@ const STEPS = [
   },
   () => check("no runtime errors after v3.37.0 manual-entry/tile changes", errors.length, 0),
   () => {
-    // Close the Water manual-entry sheet, then open the presets sheet (via "Use Your
-    // Presets") and its nested My Presets sheet — a second, independent sheet —
-    // to confirm at least one more sheet mounts cleanly under the new dark styling.
+    // Close the Water manual-entry sheet, then nav to Log It! (v3.50.0: the presets trigger is
+    // Log It!-only now, via the "Use Presets" tile below the compact grid) and open the presets
+    // sheet, then its nested My Presets sheet — a second, independent sheet — to confirm at
+    // least one more sheet mounts cleanly under the new dark styling.
     const closeBtns = [...window.document.querySelectorAll('button[aria-label="Close"]')];
     if (closeBtns[0]) fire(closeBtns[0]);
-    const presetsBtn = clickByText("Use Your Presets");
-    check("found 'Use Your Presets' button to open presets sheet", presetsBtn);
+  },
+  () => check("nav to Log It! (presets flow)", nav("Log It!")),
+  () => {
+    const presetsBtn = clickByText("Use Presets", "div");
+    check("found 'Use Presets' tile to open presets sheet", presetsBtn);
   },
   () => {
     const editPresets = [...window.document.querySelectorAll("button")].find((b) => b.textContent.includes("Edit Presets"));
@@ -968,7 +979,7 @@ const STEPS = [
   () => check("no runtime errors on My Plan", errors.length, 0),
   () => check("nav to Stats (v3.38.0 dark-theme regression check)", nav("Stats")),
   () => check("no runtime errors on Stats", errors.length, 0),
-  () => check("nav to Log It! (manual entry regression check)", nav("Log It!")),
+  () => check("nav to Today (manual entry regression check)", nav("Today")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     check("found Water tile for v3.38.0 regression check", !!waterTile);
@@ -1000,8 +1011,8 @@ const STEPS = [
     check("profile placeholder resized up to 40px", profileRule ? profileRule[0].includes("width:40px") : null, "true");
     check(".wt-topbanner-ai CSS rule removed along with the header icon (v3.40.0)", cssText.includes(".wt-topbanner-ai"), "false");
   },
-  () => check("nav to Log It! (v3.38.1 regression check)", nav("Log It!")),
-  () => check("all 8 Log It! tiles still mount after border-color change", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8),
+  () => check("nav to Today (v3.38.1 regression check)", nav("Today")),
+  () => check("all 8 Today tiles still mount after border-color change", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     if (waterTile) fire(waterTile);
@@ -1021,12 +1032,12 @@ const STEPS = [
       "true"
     );
   },
-  () => check("nav to Log It! (filled-icon check)", nav("Log It!")),
+  () => check("nav to Today (filled-icon check)", nav("Today")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     const svg = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
-    check("Log It! Water tile icon found", !!svg);
-    check("Log It! Water tile icon is filled, not transparent-inside", svg ? svg.getAttribute("fill") : null, "var(--water)");
+    check("Today Water tile icon found", !!svg);
+    check("Today Water tile icon is filled, not transparent-inside", svg ? svg.getAttribute("fill") : null, "var(--water)");
   },
   () => check("nav to My Plan (filled-icon check)", nav("My Plan")),
   () => {
@@ -1065,18 +1076,28 @@ const STEPS = [
     }
   },
   () => {
-    const tile = window.document.querySelector(".wt-voice-tile");
-    check("Voice Tracker tile present above Water", !!tile);
-    const grid = window.document.querySelector(".wt-trackers-grid");
-    check("Voice Tracker tile is first child of the trackers grid", grid ? grid.firstElementChild === tile : null, "true");
-    check("Voice Tracker tile marked aria-disabled (not yet functional)", tile ? tile.getAttribute("aria-disabled") : null, "true");
+    // v3.50.0: renamed "Voice Assistant" -> "Voice Entry", generalized into FeatureTile
+    // (.wt-feature-tile.gold), and moved to sit BEFORE the compact grid as a sibling rather than
+    // as the grid's first child (Rob's request: "a single tile across the top", then the grid).
+    const tile = window.document.querySelector(".wt-feature-tile.gold");
+    check("Voice Entry tile present above the tracker grid", !!tile);
+    const grid = window.document.querySelector(".wt-trackers-grid-compact");
+    check("Voice Entry tile sits before the compact grid in document order", tile && grid ? !!(tile.compareDocumentPosition(grid) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
+    check("Voice Entry tile marked aria-disabled (not yet functional)", tile ? tile.getAttribute("aria-disabled") : null, "true");
+    check("Voice Entry tile labeled 'Voice Entry' (renamed from 'Voice Assistant')", tile ? tile.textContent.includes("Voice Entry") : null, "true");
   },
   () => {
-    const btns = [...window.document.querySelectorAll(".wt-action-btn")].map((b) => b.textContent);
-    check("'Use Your Presets' button present (renamed from combined button)", btns.some((t) => t.includes("Use Your Presets")));
-    check("'Manually Log a Meal' button present (new second button)", btns.some((t) => t.includes("Manually Log a Meal")));
+    // v3.50.0: Log It! is now a 3x3 compact grid (8 trackers + Meals) with the old action
+    // buttons replaced by a "Use Presets" tile below the grid; "Manually Log a Meal" is now the
+    // Meals tile inside the grid. The old .wt-action-btn buttons no longer render here at all.
+    check("no .wt-action-btn buttons on the now-compact Log It!", !window.document.querySelector(".wt-action-btn"), "true");
+    const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
+    check("Log It! renders 9 compact tiles (8 trackers + Meals)", compactTiles.length, 9);
+    check("Meals tile present in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "true");
+    const useTile = window.document.querySelector(".wt-feature-tile.blue");
+    check("'Use Presets' tile present below the grid (renamed from 'Use Your Presets' button)", useTile ? useTile.textContent.includes("Use Presets") : null, "true");
   },
-  () => check("open presets sheet (v3.40.0 split check)", clickByText("Use Your Presets")),
+  () => check("open presets sheet (v3.40.0 split check)", clickByText("Use Presets", "div")),
   () => {
     const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Use Your Presets");
     check("presets-only sheet header found", !!header);
@@ -1085,7 +1106,7 @@ const STEPS = [
     const closeBtn = window.document.querySelector('button[aria-label="Close"]');
     if (closeBtn) fire(closeBtn);
   },
-  () => check("open manual meal sheet (v3.40.0 split check)", clickByText("Manually Log a Meal")),
+  () => check("open manual meal sheet (v3.40.0 split check, now triggered by the Meals tile)", clickByText("Meals", "div")),
   () => {
     const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Manually Log a Meal");
     check("manual meal sheet header found", !!header);
@@ -1295,7 +1316,9 @@ const STEPS = [
   // the hero number covers it), tighter tile height + bigger inter-tile gap, Today's Log row ──
   // restack (stats under description, actions grouped right), Stats "Subs" removed, new ──
   // "Remaining RX/Treatments" section on Today ──
-  () => check("nav to Log It! (v3.46.0 tile-trim checks)", nav("Log It!")),
+  // v3.50.0: this block tests full-detail tile sub-text trimming — now Today's tiles (Log It!
+  // dropped all sub-text/hero-number content when it went compact).
+  () => check("nav to Today (v3.46.0 tile-trim checks)", nav("Today")),
   () => {
     // Seed has no treatments and no low-supply/near-expiry alert yet, so no tile should show a
     // wt-tile-togo row at all right now — Weight's was removed outright, Treatments/RX's only
@@ -1516,7 +1539,7 @@ const STEPS = [
   // Stats, renamed "Edit Prior Days Logs", bigger text/icon, in its own clickable tile ──
   () => check("nav to Today (v3.48.0 checks)", nav("Today")),
   () => {
-    check("Voice Assistant tile removed from Today", !window.document.querySelector(".wt-voice-tile"), "true");
+    check("Voice Entry tile removed from Today (renamed from Voice Assistant, class renamed .wt-voice-tile -> .wt-feature-tile.gold in v3.50.0)", !window.document.querySelector(".wt-feature-tile.gold"), "true");
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);

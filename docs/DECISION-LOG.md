@@ -521,6 +521,45 @@ branded presence inside the app.
 status-view role), `UX-27` point 2 (tile-grid position, now directly after "Today at a Glance"
 instead of after "Remaining RX/Treatments")
 
+**UX-29 — Log It! becomes pure fast-entry: compact 3x3 tile grid, "Meals" tile, "Use Presets" tile.**
+Now that Today (`UX-27`) and the RX page (`UX-28`) both show full tracked-metric detail, Rob judged
+Log It!'s tiles duplicating that same detail (goal/logged text, hero numbers, low-supply/near-expiry
+alerts) as redundant. Resolved shape, all explicit calls by Rob:
+1. Each of the 8 tracker tiles on Log It! compacts to icon + progress ring + tracker name only —
+   no goal/logged text, no hero number (`UX-18`), no `QS()` alert row. Arranged 3x3 in existing
+   `UX-07` order (Water/Protein/Calories, Sleep/Weight/Exercise, Treatments/RX & Supplements), with
+   a 9th slot for the new Meals tile.
+2. **Today's duplicated tile grid (`UX-27`) is explicitly untouched** — it keeps showing full
+   detail. Both pages render through the same shared component (`MO`), which gained a `compact`
+   prop; Today's call site never sets it. This was a deliberate choice, confirmed with Rob before
+   building, specifically so `PROD-04`'s requirement that low-supply/near-expiry alerts stay
+   visible "on tiles" continues to hold — via Today's tiles (plus My Plan and the RX page), rather
+   than Log It!'s.
+3. "Manually Log a Meal" (previously a button below the tile grid) becomes the 9th grid tile,
+   "Meals" — tapping it opens the same `ManualMealSheet`, unchanged. Its ring has no real
+   percentage to show yet ("isn't connected for now," Rob's words) and no illustrated asset exists
+   for it, so it's a hand-built placeholder: a static circle with a `Utensils` icon in Protein
+   green (`var(--protein)`, reused rather than adding a new color token, per Rob's choice). Flagged
+   to Rob as a placeholder pending a real illustration, the same path the Voice tile itself
+   followed (CSS-gradient placeholder in v3.40.0, replaced by a supplied image in v3.40.1).
+4. "Use Your Presets" (previously the other button below the grid) becomes its own full-width tile,
+   renamed "Use Presets," moved below the 3x3 grid, and restyled to match the top "Voice Entry"
+   tile's *layout* (icon chip, title, subtitle, circular badge) — per Rob's choice, keeping its own
+   blue/water-colored treatment rather than Voice Entry's gold gradient. The shared layout was
+   generalized into one `FeatureTile` component (gold variant for Voice Entry, blue for Use
+   Presets) rather than duplicating the markup.
+5. The top tile is renamed "Voice Assistant" → "Voice Entry" (Rob's call; display text and
+   `aria-label` only, still the same non-functional design preview from `UX-19`).
+*Why:* with Today and the RX page now owning the "what's my status" and "what am I on" views
+respectively, Log It!'s only remaining job is fast data entry — full-detail tiles there were pure
+duplication. Keeping Today's tiles untouched preserves both the day-summary experience `UX-27`
+built and `PROD-04`'s alert-visibility guarantee without extra work.
+*Status:* **Locked** · Aug 25, 2026 · v3.50.0 — amends `UX-02`/`UX-18`/`UX-25` (Log It! tile
+format, now compact) and notes `PROD-04`'s tile-surface requirement is satisfied via Today/My
+Plan/RX page rather than Log It!'s tiles
+*Known gap:* the Meals tile has no illustrated icon asset — see `docs/CURRENT-STATE.md` Known
+outstanding.
+
 ---
 
 ## Legal & compliance
@@ -663,7 +702,9 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 25, 2026 (v3.49.0: UX-28 added — new "RX" nav page consolidating
+*Last updated: August 25, 2026 (v3.50.0: UX-29 added — Log It! reduced to a compact 3x3 tile grid
+plus new "Meals" and "Use Presets" tiles, Voice Assistant renamed Voice Entry, amends
+UX-02/UX-18/UX-25, notes PROD-04 satisfied via Today/My Plan/RX page; earlier: v3.49.0: UX-28 added — new "RX" nav page consolidating
 Treatments/Prescriptions/Vitamins & Supplements ("SCRIPTS FOR:"), partner-branded logo/link cards,
 "Remaining RX/Treatments" retired from Today, amends UX-06/PROD-13/UX-27; ARCH-OPEN-05 addendum —
 fixed a second-level normalizer bug (`US()`/`normalizeTreatments()`) that was silently stripping
