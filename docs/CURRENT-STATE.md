@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.55.0*
+*As of: August 27, 2026 · Deployed version: 3.56.0*
 
 ---
 
@@ -41,11 +41,12 @@ date control and a redesigned tile grid:
   Meal Entry open the same sheets their removed predecessors did. Icon boxes are a flat `102px`
   (v3.55.0, matching the 3×3 grid's default icon size exactly — was a responsive
   `min(19vw, 10.5vh, 96px)` in v3.53.0, `min(28.5vw, 15vh, 144px)` before that); labels are
-  `16.5px`, also matching the grid. The artwork has real transparent backgrounds (v3.54.0,
-  programmatically chroma-keyed and normalized to an identical 480×480 canvas across all three,
-  after three rounds of manually-supplied images all came back unusable — see Known Outstanding
-  for the caveat on edge quality). As of v3.55.0 the three image files were also renamed
-  (`voice-tracker-v2.png` etc.) to cache-bust a stale-image issue Rob hit after v3.54.0 shipped.
+  `16.5px`, also matching the grid. The artwork has real transparent backgrounds — Presets
+  (`presets-v2.png`) and Meal Entry (`meal-entry-v2.png`) via a corner-sampled chroma-key script
+  (v3.54.0, visual edge quality not yet confirmed on a real device); Voice Tracker
+  (`voice-tracker-v3.png`, v3.56.0) via a checkerboard-specific script after the earlier version
+  turned out to be sourced from outdated artwork with text baked in — this one was visually
+  inspected and confirmed clean before shipping (see `docs/DECISION-LOG.md` `UX-38`).
 - **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
   with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
   columns at ≤4 enabled trackers. As of v3.54.0 icons are 102px default / 122px in the 2-column
@@ -210,6 +211,22 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.56.0)
+
+Correction to v3.54.0/v3.55.0: the Voice Tracker "stale image" report wasn't a caching bug — this
+session had been chroma-keying an outdated source image (with text arced across the top) instead
+of the text-removed version Rob had already sent. Full detail in `CHANGELOG.md` and
+`docs/DECISION-LOG.md` `UX-38`.
+
+- **Voice Tracker icon replaced with the correct artwork.** Rob's latest upload was a JPEG with a
+  baked-in checkerboard (the same transparency-preview-screenshot issue as earlier rounds), which a
+  single-color chroma-key can't isolate — wrote a checkerboard-specific script (detects the two
+  actual checker tones sampled from the file, ~205 and ~255 gray) and reused the v3.54.0 crop/pad/
+  resize pipeline. Result visually inspected this time, not just alpha-checked.
+- File renamed again (`voice-tracker-v2.png` → `voice-tracker-v3.png`).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
 
 ## What shipped Aug 27, 2026 (v3.55.0)
 
@@ -663,21 +680,21 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Image assets under `site/app/tile-icons/` (and similar static files) are not provably
-  cache-busted by the app's own `_headers` no-cache rule** (found v3.55.0): Rob saw a stale cached
-  copy of the Voice Tracker icon after v3.54.0 shipped a corrected file. `_headers`'
-  `no-cache, no-store, must-revalidate` on `/app/*` controls *browser* caching, but a CDN edge cache
-  in front of the site is a separate layer this repo doesn't control and isn't guaranteed to respect
-  that rule for static binary assets. The fix applied was renaming the files (cache-busting via
-  filename) rather than relying on cache headers/purges — worth remembering as the standard fix if
-  any other static asset (icons, images) seems to not update after a deploy.
-- **Top-row icon backgrounds (v3.54.0) were fixed with an automated script, not real designed
-  cutouts** — after three rounds of manually-supplied images all came back unusable (see
-  `docs/DECISION-LOG.md` `UX-35`), a chroma-key script now strips each background programmatically.
-  This is best-effort: edges may show faint fringing or an imperfect cutout compared to a real
-  designed transparent export. Needs Rob's eyes on a real device; if the edges look rough, the
-  fallback is still a properly-exported transparent PNG from Rob (see `UX-35` for what that actually
-  requires on the export side).
+- **v3.55.0 misdiagnosed the Voice Tracker report as a caching issue; it was actually a stale
+  source image on this session's side** (corrected v3.56.0, see `docs/DECISION-LOG.md` `UX-38`) —
+  the v3.55.0 file rename wasn't wasted (renaming to bust any cache layer beyond this repo's
+  control, e.g. a CDN edge cache, is still the right general practice if an asset ever *does* seem
+  stuck after a real fix), but the caching theory should have been checked against the actual
+  source content first, not assumed. Worth remembering: when an image "won't update," diff the
+  actual file content/source before reaching for a caching explanation.
+- **Top-row icon backgrounds were fixed with automated scripts, not real designed cutouts** for all
+  three icons — Presets/Meal Entry via a corner-sampled chroma-key (v3.54.0), Voice Tracker via a
+  checkerboard-specific variant (v3.56.0, visually confirmed clean before shipping — the other two
+  were only alpha-checked, not eyeballed). This is inherently best-effort: edges may show faint
+  fringing or an imperfect cutout compared to a real designed transparent export. Needs Rob's eyes
+  on a real device for Presets/Meal Entry specifically; if their edges look rough, the fallback is
+  still a properly-exported transparent PNG from Rob (see `docs/DECISION-LOG.md` `UX-35` for what
+  that requires on the export side).
 - **v3.53.0–v3.55.0's date-pill, sizing, and header changes all need Rob's real-device
   confirmation** — centering, the native calendar picker's feel on a phone, whether the bigger grid
   icons/labels fit well, and whether the header's new left/right balance reads correctly are all

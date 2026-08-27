@@ -227,7 +227,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.55.0",
+        xS = "3.56.0",
         SCHEMA_VERSION = 3,
         ES = {
             logs: {},
@@ -2668,7 +2668,7 @@ import {
             className: "wt-toprow"
         }, React.default.createElement(TopRowItem, {
             label: "Voice Tracker",
-            imageSrc: "voice-tracker-v2",
+            imageSrc: "voice-tracker-v3",
             onClick: onOpenVoiceSheet
         }), React.default.createElement(TopRowItem, {
             label: "Presets",

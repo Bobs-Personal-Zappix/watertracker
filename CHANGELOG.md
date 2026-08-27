@@ -20,6 +20,31 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.56.0] — 2026-08-27
+
+Correction: v3.54.0/v3.55.0's Voice Tracker fix diagnosed the wrong problem. Rob's report of a
+stale image wasn't a caching issue — it was this session using an outdated *source* image (the
+version with "LISTEN · TAKE VOICE ENTRIES · AGENTIC AI" text arced across the top) instead of the
+text-removed version Rob had already sent. The v3.55.0 cache-busting rename was real but
+unnecessary work chasing the wrong cause; the actual fix needed was using the right source file.
+
+- **Voice Tracker icon replaced with the correct, text-free artwork.** Rob's latest upload was
+  still a JPEG (no real alpha channel) with the same baked-in transparency-preview checkerboard
+  seen in earlier rounds — but unlike a solid-color background, a checkerboard has two alternating
+  flat tones, so the general chroma-key approach from `UX-36` wouldn't isolate it correctly. Wrote
+  a second, checkerboard-specific script (`jpeg-js` to decode, since `pngjs` can't read JPEGs):
+  detects near-neutral-gray pixels matching either checker tone (~205 and ~255, sampled directly
+  off this file), clears a thin fringe of adjacent gray pixels to avoid a faint halo at the
+  boundary, then reuses the same crop/pad/resize pipeline from `UX-36` (480×480, matching the
+  other two top-row icons). Result inspected directly this time (not just alpha-checked) — a clean
+  circular badge, text gone, background genuinely transparent.
+- File renamed again (`voice-tracker-v2.png` → `voice-tracker-v3.png`) — both because the content
+  actually changed and to keep the established cache-busting practice from `UX-37`.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 519 checks pass), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0). **Not
+  yet verified on a real device.**
+
 ## [3.55.0] — 2026-08-27
 
 Two follow-ups from Rob's v3.54.0 review: the Voice Tracker icon was still showing its old

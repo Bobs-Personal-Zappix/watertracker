@@ -798,6 +798,38 @@ existing hard-won lesson (`CHANGELOG.md`'s "Caching will strand users on stale b
 that caching bugs recur in layers beyond the one already fixed once.
 *Status:* **Locked** · Aug 27, 2026 · v3.55.0 — amends `UX-36` (top-row sizing, icon filenames)
 
+**UX-38 — `UX-37`'s caching diagnosis was wrong; the real cause was a stale source image on this
+session's side, corrected with the actual current artwork.**
+Rob pushed back on `UX-37`'s conclusion: he'd cleared his browser multiple times and the old
+Voice Tracker image (with "LISTEN · TAKE VOICE ENTRIES · AGENTIC AI" arced across the top) kept
+showing. He was right — this session had been chroma-keying the *original* round-1 upload as its
+source image the whole time, never re-checking whether a newer version existed in the later rounds
+of images Rob sent. Rob had, in fact, already edited the badge to remove that text; this session
+simply never used that edit as input, so no amount of cache-busting on the *output* file could have
+fixed a wrong *source*. `UX-37`'s cache-busting fix was still real work (renaming files is still
+the right general practice — see that entry), but it fixed a problem that wasn't the actual cause
+this time.
+Rob's latest resend was, once again, a JPEG with a checkerboard baked into the pixels (the same
+mechanism as `UX-35`'s earlier rounds) rather than true alpha transparency — but a checkerboard is
+two alternating flat tones, not one uniform background color, so `UX-36`'s corner-sampled chroma-key
+approach (built for a single-color background) would not have isolated it correctly. A second,
+checkerboard-specific script was written: sample the two actual checker tones directly from the file
+(~205 and ~255, both near-neutral gray) rather than assuming a single corner color, clear any
+adjacent near-gray fringe pixels to avoid a faint halo at the true edge, then reuse `UX-36`'s existing
+crop/pad/480×480-resize pipeline unchanged. The result was visually inspected before shipping (via
+the Read tool, not just alpha-value checks like the first pass) — a clean circular badge, text gone,
+matching what Rob described.
+*Why this is recorded as its own entry rather than folded into `UX-37`:* the mistake itself is the
+important thing to carry forward — a "user reports X still looks wrong after a fix" report should
+prompt re-checking the actual current inputs/state before defaulting to a caching explanation,
+especially when the user reports having already cleared caches. Caching is a real, recurring bug
+class in this codebase (`CHANGELOG.md`'s v1–v2 lessons), but it is not the *only* explanation for
+"the old thing keeps showing up," and asserting it with confidence without checking is itself a
+failure mode worth naming.
+*Status:* **Locked** · Aug 27, 2026 · v3.56.0 — corrects `UX-37`'s root-cause diagnosis; the
+cache-busting mechanism `UX-37` introduced remains in place and is reused here (a third filename,
+`voice-tracker-v3.png`)
+
 ---
 
 ## Legal & compliance
@@ -940,7 +972,10 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.55.0: UX-37 added — top-row icon staleness diagnosed as a CDN
+*Last updated: August 27, 2026 (v3.56.0: UX-38 added — corrects UX-37's caching diagnosis (the real
+cause was a stale source image on this session's side, not caching); Voice Tracker icon replaced
+with the correct text-free artwork via a checkerboard-specific strip script, visually confirmed
+before shipping; earlier: v3.55.0: UX-37 added — top-row icon staleness diagnosed as a CDN
 caching issue (not a code bug), fixed via cache-busting filenames, top-row sizing matched exactly to
 the 3x3 grid; earlier: v3.54.0: UX-36 added — top-row icon backgrounds fixed
 programmatically (chroma-key script, supersedes UX-35's blocked state), grid sized up further,
