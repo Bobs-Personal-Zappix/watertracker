@@ -732,7 +732,47 @@ until a genuine PNG export with real alpha is supplied.
 *Why:* recording this so a future session doesn't re-attempt the same round-trip blind — the fix
 needed is on the export side (save/export the actual PNG file directly, not a screenshot of a
 transparent-preview thumbnail), not anything on the code side.
-*Status:* **Open** · Aug 27, 2026 · v3.53.0 — blocks the visual half of `UX-34`'s top-row fix
+*Status:* **Superseded by `UX-36`** · Aug 27, 2026 · v3.53.0 — Rob asked for the backgrounds fixed
+regardless of image-supply issues; `UX-36` covers the programmatic fix actually shipped.
+
+**UX-36 — Real-device review round 2: top-row icon backgrounds fixed programmatically, grid sized
+up further, header rearranged.**
+After `UX-35`'s three rounds of unusable supplied images, Rob's follow-up was explicit: "we must
+fix this" — not another round-trip. Resolved with a code-only fix rather than waiting on new art,
+plus two further real-device requests, all explicit calls by Rob:
+1. **Icon backgrounds removed programmatically.** A one-off Node script (`pngjs`, pure JS, no
+   native binary dependency) processes the three *original* round-1 PNGs (which had a real, if
+   opaque, alpha channel — unlike the later JPEG rounds): samples background color from each
+   image's corners, chroma-keys near-background pixels to transparent with a soft-edge falloff
+   (avoids a harsh jagged cutout), crops to the surviving content's bounding box, pads to a square
+   transparent canvas, and bilinear-resizes all three to an identical 480×480 output. The common
+   final canvas size is what fixes "not the same size and level with each other" — regardless of
+   each source image's original aspect ratio (voice-tracker was near-square, presets notably more
+   portrait), `object-fit:contain` now renders all three at the same visual scale. Verified
+   programmatically only (corner pixels confirmed alpha=0, center alpha=255 on all three) — this
+   tool cannot render a transparent PNG against a dark background to eyeball edge quality, so this
+   is explicitly best-effort, not a guaranteed-clean cutout the way a properly designed transparent
+   export would be.
+2. **3×3 grid sized up again, spacing tightened to make room.** Icons 84px→102px (3-column
+   default), 100px→122px (2-column fallback); labels 14.5px/15.5px→16.5px/17.5px. Room freed by
+   shrinking `.wt-tracker-col-compact` padding (12px→4px vertical) and the grid's own gap
+   (16px/12px→8px/6px) and margin (8px/16px→4px/12px) — Rob's own suggestion ("reduce the black
+   space to help keep them closer together").
+3. **Header rearranged**: brand (logo+title) moved from a centered cluster to the far-left edge;
+   profile icon moved from the left (previously nudged in tight against the brand with a `-14px`
+   margin hack) to the far-right edge. `.wt-topbanner-inner` switched from `justify-content:center`
+   to `space-between`, with a new `.wt-topbanner-brand` wrapper grouping the logo+title so they move
+   as one unit rather than spreading apart under `space-between`'s two-child assumption.
+*Why, for the icon-background fix specifically:* three attempts at getting a usable transparent export
+from Rob had already failed for reasons outside either side's easy control (chat upload pipeline
+apparently flattening/re-encoding images); rather than a fourth blind attempt, solving it in code
+unblocks the release now. This is recorded as best-effort/reversible — if the chroma-keyed edges
+look wrong on a real device, the fallback remains a genuine designed transparent PNG from Rob (see
+`UX-35` for what that requires on the export side), which would simply replace these files with no
+further code change needed either way.
+*Status:* **Locked** · Aug 27, 2026 · v3.54.0 — amends `UX-31`/`UX-32`/`UX-34` (top-row/grid
+sizing), supersedes `UX-35`'s blocked state for the background specifically (edge-quality follow-up
+remains open)
 
 ---
 
@@ -876,7 +916,9 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.53.0: UX-34 added — real-device review round 1: date-pill
+*Last updated: August 27, 2026 (v3.54.0: UX-36 added — top-row icon backgrounds fixed
+programmatically (chroma-key script, supersedes UX-35's blocked state), grid sized up further,
+header rearranged (brand left, profile right); earlier: v3.53.0: UX-34 added — real-device review round 1: date-pill
 centering, chevrons replaced with a native calendar picker, top-row/grid sizing, plus a genuine
 offsetDays sign-inversion bug found and fixed along the way; UX-35 added (Open) — three rounds of
 top-row icon art from Rob all unusable (opaque/JPEG/checkerboard-baked-in), real transparent PNGs

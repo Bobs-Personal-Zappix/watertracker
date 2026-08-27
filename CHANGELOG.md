@@ -20,6 +20,41 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.54.0] — 2026-08-27
+
+Real-device review round 2: the top-row icon backgrounds are finally fixed (programmatically,
+after three rounds of manual image exports all came back unusable), the 3×3 grid got bigger again,
+and the header layout changed per Rob's request.
+
+- **Top-row icon backgrounds actually fixed.** Rather than wait on a fourth manual export attempt,
+  wrote a one-off Node script (`pngjs`, no native deps) that: samples each image's background color
+  from its corners, chroma-keys near-background pixels to transparent with a soft edge falloff (to
+  avoid a hard jagged cutout), crops to the surviving content's bounding box, pads to a square
+  transparent canvas, and bilinear-resizes all three to an identical 480×480 — so they render at
+  the same visual size and stay level with each other inside equal `object-fit:contain` boxes
+  regardless of each source image's original aspect ratio. Verified programmatically (corner alpha
+  = 0, center alpha = 255 on all three) since this can't be eyeballed through this tool. Replaces
+  `site/app/tile-icons/voice-tracker.png`/`presets.png`/`meal-entry.png` in place — same filenames,
+  no further code change. Still needs Rob's eyes on the actual edge quality (chroma-keying is
+  best-effort, not a guaranteed-clean cutout the way a real designed transparent export would be).
+- **3×3 grid: bigger again, tighter spacing.** Icons 84px → 102px (3-column default), 100px → 122px
+  (2-column fallback); labels 14.5px/15.5px → 16.5px/17.5px. Freed the room by tightening tile
+  padding (12px→4px vertical) and the grid's own gap (16px/12px → 8px/6px) and top/bottom margin
+  (8px/16px → 4px/12px), per Rob's explicit "reduce the black space to keep them closer together."
+- **Header rearranged**: the brand (logo + "HydroPro Tracker" title) moved from a centered cluster
+  to the far left edge; the profile icon moved from the left (previously nudged in tight against
+  the brand with a `-14px` margin hack) to the far right edge. `.wt-topbanner-inner` switched from
+  `justify-content:center` to `space-between` with the brand and profile as its two flex children
+  (badge+title now wrapped in a new `.wt-topbanner-brand` group so they move as one unit rather
+  than spreading apart under `space-between`).
+- `tools/harness.js`: new coverage for the header reorder (brand exists, profile now follows it in
+  DOM order, `justify-content:space-between` confirmed).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 519 checks pass, up from 516), lint unchanged at the 11-error vendor
+  baseline. One unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since
+  v3.44.0). **Not yet verified on a real device** — icon edge quality, grid legibility at the new
+  size, and the header's new left/right balance all need Rob's eyes.
+
 ## [3.53.0] — 2026-08-27
 
 Real-device review round 1 of the Log It! redesign — Rob found three problems that made the page

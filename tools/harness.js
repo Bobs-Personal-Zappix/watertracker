@@ -394,6 +394,17 @@ const STEPS = [
     check("wordmark color is warm tan var(--ink-inverse) (v3.36.0; was #fff)", titleRuleMatch ? titleRuleMatch[0].includes("color:var(--ink-inverse)") : null, "true");
     check("wt-topbanner element exists", !!banner);
   },
+  () => {
+    // v3.54.0: header rearranged per Rob's real-device feedback — brand (logo+title) moved to the
+    // left edge, profile icon moved to the right edge (was profile-left, brand-centered).
+    const brand = window.document.querySelector(".wt-topbanner-brand");
+    const profile = window.document.querySelector(".wt-topbanner-profile");
+    check("wt-topbanner-brand (logo+title) group exists", !!brand);
+    check("profile button now sits after the brand group in DOM order (right side)", brand && profile ? !!(brand.compareDocumentPosition(profile) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
+    const cssText = window.document.querySelector("style").textContent;
+    const innerRule = cssText.match(/\.wt-topbanner-inner\s*\{[^}]*\}/);
+    check("header row uses space-between (brand left, profile right)", innerRule ? innerRule[0].includes("justify-content:space-between") : null, "true");
+  },
   () => check("nav to Log It! (for grid-to-button spacing check)", nav("Log It!")),
   () => {
     const cssText = window.document.querySelector("style").textContent;

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.53.0*
+*As of: August 27, 2026 · Deployed version: 3.54.0*
 
 ---
 
@@ -38,13 +38,16 @@ date control and a redesigned tile grid:
 - **Top row** (bare artwork, no card/border): Voice Tracker, Presets, Meal Entry — replaces the old
   gold "Voice Entry" and blue "Use Presets" banner tiles. Voice Tracker opens a new non-functional
   preview sheet (text field + decorative mic icon, no parser — still not Smart Entry). Presets and
-  Meal Entry open the same sheets their removed predecessors did. As of v3.53.0 the icon boxes are
-  meaningfully smaller (`min(19vw, 10.5vh, 96px)`, was `min(28.5vw, 15vh, 144px)`) — the artwork
-  itself is still the original white-background placeholders (see Known Outstanding).
+  Meal Entry open the same sheets their removed predecessors did. Icon boxes are
+  `min(19vw, 10.5vh, 96px)` (v3.53.0, was `min(28.5vw, 15vh, 144px)`). As of v3.54.0 the artwork
+  itself has real transparent backgrounds (programmatically chroma-keyed and normalized to an
+  identical 480×480 canvas across all three, after three rounds of manually-supplied images all
+  came back unusable — see Known Outstanding for the caveat on edge quality).
 - **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
   with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
-  columns at ≤4 enabled trackers. As of v3.53.0 icons are bigger (84px default / 100px in the
-  2-column state, was 64px/88px) and labels are bigger (14.5px / 15.5px, was a flat 12px).
+  columns at ≤4 enabled trackers. As of v3.54.0 icons are 102px default / 122px in the 2-column
+  state (was 64px/88px pre-v3.53.0, 84px/100px in v3.53.0) and labels are 16.5px/17.5px (was a flat
+  12px pre-v3.53.0); tile padding and grid gap/margin were tightened to make room.
 - **Redesigned ring, Log It!-only** (Today's full-detail rendering is unchanged) — a real neutral
   track ring under the accent fill (previously the "track" was just a dimmed copy of the fill
   color), a goal-met state (clamped arc, squared cap, glow, check badge), and a ring-less mode for
@@ -204,6 +207,25 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.54.0)
+
+Real-device review round 2 for Log It!, plus a header layout change — all per Rob's direct
+feedback. Full detail in `CHANGELOG.md` and `docs/DECISION-LOG.md` (amends `UX-34`/`UX-35`).
+
+- **Top-row icon backgrounds fixed programmatically** — a one-off Node script (`pngjs`) chroma-keys
+  each image's background to transparent, crops to content, and normalizes all three to an
+  identical 480×480 square canvas so they render the same size and stay level with each other.
+  Applied after three rounds of manually-supplied replacement images were all unusable (see
+  `UX-35`). Verified programmatically (corner alpha 0, center alpha 255); actual edge quality still
+  needs Rob's eyes.
+- **3×3 grid bigger again** (102px/122px icons, 16.5px/17.5px labels) with tighter tile/grid
+  spacing to make room, per Rob's explicit request.
+- **Header rearranged**: brand (logo+title) now sits at the far left edge; profile icon now sits at
+  the far right edge (previously: profile pinned left with a `-14px` nudge, brand centered).
+- `tools/harness.js`: new coverage for the header reorder.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
 
 ## What shipped Aug 27, 2026 (v3.53.0)
 
@@ -625,16 +647,17 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Top-row icon artwork (Voice Tracker/Presets/Meal Entry) still needs real transparent PNGs**
-  (v3.53.0): three rounds of images from Rob have all been unusable — see `CHANGELOG.md` v3.53.0
-  for the detail. What's needed: an actual exported PNG file with a real alpha channel, not a
-  screenshot of an editor's transparent-preview thumbnail (which bakes the preview's checkerboard
-  pattern in as opaque pixels and typically saves as a JPEG, which can't hold transparency at all).
-  Until then the three icons keep their original white-background art; the box size/spacing around
-  them was fixed in code regardless.
-- **v3.53.0's date-pill and sizing fixes need Rob's real-device confirmation** — centering, the
-  native calendar picker's actual feel on a phone, and whether the bigger grid icons/labels now fit
-  well are all things jsdom cannot verify.
+- **Top-row icon backgrounds (v3.54.0) were fixed with an automated script, not real designed
+  cutouts** — after three rounds of manually-supplied images all came back unusable (see
+  `docs/DECISION-LOG.md` `UX-35`), a chroma-key script now strips each background programmatically.
+  This is best-effort: edges may show faint fringing or an imperfect cutout compared to a real
+  designed transparent export. Needs Rob's eyes on a real device; if the edges look rough, the
+  fallback is still a properly-exported transparent PNG from Rob (see `UX-35` for what that actually
+  requires on the export side).
+- **v3.53.0/v3.54.0's date-pill, sizing, and header changes all need Rob's real-device
+  confirmation** — centering, the native calendar picker's feel on a phone, whether the bigger grid
+  icons/labels fit well, and whether the header's new left/right balance reads correctly are all
+  things jsdom cannot verify.
 - **RX/Supplements split (v3.52.0) needs Rob's real-device confirmation.** Not yet verified: the
   new Supplements tile/icon's visual read next to RX on Log It!, My Plan's new "What I'm Tracking"
   row, and that the migration ran cleanly on Rob's own device data (not just the harness's seed).
