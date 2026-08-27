@@ -227,7 +227,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.57.0",
+        xS = "3.58.0",
         SCHEMA_VERSION = 3,
         ES = {
             logs: {},
@@ -2804,7 +2804,7 @@ import {
                 gridClass = "wt-trackers-grid-compact";
             return React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
                 className: gridClass
-            }, compactTile("Voice Tracker", "voice", () => setVoiceSheetOpen(!0), plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3")), x && compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 })), E && compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 })), k && compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 })), S && compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 })), O && compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 })), j && compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 })), C && compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 })), P && compactTile("RX", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 })), supShow && compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), React.default.createElement(VoiceEntrySheet, {
+            }, compactTile("Voice Tracker", "voice", () => setVoiceSheetOpen(!0), plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3")), x && compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 })), E && compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 })), k && compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 })), S && compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 })), O && compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 })), j && compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 })), C && compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 })), P && compactTile("Prescriptions", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 })), supShow && compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), React.default.createElement(VoiceEntrySheet, {
                 open: voiceSheetOpen,
                 onClose: () => setVoiceSheetOpen(!1)
             }))
@@ -3113,55 +3113,87 @@ import {
             className: "wt-tile-right"
         }, React.default.createElement(cO, {
             pct: Y
-        }))), (P || supShow) && (() => {
-            let cTotal = A + supTotal,
-                cDueNow = H + supOverdueCount,
-                cRemaining = D + supDueCount,
-                cTaken = M.size + supTakenCount,
-                cAlert = Q || supAlert,
-                cPct = 0 === cTotal ? 0 : 0 === cDueNow ? 100 : (cDueNow - cRemaining) / cDueNow * 100;
-            return React.default.createElement("div", {
-                className: "wt-tracker-col wt-tracker-col-clickable",
-                style: {
-                    border: "2px solid var(--meds)"
-                },
-                onClick: o,
-                role: "button",
-                tabIndex: 0
-            }, React.default.createElement("div", {
-                className: "wt-tile-left"
-            }, React.default.createElement("div", {
-                className: "wt-tile-header"
-            }, React.default.createElement("div", {
-                className: "wt-tile-chip",
-                style: {
-                    background: "var(--meds-chip)",
-                    color: "var(--meds)"
-                }
-            }, React.default.createElement(Pill, {
-                size: 18,
-                color: "var(--meds)",
-                fill: "var(--meds)"
-            })), React.default.createElement("span", {
-                className: "wt-tile-title"
-            }, "RX & Supplements")), React.default.createElement("div", {
-                className: "wt-tile-goal"
-            }, 0 === cTotal ? "Add in Setup" : cDueNow > 0 ? `Goal ${cDueNow} today` : "Nothing due"), cAlert && React.default.createElement("div", {
-                className: "wt-tile-togo"
-            }, cAlert), React.default.createElement("div", {
-                className: "wt-tile-logged"
-            }, cTaken, " Taken")), React.default.createElement("div", {
-                className: "wt-tile-mid"
-            }, React.default.createElement("div", {
-                className: "wt-tile-mid-value"
-            }, 0 === cTotal ? "–" : `${cDueNow}`), React.default.createElement("div", {
-                className: "wt-tile-mid-label"
-            }, 0 === cTotal ? "Add in Setup" : "to take")), React.default.createElement("div", {
-                className: "wt-tile-right"
-            }, React.default.createElement(sO, {
-                pct: cPct
-            })))
-        })(), !O && !P && !supShow && !C && !j && React.default.createElement("p", {
+        }))), P && React.default.createElement("div", {
+            className: "wt-tracker-col wt-tracker-col-clickable",
+            style: {
+                border: "2px solid var(--meds)"
+            },
+            onClick: o,
+            role: "button",
+            tabIndex: 0
+        }, React.default.createElement("div", {
+            className: "wt-tile-left"
+        }, React.default.createElement("div", {
+            className: "wt-tile-header"
+        }, React.default.createElement("div", {
+            className: "wt-tile-chip",
+            style: {
+                background: "var(--meds-chip)",
+                color: "var(--meds)"
+            }
+        }, React.default.createElement(Pill, {
+            size: 18,
+            color: "var(--meds)",
+            fill: "var(--meds)"
+        })), React.default.createElement("span", {
+            className: "wt-tile-title"
+        }, "Prescriptions")), React.default.createElement("div", {
+            className: "wt-tile-goal"
+        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), Q && React.default.createElement("div", {
+            className: "wt-tile-togo"
+        }, Q), React.default.createElement("div", {
+            className: "wt-tile-logged"
+        }, M.size, " Taken")), React.default.createElement("div", {
+            className: "wt-tile-mid"
+        }, React.default.createElement("div", {
+            className: "wt-tile-mid-value"
+        }, 0 === A ? "–" : `${H}`), React.default.createElement("div", {
+            className: "wt-tile-mid-label"
+        }, 0 === A ? "Add in Setup" : "to take")), React.default.createElement("div", {
+            className: "wt-tile-right"
+        }, React.default.createElement(sO, {
+            pct: q
+        }))), supShow && React.default.createElement("div", {
+            className: "wt-tracker-col wt-tracker-col-clickable",
+            style: {
+                border: "2px solid var(--supplements)"
+            },
+            onClick: onOpenSup2,
+            role: "button",
+            tabIndex: 0
+        }, React.default.createElement("div", {
+            className: "wt-tile-left"
+        }, React.default.createElement("div", {
+            className: "wt-tile-header"
+        }, React.default.createElement("div", {
+            className: "wt-tile-chip",
+            style: {
+                background: "var(--supplements-chip)",
+                color: "var(--supplements)"
+            }
+        }, React.default.createElement(Pill, {
+            size: 18,
+            color: "var(--supplements)",
+            fill: "var(--supplements)"
+        })), React.default.createElement("span", {
+            className: "wt-tile-title"
+        }, "Supplements")), React.default.createElement("div", {
+            className: "wt-tile-goal"
+        }, 0 === supTotal ? "Add in Setup" : supOverdueCount > 0 ? `Goal ${supOverdueCount} today` : "Nothing due"), supAlert && React.default.createElement("div", {
+            className: "wt-tile-togo"
+        }, supAlert), React.default.createElement("div", {
+            className: "wt-tile-logged"
+        }, supTakenCount, " Taken")), React.default.createElement("div", {
+            className: "wt-tile-mid"
+        }, React.default.createElement("div", {
+            className: "wt-tile-mid-value"
+        }, 0 === supTotal ? "–" : `${supOverdueCount}`), React.default.createElement("div", {
+            className: "wt-tile-mid-label"
+        }, 0 === supTotal ? "Add in Setup" : "to take")), React.default.createElement("div", {
+            className: "wt-tile-right"
+        }, React.default.createElement(newSupO, {
+            pct: supPct
+        }))), !O && !P && !supShow && !C && !j && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 width: "100%"
@@ -3189,14 +3221,21 @@ import {
     }) {
         let {
             p, m, h, g, y, v, b, w, x, E, k, S, j, H, I, F, R, supOverdueCount
-        } = computeTrackerStats(e, t), rows = [], cDueNow = H + supOverdueCount;
-        cDueNow > 0 && rows.push({
+        } = computeTrackerStats(e, t), rows = [];
+        H > 0 && rows.push({
             key: "meds",
             color: "var(--meds)",
             chip: "var(--meds-chip)",
             icon: AlertCircle,
-            label: "RX & Supplements",
-            detail: `${cDueNow} due today`
+            label: "Prescriptions",
+            detail: `${H} due today`
+        }), supOverdueCount > 0 && rows.push({
+            key: "supplements",
+            color: "var(--supplements)",
+            chip: "var(--supplements-chip)",
+            icon: AlertCircle,
+            label: "Supplements",
+            detail: `${supOverdueCount} due today`
         }), I > 0 && rows.push({
             key: "treatments",
             color: "var(--treatment)",
@@ -3956,7 +3995,7 @@ import {
                 marginTop: -6,
                 marginBottom: 16
             }
-        }, "Backfilled entries are timestamped 12:00 PM on the date below and marked as entered after the fact — they don't trigger today's goal toasts, and RX & Supplements doses still adjust inventory but never change the upcoming schedule."), React.default.createElement("label", {
+        }, "Backfilled entries are timestamped 12:00 PM on the date below and marked as entered after the fact — they don't trigger today's goal toasts, and Prescriptions and Supplements doses still adjust inventory but never change the upcoming schedule."), React.default.createElement("label", {
             className: "wt-field"
         }, "Date", React.default.createElement("input", {
             type: "date",
@@ -5438,12 +5477,12 @@ import {
             icon: Pill,
             iconBg: "var(--meds-chip)",
             iconColor: "var(--meds)",
-            label: "RX",
+            label: "Prescriptions",
             goalDisplay: null,
             on: JRx,
             onToggle: () => onToggleShowRx(!JRx),
             onOpen: () => setOpenTracker({
-                label: "RX",
+                label: "Prescriptions",
                 borderColor: "var(--meds)",
                 hasGoal: !1
             })
@@ -5516,7 +5555,7 @@ import {
             size: 20
         }), " Add Treatment Provider"), React.default.createElement("div", {
             className: "wt-plan-section-label"
-        }, "Self-Managed RX"), React.default.createElement(RegimenSummaryCard, {
+        }, "Self-Managed Prescriptions & Supplements"), React.default.createElement(RegimenSummaryCard, {
             icon: Pill,
             iconBg: "var(--supplements-chip)",
             iconColor: "var(--supplements)",
@@ -5575,13 +5614,13 @@ import {
             icon: ClipboardList,
             iconBg: "#FBE7EE",
             iconColor: "#B23A6B",
-            label: "RX",
+            label: "Prescriptions",
             count: rxItems.length,
             preview: rxPreview,
             expanded: "rx" === expandedList,
             onClick: () => setExpandedList("rx" === expandedList ? null : "rx")
         }), "rx" === expandedList && React.default.createElement(PlanSheet, {
-            title: "RX",
+            title: "Prescriptions",
             onClose: () => setExpandedList(null)
         }, 0 === rxItems.length && React.default.createElement("p", {
             className: "wt-empty-note",
@@ -7820,9 +7859,9 @@ import {
             supplements: t.settings.rx,
             initial: rxSheetInitial,
             targetDateLabel: entryTargetDateLabel,
-            title: "RX",
+            title: "Prescriptions",
             emptyCopy: "Nothing set up yet. Add prescriptions you manage yourself in My Plan, and they'll show up here to log with one tap.",
-            addButtonLabel: "Add to RX",
+            addButtonLabel: "Add to Prescriptions",
             borderColor: "var(--meds)",
             onClose: () => {
                 setRxSheetOpen(!1), setRxSheetInitial(null)
@@ -8109,7 +8148,7 @@ import {
             onClick: () => a("rx")
         }, React.default.createElement(Pill, {
             size: 18
-        }), " RX"), React.default.createElement("button", {
+        }), " Prescriptions"), React.default.createElement("button", {
             className: "wt-nav-btn " + ("reports" === r ? "active" : ""),
             "aria-current": "reports" === r ? "page" : undefined,
             onClick: () => a("reports")

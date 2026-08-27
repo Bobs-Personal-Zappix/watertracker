@@ -20,6 +20,53 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.58.0] — 2026-08-27
+
+Continues the Prescriptions/Supplements separation started by `TRACK-01` (v3.52.0): Today's tile
+split into two independent tiles, and "RX" relabeled "Prescriptions" everywhere it's a user-facing
+label, so the three trackers read consistently as **Treatments / Prescriptions / Supplements**
+across every page.
+
+- **Today's combined "RX & Supplements" tile split into two independent tiles.** `computeTrackerStats()`
+  already returned fully independent fields for both trackers (from TRACK-01) — Today's full-detail
+  grid just hadn't been updated to use them yet. The old block was an IIFE that locally summed the
+  two trackers into combined values; both new tiles use their already-computed fields directly, no
+  local derivation needed. New "Supplements" tile reuses the same ring/icon combination already
+  established elsewhere in the app (`newSupO`'s `--supplements` ring color, `Pill` chip icon with
+  `--supplements`/`--supplements-chip`) — no new design decision required. Tile order: Treatments,
+  Prescriptions, Supplements, matching Log It!'s existing compact-grid order.
+- **"Tracked So Far" alert row split** the same way — the combined due-count callout is now two
+  independent rows (Prescriptions due, Supplements due).
+- **"RX" relabeled "Prescriptions" everywhere else it appeared as a user-facing label**: Log It!'s
+  compact grid tile, My Plan's "What I'm Tracking" row and its own RX entry sheet, the bottom-nav
+  tab (6th tab, icon unchanged), the RX entry sheet opened from Log It!, and the Backfill sheet's
+  disclaimer text. Internal identifiers (`settings.rx`, `type:"rx"`, `showRx`, route key `"rx"`,
+  CSS class hooks like `"meds"`) are unchanged — this is a label rename only, not a data-model
+  change, so none of the new-entry-type/new-field checklists applied.
+- **My Plan's "Self-Managed RX" section header renamed "Self-Managed Prescriptions & Supplements"**
+  — not "Self-Managed Prescriptions" as originally planned, since that section actually wraps both
+  the Supplements and Prescriptions regimen cards, and "Prescriptions" alone would have been
+  inaccurate. Caught by reading the section's actual contents before applying the rename.
+  The RX page itself (`RxPage`, 3rd bottom-nav tab) was not touched — it already correctly said
+  "Treatments"/"Prescriptions"/"Vitamins & Supplements" from TRACK-01.
+- `tools/harness.js`: extensive updates — every existing "RX"/"RX & Supplements" assertion updated
+  to expect "Prescriptions" (roughly a dozen call sites across Today, Log It!, My Plan, the RX
+  entry sheet, and the bottom nav); tile-count checks bumped 8→9 everywhere Today's/Log It!'s full
+  tracker set is asserted; new regression check added that seeds different due-counts for
+  Prescriptions vs. Supplements and confirms the two tiles show different, non-summed numbers (the
+  actual bug class this whole change guards against — a naive incomplete split could still show
+  correct labels while silently leaving stale combined math underneath).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One pre-existing,
+  unrelated stale check still fails (`wt-tile-togo`, documented since v3.44.0).
+- **Not yet verified on a real device**: Today's new two-tile layout (does it reflow sanely with
+  one more tile than before), and specifically flagged by Rob before this shipped — the bottom-nav
+  row's fit with "Prescriptions" (9 characters longer than "RX") in an already-tight 6-tab, 420px-
+  max-width layout. May need a font-size tweak in a fast follow-up if it doesn't fit well.
+- Explicitly out of scope this pass (per Rob, future session): partner configuration for
+  Treatments/Prescriptions (DripBar-style / pharmacy), and any Stats-page additions for these three
+  trackers (Stats currently has zero RX/Supplements/Treatments content).
+
 ## [3.57.0] — 2026-08-27
 
 Log It! merges the 3-item top row (Voice Tracker/Presets/Meal Entry) into the tracker grid itself,

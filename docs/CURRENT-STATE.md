@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.57.0*
+*As of: August 27, 2026 · Deployed version: 3.58.0*
 
 ---
 
@@ -14,9 +14,9 @@
 - Worker on its own `workers.dev` domain — deliberately ungated, which is what makes doctor-share links reachable without a login.
 
 **Tracked metrics (9 tiles as of v3.52.0, all with percentage progress rings except Weight)**
-Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX · Supplements — in that order. RX and Supplements were one combined "RX & Supplements" tracker through v3.51.0 (renamed from "RX & Vitamins" in v3.47.0); v3.52.0 split them into two fully independent trackers — see below and `docs/DECISION-LOG.md` `TRACK-01`. As of v3.50.0, these display very differently on Log It! (compact) vs. Today (full detail) — see below.
+Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · Prescriptions · Supplements — in that order. Prescriptions and Supplements were one combined "RX & Supplements" tracker through v3.51.0 (renamed from "RX & Vitamins" in v3.47.0); v3.52.0 split them into two fully independent trackers, and v3.58.0 finished the split's visual work — Today's full-detail grid now shows two independent tiles instead of one combined tile, and every user-facing "RX" label became "Prescriptions" — see below and `docs/DECISION-LOG.md` `TRACK-01`/its v3.58.0 amendment. As of v3.50.0, these display very differently on Log It! (compact) vs. Today (full detail) — see below.
 
-**Tabs:** Log It! · Today · **RX** · Stats · My Plan · Settings — 6 tabs as of v3.49.0, which added
+**Tabs:** Log It! · Today · **Prescriptions** · Stats · My Plan · Settings — 6 tabs as of v3.49.0, which added
 "RX" (icon `Pill`) between Today and Stats (v3.42.0 swapped Today first; v3.42.1 reverted that swap
 per Rob after real-device testing — Today's landing-page content additions from v3.42.0 remain,
 only the nav order reverted). Today's Voice Entry tile (renamed from "Voice Assistant" in v3.50.0)
@@ -211,6 +211,32 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.58.0)
+
+Continues the Prescriptions/Supplements separation started by `TRACK-01` (v3.52.0). Full detail in
+`CHANGELOG.md` and `docs/DECISION-LOG.md` (amends `TRACK-01`/`PROD-13`/`UX-24`/`UX-28`).
+
+- Today's combined "RX & Supplements" full-detail tile split into two independent tiles
+  (Prescriptions, Supplements), reusing `computeTrackerStats()`'s already-independent fields — no
+  new stat computation needed, just new JSX. Tile order: Treatments, Prescriptions, Supplements,
+  matching Log It!'s existing order.
+- "Tracked So Far" alert row split the same way (independent Prescriptions-due / Supplements-due
+  rows instead of one combined row).
+- "RX" relabeled "Prescriptions" everywhere it was a user-facing label: Log It!'s compact grid,
+  My Plan's tracker row, the RX entry sheet, the bottom-nav tab, the Backfill sheet disclaimer.
+  Internal identifiers (`settings.rx`, route key `"rx"`, etc.) unchanged — label rename only.
+- My Plan's "Self-Managed RX" section header became "Self-Managed Prescriptions & Supplements"
+  (not "Self-Managed Prescriptions" as first planned — that section wraps both trackers' cards).
+- `tools/harness.js`: every existing "RX"/"RX & Supplements" assertion updated; tile-count checks
+  bumped 8→9 everywhere Today's/Log It!'s full tracker set is asserted; new regression check
+  confirms Prescriptions and Supplements tiles show independent, non-summed numbers.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. **Not yet verified on a
+  real device** — Today's new two-tile layout, and specifically the "Prescriptions" nav-tab label's
+  fit in the tight 6-tab nav row (explicitly flagged by Rob before shipping).
+- Explicitly out of scope (future session): partner configuration for Treatments/Prescriptions, any
+  Stats-page additions for these three trackers.
 
 ## What shipped Aug 27, 2026 (v3.57.0)
 
@@ -728,13 +754,14 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   confirmation** — centering, the native calendar picker's feel on a phone, whether the bigger grid
   icons/labels fit well, and whether the header's new left/right balance reads correctly are all
   things jsdom cannot verify.
-- **RX/Supplements split (v3.52.0) needs Rob's real-device confirmation.** Not yet verified: the
-  new Supplements tile/icon's visual read next to RX on Log It!, My Plan's new "What I'm Tracking"
-  row, and that the migration ran cleanly on Rob's own device data (not just the harness's seed).
-- **Today has no Supplements tile** (open item, not started): Today's combined "RX & Supplements"
-  tile still sums both trackers into one number rather than showing them separately — Today was
-  explicitly out of scope for the v3.52.0 session. A real fix (second tile, or a different combined
-  presentation) needs its own decision with Rob.
+- **RX/Supplements split (v3.52.0/v3.58.0) needs Rob's real-device confirmation.** Not yet
+  verified: the Supplements tile/icon's visual read next to Prescriptions on Log It! and Today, My
+  Plan's "What I'm Tracking" row, and whether the bottom-nav "Prescriptions" label (longer than the
+  old "RX") fits well in the 6-tab, 420px-max-width nav row — flagged explicitly by Rob before
+  shipping v3.58.0.
+- ~~**Today has no Supplements tile**~~ **RESOLVED v3.58.0** — Today's full-detail grid now shows
+  independent Prescriptions and Supplements tiles instead of one combined "RX & Supplements" tile.
+  See `docs/DECISION-LOG.md` `TRACK-01`'s v3.58.0 amendment.
 - **Pre-migration log-entry history stays tagged `type: "supplement"` regardless of which item it
   referenced** (v3.52.0, accepted limitation) — see `docs/DECISION-LOG.md` `TRACK-01`. A
   pre-migration dose of what is now an RX item won't retroactively count toward RX's "taken today"

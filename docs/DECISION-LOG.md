@@ -394,7 +394,12 @@ a standing-risk flag before building anything further. Resolved shape, explicit 
    it away silently would have been the same class of quiet capability loss as the next-due-date gap.
 *Why:* keeps day-to-day logging at one step (the thing that matters most for adherence, `STRAT-02`)
 while giving setup-time management the category-specific detail each type actually needs.
-*Status:* **Locked** · Aug 23, 2026 · v3.45.0
+*Status:* **Locked** · Aug 23, 2026 · v3.45.0 — *amended Aug 27, 2026 (v3.58.0): the "RX" label this
+entry established on My Plan's "Self-Managed RX" section was renamed "Self-Managed Prescriptions &
+Supplements" as part of an app-wide "RX"→"Prescriptions" label rename — see `TRACK-01`'s v3.58.0
+amendment. This entry's core decision (splitting supplements-vs-prescriptions setup detail while
+keeping combined daily logging) is otherwise unchanged; the combined-logging half was itself later
+superseded by `TRACK-01`.*
 *Known gap:* Treatments still have no next-due-date-editing UI anywhere in the app (out of scope for
 this change — "My Treatments" isn't fully built out yet per Rob). Flagged in
 `docs/CURRENT-STATE.md`'s Known outstanding.
@@ -454,7 +459,12 @@ place to check status.
 RX/Treatments" gained its own section-wide card border (matching "Today at a Glance"'s `wt-card`
 treatment) per Rob's follow-up review — the section label now sits inside the bubble at the top,
 with each item's own smaller card nested inside it, rather than floating without a border of its
-own.*
+own.* — *amended Aug 27, 2026, v3.58.0: `TRACK-01`'s split of the RX/Supplements data model
+(v3.52.0) had left Today's full-detail tile still summing both trackers into one displayed number,
+consistent with "Today shows status" but not fully reflecting the underlying independent trackers.
+v3.58.0 resolved this — Today now shows two independent Prescriptions/Supplements tiles, matching
+what My Plan (the system of record) and Log It! already tracked separately. See `TRACK-01`'s
+v3.58.0 amendment for detail.*
 
 **UX-27 — Voice Assistant tile removed from Today; Log It!'s 8 tracker tiles duplicated onto Today;
 "Prior Days" relocated to Stats and renamed "Edit Prior Days Logs."**
@@ -519,7 +529,11 @@ supports the clinic-distribution direction (`STRAT-10`) by giving a partner like
 branded presence inside the app.
 *Status:* **Locked** · Aug 25, 2026 · v3.49.0 — amends `UX-06` (nav order), `PROD-13` (Today's
 status-view role), `UX-27` point 2 (tile-grid position, now directly after "Today at a Glance"
-instead of after "Remaining RX/Treatments")
+instead of after "Remaining RX/Treatments") — *amended Aug 27, 2026, v3.58.0: the bottom-nav tab's
+visible label changed from "RX" to "Prescriptions" as part of an app-wide rename (see `TRACK-01`'s
+v3.58.0 amendment); this page's own title ("SCRIPTS FOR:") and its three section headers
+("Treatments"/"Prescriptions"/"Vitamins & Supplements") were already correct from this entry and
+were not touched.*
 
 **UX-29 — Log It! becomes pure fast-entry: compact 3x3 tile grid, "Meals" tile, "Use Presets" tile.**
 Now that Today (`UX-27`) and the RX page (`UX-28`) both show full tracked-metric detail, Rob judged
@@ -682,6 +696,23 @@ underlying numbers still had to stay correct.
 *Status:* **Locked** · Aug 27, 2026 · v3.52.0 — amends `UX-24` (Self-Managed RX split origin),
 `UX-28` (RX page sections), `PROD-13` (Today's combined tile), `ARCH-OPEN-05` (first real use of the
 migration-chain hook it established)
+*Amendment (v3.58.0, Aug 27, 2026):* the two deliberate deferrals this entry called out — Today's
+tile still summing both trackers, and every other "RX" label staying as-is — were resolved. Rob
+asked for the next step: split Today's full-detail tile into independent Prescriptions/Supplements
+tiles (reusing the already-independent `computeTrackerStats()` fields this entry's migration
+produced — no new stat computation needed), and rename "RX" to "Prescriptions" everywhere it
+appears as a user-facing label (Log It!, My Plan, the RX entry sheet, the bottom-nav tab, the
+Backfill disclaimer, the "Tracked So Far" alert row), confirmed via clarifying questions to be a
+full app-wide rename rather than the narrower "My Plan only" scope first mentioned. One correction
+made during implementation: My Plan's "Self-Managed RX" section header was renamed "Self-Managed
+Prescriptions & Supplements," not "Self-Managed Prescriptions" — that section wraps both trackers'
+regimen cards, so a Prescriptions-only label would have been inaccurate; caught by reading the
+section's actual rendered contents before applying the rename rather than assuming from its old
+name. Internal identifiers (`settings.rx`, `type:"rx"`, `showRx`, route key `"rx"`) are unchanged —
+this was a label rename only, not a further data-model change. The RX page itself (`UX-28`) and its
+three section headers were already correctly named and were not touched. Partner configuration for
+Treatments/Prescriptions and any Stats-page work for these three trackers remain explicitly
+out of scope, deferred to a future session per Rob.
 
 **UX-34 — Log It! real-device review round 1: date-pill centering/calendar-picker, top-row/grid
 sizing.**
@@ -996,7 +1027,12 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.57.0: UX-39 added — Log It!'s standalone top row merged into the
+*Last updated: August 27, 2026 (v3.58.0: TRACK-01 amended — Today's combined "RX & Supplements"
+tile split into independent Prescriptions/Supplements tiles, "RX" relabeled "Prescriptions"
+app-wide (Log It!, My Plan, RX entry sheet, bottom nav, Backfill disclaimer, Tracked So Far row);
+My Plan's "Self-Managed RX" section became "Self-Managed Prescriptions & Supplements" (corrected
+from the originally planned "Self-Managed Prescriptions" after finding the section covers both
+trackers); PROD-13/UX-24/UX-28 amended to point at this resolution; earlier: v3.57.0: UX-39 added — Log It!'s standalone top row merged into the
 tracker grid (amends UX-30/UX-31/UX-32), divider removed, now a single evenly-spaced 4x3 grid;
 2-column grid fallback dropped; Presets/Meal Entry/Weight images Rob also requested arrived later in
 the same session and were swapped in, verified clean (real alpha transparency, no checkerboard/JPEG

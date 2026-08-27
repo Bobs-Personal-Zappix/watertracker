@@ -323,24 +323,24 @@ const STEPS = [
     check("Supplements sheet title found", !!title);
   },
   () => check("close Supplements sheet", clickByAria("Close")),
-  () => check("open RX sheet", clickByText("RX", "button")),
+  () => check("open Prescriptions sheet", clickByText("Prescriptions", "button")),
   () => {
     const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
-      .find((el) => el.textContent === "RX");
-    check("RX sheet title found", !!title);
+      .find((el) => el.textContent === "Prescriptions");
+    check("Prescriptions sheet title found", !!title);
     // SeedRx (category "rx", pharmacy/refills/partner fields pre-set in the seed, as if saved in
     // a prior session) appearing here proves those fields survived the boot-time migrate() pass —
     // the v3.49.0 regression check for the normalizer bug that used to silently strip them.
     const row = [...window.document.querySelectorAll(".wt-preset-row")].find((r) => r.textContent.includes("SeedRx"));
-    check("seeded SeedRx (category/pharmacy/refills pre-set) survived boot and appears in the RX list", !!row);
+    check("seeded SeedRx (category/pharmacy/refills pre-set) survived boot and appears in the Prescriptions list", !!row);
   },
-  () => check("close RX sheet", clickByAria("Close")),
+  () => check("close Prescriptions sheet", clickByAria("Close")),
   // Add assertions for whatever changed this session.
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
     check("My Plan always renders all 9 cards (Water off, Treatments off seeded; RX/Supplements split into two rows)", cards.length, 9);
     const titles = cards.map((c) => c.querySelector(".wt-plan-card-title").textContent);
-    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX,Supplements,Treatments");
+    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,Prescriptions,Supplements,Treatments");
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water card renders dimmed (off class)", waterCard ? waterCard.classList.contains("off") : null, "true");
   },
@@ -532,10 +532,10 @@ const STEPS = [
   },
   // v3.50.0: Log It!'s tiles are now compact (icon/ring/name only, no goal/logged text) — this
   // check needs the full-detail markup, which now lives on Today (same MO component, unchanged).
-  () => check("nav to Today (verify today's RX tile ring unaffected)", nav("Today")),
+  () => check("nav to Today (verify today's Prescriptions tile ring unaffected)", nav("Today")),
   () => {
-    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
-    check("today's RX & Supplements tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
+    const rxTile = tiles().find((t) => t.startsWith("Prescriptions"));
+    check("today's Prescriptions tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
   },
   () => check("nav back to Stats (to delete the backfilled dose)", nav("Stats")),
   () => check("re-open All Past Days", clickByAria("Edit Prior Days Logs")),
@@ -613,8 +613,8 @@ const STEPS = [
   // (surface moved from the removed "To Do Today" section to "Today at a Glance" in v3.43.0/v3.44.0)
   () => check("nav to Today (for overdue icon check)", nav("Today")),
   () => {
-    const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("RX & Supplements"));
-    check("seeded OverdueMed is reflected in the RX & Supplements due callout", !!medsRow);
+    const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("Prescriptions"));
+    check("seeded OverdueMed is reflected in the Prescriptions due callout", !!medsRow);
     const icon = medsRow ? medsRow.querySelector(".wt-tracked-row-chip svg") : null;
     check("due callout has an icon glyph alongside color (not color alone)", !!icon, "true");
     check("due callout text still states the due count", medsRow ? /due today/.test(medsRow.textContent) : null, "true");
@@ -658,8 +658,8 @@ const STEPS = [
   () => check("nav to Today (item 3/4 tile restructure checks)", nav("Today")),
   () => {
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
-    check("all 8 Log It! tiles mount with all trackers enabled", tiles.length, 8);
-    check("no runtime errors after full 8-tile render", errors.length, 0);
+    check("all 9 Log It! tiles mount with all trackers enabled (Prescriptions/Supplements split)", tiles.length, 9);
+    check("no runtime errors after full 9-tile render", errors.length, 0);
   },
   () => {
     // Item 3: horizontal layout — left column (chip+title+stats) and right column (gem), per tile.
@@ -671,7 +671,8 @@ const STEPS = [
       ["Weight", "var(--weight)", "var(--weight-chip)"],
       ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
       ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
-      ["RX & Supplements", "var(--meds)", "var(--meds-chip)"],
+      ["Prescriptions", "var(--meds)", "var(--meds-chip)"],
+      ["Supplements", "var(--supplements)", "var(--supplements-chip)"],
     ];
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
     let allOk = true;
@@ -781,7 +782,7 @@ const STEPS = [
   },
   () => {
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
-    check("all 8 Log It! tiles still mount cleanly after item 1 changes", tiles.length, 8);
+    check("all 9 Log It! tiles still mount cleanly after item 1 changes (Prescriptions/Supplements split)", tiles.length, 9);
     check("no runtime errors after item 1 changes", errors.length, 0);
   },
   () => {
@@ -828,7 +829,7 @@ const STEPS = [
       ["Sleep", "var(--sleep)", "var(--sleep-chip)"],
       ["Weight", "var(--weight)", "var(--weight-chip)"],
       ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
-      ["RX", "var(--meds)", "var(--meds-chip)"],
+      ["Prescriptions", "var(--meds)", "var(--meds-chip)"],
       ["Supplements", "var(--supplements)", "var(--supplements-chip)"],
       ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
     ];
@@ -1066,7 +1067,7 @@ const STEPS = [
     check(".wt-topbanner-ai CSS rule removed along with the header icon (v3.40.0)", cssText.includes(".wt-topbanner-ai"), "false");
   },
   () => check("nav to Today (v3.38.1 regression check)", nav("Today")),
-  () => check("all 8 Today tiles still mount after border-color change", [...window.document.querySelectorAll(".wt-tracker-col")].length, 8),
+  () => check("all 9 Today tiles still mount after border-color change (Prescriptions/Supplements split)", [...window.document.querySelectorAll(".wt-tracker-col")].length, 9),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     if (waterTile) fire(waterTile);
@@ -1273,9 +1274,11 @@ const STEPS = [
   () => {
     const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
     check("Today at a Glance shows at most 4 callout rows", rows.length <= 4, "true");
-    // Default seed has 2 supplements due and nothing else logged yet, so it should surface the
-    // meds-due callout plus the single most-behind tracker — not one row per tracker.
-    check("Today at a Glance surfaces the RX & Supplements due-count callout", rows.some((r) => /RX & Supplements/.test(r.textContent) && /due today/.test(r.textContent)), "true");
+    // Default seed's pre-migration combined array (TestVit, OverdueMed) migrates entirely into
+    // settings.rx per TRACK-01 (settings.supplements starts empty), so both due items surface
+    // under the Prescriptions callout, not Supplements — nothing else logged yet, so it should
+    // surface the Prescriptions-due callout plus the single most-behind tracker.
+    check("Today at a Glance surfaces the Prescriptions due-count callout", rows.some((r) => /Prescriptions/.test(r.textContent) && /due today/.test(r.textContent)), "true");
     check("Today at a Glance does not list every enabled tracker (no Water/Calories/Sleep/Exercise noise in default seed)", rows.some((r) => /Water|Calories|Sleep|Exercise/.test(r.textContent)), false);
   },
   () => check("no runtime errors after v3.43.0 Today-at-a-Glance pass", errors.length, 0),
@@ -1306,22 +1309,22 @@ const STEPS = [
 
   // ── v3.44.0: Self-Managed RX — Vitamins & Supplements / RX split, self-managed Treatments ──
   // preserved as its own tile, RX next-due-date editing added (see decision log UX-22/UX-23) ──
-  () => check("nav to My Plan (for Self-Managed RX checks)", nav("My Plan")),
+  () => check("nav to My Plan (for Self-Managed Prescriptions & Supplements checks)", nav("My Plan")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-plan-section-label")].map((el) => el.textContent);
-    check("'Self-Managed RX' section header present", labels.includes("Self-Managed RX"), "true");
+    check("'Self-Managed Prescriptions & Supplements' section header present", labels.includes("Self-Managed Prescriptions & Supplements"), "true");
   },
   // v3.51.0 (Track 2): RX & Supplements split into two fully independent trackers. Per the locked
   // migration design, ALL pre-existing combined items (regardless of the old category field) seed
-  // the retained RX tracker (settings.rx); the new Supplements tracker (settings.supplements)
-  // starts empty. See docs/DECISION-LOG.md TRACK-01.
-  () => check("open RX sheet (legacy-item migration check)", clickByText("RX", "button")),
+  // the retained RX/Prescriptions tracker (settings.rx); the new Supplements tracker
+  // (settings.supplements) starts empty. See docs/DECISION-LOG.md TRACK-01.
+  () => check("open Prescriptions sheet (legacy-item migration check)", clickByText("Prescriptions", "button")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
-    check("seeded TestVit (no category field) migrated into RX (all pre-split items seed RX)", rows.some((r) => r.includes("TestVit")), "true");
-    check("seeded OverdueMed (no category field) migrated into RX", rows.some((r) => r.includes("OverdueMed")), "true");
+    check("seeded TestVit (no category field) migrated into Prescriptions (all pre-split items seed RX)", rows.some((r) => r.includes("TestVit")), "true");
+    check("seeded OverdueMed (no category field) migrated into Prescriptions", rows.some((r) => r.includes("OverdueMed")), "true");
   },
-  () => check("close RX sheet", clickByAria("Close")),
+  () => check("close Prescriptions sheet", clickByAria("Close")),
   () => check("open Supplements sheet (new tracker starts empty)", clickByText("Supplements", "button")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")];
@@ -1340,23 +1343,23 @@ const STEPS = [
     check("new vitamin implicitly daily (intervalDays:1) with no schedule prompt", v ? v.intervalDays : null, 1);
   },
   () => check("close Supplements sheet", clickByAria("Close")),
-  () => check("open RX sheet", clickByText("RX", "button")),
+  () => check("open Prescriptions sheet", clickByText("Prescriptions", "button")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
-    check("new vitamin TestVitamin does NOT appear in RX (separate tracker)", rows.some((r) => r.includes("TestVitamin")), false);
+    check("new vitamin TestVitamin does NOT appear in Prescriptions (separate tracker)", rows.some((r) => r.includes("TestVitamin")), false);
   },
   () => check("open Add-prescription form", clickByText("Add prescription", "button")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-field")].map((l) => l.textContent);
-    check("RX add form keeps the 'Take every (days)' schedule field", labels.some((l) => l.includes("Take every")), "true");
+    check("Prescriptions add form keeps the 'Take every (days)' schedule field", labels.some((l) => l.includes("Take every")), "true");
   },
   () => check("fill new RX name", setInput("e.g. Metformin", "TestRx")),
   () => check("set new RX interval to every 3 days", setInput("1", "3")),
   () => check("save new RX item", clickByText("Save", "button")),
   () => {
     const r = rxItem("TestRx");
-    check("new RX item stored in settings.rx", !!r, "true");
-    check("new RX item keeps its entered interval (3 days)", r ? r.intervalDays : null, 3);
+    check("new Prescriptions item stored in settings.rx", !!r, "true");
+    check("new Prescriptions item keeps its entered interval (3 days)", r ? r.intervalDays : null, 3);
   },
   () => {
     // TestRx has intervalDays:3 and no lastTakenDate/nextDueOverride yet, so DS() treats it as
@@ -1376,6 +1379,20 @@ const STEPS = [
   },
   () => check("no runtime errors after Self-Managed RX pass", errors.length, 0),
 
+  // v3.58.0: regression guard for the Today-tile split — Prescriptions due = 3 (TestVit,
+  // OverdueMed, TestRx), Supplements due = 1 (TestVitamin, added above, never taken). Two
+  // different non-zero numbers on two independent tiles proves the split isn't silently still
+  // summing the two trackers together (a summed tile would show 4 on both, or one combined tile).
+  () => check("nav to Today (verify Prescriptions/Supplements tiles show independent, non-summed numbers)", nav("Today")),
+  () => {
+    const rxTile = tiles().find((t) => t.startsWith("Prescriptions"));
+    const supTile = tiles().find((t) => t.startsWith("Supplements"));
+    check("Prescriptions tile shows its own due count (3: TestVit + OverdueMed + TestRx)", rxTile ? /Goal 3 today/.test(rxTile) : null, "true");
+    check("Supplements tile shows its own due count (1: TestVitamin)", supTile ? /Goal 1 today/.test(supTile) : null, "true");
+    check("Prescriptions and Supplements tiles are not showing the same combined number", rxTile === supTile, false);
+  },
+  () => check("no runtime errors after Today split-independence check", errors.length, 0),
+
   // ── v3.46.0: Log It! tile trims (Weight/Treatments/RX drop their redundant sub-text now that ──
   // the hero number covers it), tighter tile height + bigger inter-tile gap, Today's Log row ──
   // restack (stats under description, actions grouped right), Stats "Subs" removed, new ──
@@ -1393,8 +1410,8 @@ const STEPS = [
   () => {
     const weightTile = tiles().find((t) => t.startsWith("Weight"));
     check("Weight tile no longer repeats the goal-difference text a second time", weightTile ? !/to golbs|lbs to go.*to go/.test(weightTile) : null, "true");
-    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
-    check("RX & Supplements tile no longer shows the old 'of N taken' sub-text", rxTile ? !/of \d+ taken/.test(rxTile) : null, "true");
+    const rxTile = tiles().find((t) => t.startsWith("Prescriptions"));
+    check("Prescriptions tile no longer shows the old 'of N taken' sub-text", rxTile ? !/of \d+ taken/.test(rxTile) : null, "true");
   },
   () => {
     const cssText = window.document.querySelector("style").textContent;
@@ -1436,7 +1453,7 @@ const STEPS = [
 
   // ── New "Remaining RX/Treatments" Today section, fed from My Plan's system-of-record fields ──
   () => check("nav to My Plan (add a fully-detailed RX + treatment)", nav("My Plan")),
-  () => check("open RX sheet (fill full detail)", clickByText("RX", "button")),
+  () => check("open Prescriptions sheet (fill full detail)", clickByText("Prescriptions", "button")),
   () => check("open Add-prescription form", clickByText("Add prescription", "button")),
   () => check("fill detailed RX name", setInput("e.g. Metformin", "DetailedRx")),
   () => check("fill DetailedRx pharmacy", setInput("e.g. CVS on Main St", "Corner Pharmacy")),
@@ -1488,9 +1505,17 @@ const STEPS = [
     const labels = [...window.document.querySelectorAll(".wt-section-label, .wt-section-label-lg")].map((el) => el.textContent);
     check("'Remaining RX/Treatments' no longer present on Today (moved to the RX page)", labels.includes("Remaining RX/Treatments"), false);
   },
-  () => check("nav button 'RX' present in bottom nav", [...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.trim() === "RX"), "true"),
-  () => check("nav to RX page", nav("RX")),
+  () => check("nav button 'Prescriptions' present in bottom nav", [...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.trim() === "Prescriptions"), "true"),
+  () => {
+    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "Prescriptions");
+    check("nav tab's internal route/active-class is unaffected by the label rename (still keys off 'rx')", rxBtn ? rxBtn.getAttribute("aria-current") !== "page" : null, "true");
+  },
+  () => check("nav to RX page", nav("Prescriptions")),
   () => check("RX page title starts with 'SCRIPTS FOR:'", (headerText() || "").startsWith("SCRIPTS FOR:"), "true"),
+  () => {
+    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "Prescriptions");
+    check("nav tab shows active state after navigating to it (route key 'rx' still wired correctly)", rxBtn ? rxBtn.className.includes("active") : null, "true");
+  },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label-lg")].map((el) => el.textContent);
     check("RX page has 'Treatments' section", labels.includes("Treatments"), "true");
@@ -1552,13 +1577,14 @@ const STEPS = [
     const seamRule = cssText.match(/\.wt-trackers-grid \+ \.wt-trackers-grid \{[^}]*\}/);
     check("Sleep→Weight seam now has its own margin-top override (was relying on default 6px+8px=14px, now matches the 24px gap used elsewhere)", seamRule ? seamRule[0].includes("margin-top:18px") : null, "true");
     const btnSeamRule = cssText.match(/\.wt-trackers-grid \+ \.wt-action-btns \{[^}]*\}/);
-    check("RX & Supplements→presets-button seam also gets the matching margin-top override", btnSeamRule ? btnSeamRule[0].includes("margin-top:18px") : null, "true");
+    check("Prescriptions→presets-button seam also gets the matching margin-top override", btnSeamRule ? btnSeamRule[0].includes("margin-top:18px") : null, "true");
   },
   () => {
     // v3.51.0 (Track 2): Log It!'s compact grid split the combined tile into two — "RX" and
     // "Supplements" — so the old combined "RX & Supplements" label no longer appears there.
-    const rxTile = tiles().find((t) => t === "RX");
-    check("Log It! has a standalone 'RX' tile (split from the old combined tile)", !!rxTile);
+    // v3.58.0: "RX" relabeled "Prescriptions" throughout.
+    const rxTile = tiles().find((t) => t === "Prescriptions");
+    check("Log It! has a standalone 'Prescriptions' tile (split from the old combined tile)", !!rxTile);
     const supTile = tiles().find((t) => t === "Supplements");
     check("Log It! has a standalone 'Supplements' tile", !!supTile);
     const oldName = tiles().find((t) => t.startsWith("RX & Vitamins"));
@@ -1568,9 +1594,9 @@ const STEPS = [
   () => check("nav to My Plan (rename check)", nav("My Plan")),
   () => {
     // v3.51.0 (Track 2): the combined "RX & Supplements" What-I'm-Tracking row split into two
-    // independent rows.
+    // independent rows. v3.58.0: "RX" relabeled "Prescriptions" throughout.
     const cardTitles = [...window.document.querySelectorAll(".wt-plan-card-title")].map((el) => el.textContent);
-    check("My Plan has a standalone 'RX' tracker card", cardTitles.includes("RX"), "true");
+    check("My Plan has a standalone 'Prescriptions' tracker card", cardTitles.includes("Prescriptions"), "true");
     check("My Plan has a standalone 'Supplements' tracker card", cardTitles.includes("Supplements"), "true");
     check("My Plan tracker card old combined name gone", cardTitles.includes("RX & Vitamins"), false);
   },
@@ -1578,10 +1604,11 @@ const STEPS = [
 
   // ── RX page sections each get their own section-wide card border (carried over from the ──
   // retired Today section's styling, now per-group on the RX page) ──
-  // Route through Today first: from My Plan, clickByText("RX") would instead hit My Plan's own
-  // "RX" RegimenSummaryCard button (same literal text, earlier in document order).
-  () => check("nav to Today (before RX, to avoid My Plan's own 'RX' button)", nav("Today")),
-  () => check("nav to RX (section card-border check)", nav("RX")),
+  // Route through Today first: from My Plan, clickByText("Prescriptions") would instead hit My
+  // Plan's own "Prescriptions" RegimenSummaryCard button (same literal text, earlier in document
+  // order).
+  () => check("nav to Today (before RX, to avoid My Plan's own 'Prescriptions' button)", nav("Today")),
+  () => check("nav to RX (section card-border check)", nav("Prescriptions")),
   () => {
     const labelEl = [...window.document.querySelectorAll(".wt-section-label-lg")].find((el) => el.textContent === "Prescriptions");
     check("'Prescriptions' label found", !!labelEl);
@@ -1619,9 +1646,10 @@ const STEPS = [
     // is now Today at a Glance -> duplicated tile grid -> Today's log.
     check("Today at a Glance sits above Today's log with the duplicated tile grid between them", idxGlance >= 0 && idxLog > idxGlance, "true");
     const t = tiles();
-    check("Today shows all 8 Log It! tiles (duplicated grid, current toggle state all-on)", t.length, 8);
+    check("Today shows all 9 Log It! tiles (duplicated grid, current toggle state all-on; Prescriptions/Supplements split)", t.length, 9);
     check("Today's duplicated grid includes Water", t.some((x) => x.startsWith("Water")), "true");
-    check("Today's duplicated grid includes RX & Supplements", t.some((x) => x.startsWith("RX & Supplements")), "true");
+    check("Today's duplicated grid includes Prescriptions", t.some((x) => x.startsWith("Prescriptions")), "true");
+    check("Today's duplicated grid includes Supplements", t.some((x) => x.startsWith("Supplements")), "true");
     check("duplicated grid does not also duplicate Log It!'s presets/manual-log action buttons", !window.document.querySelector(".wt-action-btns"), "true");
   },
   () => {
