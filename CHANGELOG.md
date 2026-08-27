@@ -20,6 +20,58 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.53.0] — 2026-08-27
+
+Real-device review round 1 of the Log It! redesign — Rob found three problems that made the page
+"look terrible" and hard to use; this pass fixes what's fixable from code, and flags what still
+needs real assets from Rob.
+
+- **Date pill: fixed a genuine logic bug, not just a device-only issue.** The pill's
+  `offsetDays` calculation had the subtraction backwards since it was first written (Track 1) —
+  picking "yesterday" always showed the "PAST DAY" badge instead of "YESTERDAY," because
+  `today - selectedDate` is positive for a past date, not negative, and the badge logic checked
+  for `-1`. Caught by a new harness test written for this fix, not by the original build. Also:
+  - **Centered on screen** — the date pill wasn't centering because `.wt-header`'s
+    `justify-content:space-between` only works with two children (a back button + the date); Log
+    It! never renders the back button, so the pill was left flush against the left edge. Fixed
+    with a scoped `:only-child` rule that can't affect the Profile page's back-button layout.
+  - **Chevron arrows replaced with a native calendar picker** — the two 28×28px chevron buttons
+    (a poor touch target, and no way to jump to a specific day) are gone. The whole pill is now a
+    single tap target (`min-height:var(--touch)`, the app's own 48px touch-target standard)
+    overlaying a native `<input type="date">` — reusing the exact pattern already used in 6+ other
+    places in this codebase (`BackfillSheet`, the RX/treatment expiration fields), so this opens
+    the OS/browser's own calendar UI rather than a custom-built widget. `max` still caps it at
+    today, keeping the existing "never allow a future date" rule.
+- **Top row (Voice Tracker/Presets/Meal Entry): shrunk and its spacing trimmed.** Icon box size
+  `min(28.5vw, 15vh, 144px)` → `min(19vw, 10.5vh, 96px)` (roughly a third smaller — was
+  legitimately oversized for a 3-up row). Row padding/margin trimmed to free vertical space for the
+  grid below, per Rob's own request.
+- **3×3 grid: icons and labels made meaningfully bigger**, using the space freed above — ring/icon
+  64px → 84px (default 3-column state), 88px → 100px (2-column fallback at ≤4 trackers); tracker
+  label 12px → 14.5px (15.5px in the 2-column state, which previously didn't scale with the ring
+  at all).
+- **Top-row icon artwork is still unresolved — not a code problem.** Rob sent three separate
+  rounds of replacement PNGs for Voice Tracker/Presets/Meal Entry (the "white square background"
+  complaint). None were usable: round 1 arrived with an opaque background baked in; round 2's
+  Presets image arrived as a JPEG (JPEGs can't have transparency); round 3 — resent explicitly as
+  "transparent and as png" — still arrived as JPEGs for all three, each with a **checkerboard
+  pattern baked into the pixels themselves** (the gray/white grid an editor shows to *indicate*
+  transparency in its own preview, apparently captured as a flattened screenshot rather than an
+  actual PNG export). Using any of these as-is would look worse than the current white-background
+  icons, so all three keep their existing files this release. Needs Rob to export/save the actual
+  PNG file directly from whatever tool generated it, not a screenshot of its transparent-preview
+  thumbnail.
+- `tools/harness.js`: new dedicated `DatePill` coverage (this is what caught the offset-days bug)
+  — asserts the pill renders with a native date input defaulting to today and capped there, that
+  picking a prior day updates the badge/styling/subtitle correctly, and that no chevron buttons
+  remain.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 516 checks pass, up from 503 — net new `DatePill` coverage), lint
+  unchanged at the 11-error vendor baseline. One unrelated pre-existing stale check still fails
+  (`wt-tile-togo`, documented since v3.44.0). **Not yet verified on a real device** — every part of
+  this fix (centering, sizing, spacing, the native picker's actual on-screen appearance) is
+  fundamentally visual/interactive and jsdom cannot confirm any of it.
+
 ## [3.52.0] — 2026-08-27
 
 Track 2 of Rob's Log It! redesign brief: **RX and Supplements split into two fully independent

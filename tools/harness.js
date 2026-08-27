@@ -221,6 +221,45 @@ const STEPS = [
     check("tile count (Water+Treatments off in seed, Meals moved to the top row, RX/Supplements split into two tiles)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 7);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
+  () => {
+    // v3.53.0: date pill's prev/next chevrons replaced with a native <input type="date"> calendar
+    // picker (real-device fix — chevrons were too small a tap target and gave no direct way to
+    // jump to an arbitrary day).
+    const pill = window.document.querySelector(".wt-datepill");
+    check("date pill present on Log It!", !!pill);
+    check("no leftover chevron buttons on the date pill", !window.document.querySelector(".wt-datepill-chevron"));
+    const dateInput = pill ? pill.querySelector('input[type="date"]') : null;
+    check("date pill has a native date input", !!dateInput);
+    check("date input defaults to today", dateInput ? dateInput.value : null, TODAY);
+    check("date input caps out at today (max attr, never allow a future date)", dateInput ? dateInput.getAttribute("max") : null, TODAY);
+    check("badge reads TODAY by default", pill ? pill.textContent.includes("TODAY") : null, "true");
+    check("pill is not in past-day styling by default", pill ? pill.classList.contains("wt-datepill-past") : null, "false");
+  },
+  () => {
+    const dateInput = window.document.querySelector(".wt-datepill input[type=\"date\"]");
+    check("set date pill to yesterday", !!dateInput);
+    if (dateInput) {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(dateInput, DAYS_AGO(1));
+      dateInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+    }
+  },
+  () => {
+    const pill = window.document.querySelector(".wt-datepill");
+    check("badge reads YESTERDAY after picking the prior day", pill ? pill.textContent.includes("YESTERDAY") : null, "true");
+    check("pill switches to past-day (amber) styling", pill ? pill.classList.contains("wt-datepill-past") : null, "true");
+    check("'Saving to this day' subtitle appears", !!window.document.querySelector(".wt-datepill-subtitle"));
+  },
+  () => {
+    // Reset back to today so the rest of the suite runs against its usual assumptions.
+    const dateInput = window.document.querySelector(".wt-datepill input[type=\"date\"]");
+    if (dateInput) {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(dateInput, TODAY);
+      dateInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+    }
+    const pill = window.document.querySelector(".wt-datepill");
+    check("date pill back to TODAY for the rest of the suite", pill ? pill.textContent.includes("TODAY") : null, "true");
+  },
+  () => check("no runtime errors after date-pill pass", errors.length, 0),
   () => check("nav to Stats", nav("Stats")),
   () => check("nav to My Plan", nav("My Plan")),
   () => {

@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.52.0*
+*As of: August 27, 2026 · Deployed version: 3.53.0*
 
 ---
 
@@ -28,18 +28,23 @@ sit between them was removed from Today entirely and moved to the RX page.
 
 **Log It! rebuilt again (v3.51.0, Track 1 of a 2-part brief)** — pure fast-entry, now with a real
 date control and a redesigned tile grid:
-- **Date pill** under the header (Log It! only — every other tab's date text is unchanged): `‹ Wed,
-  Aug 26 [TODAY] ›`, chevrons step one day at a time, right chevron disabled at today, badge reads
-  TODAY/YESTERDAY/PAST DAY. Off-today, the pill goes amber, every entry sheet shows an amber
-  "Saving to <date>" bar, and toasts append the date. This is a second, independent path for
-  prior-day logging alongside — not a replacement for — Stats' existing prior-day/backfill picker.
+- **Date pill** under the header (Log It! only — every other tab's date text is unchanged),
+  centered on screen: `Wed, Aug 26 [TODAY]`, badge reads TODAY/YESTERDAY/PAST DAY. As of v3.53.0,
+  tapping the pill opens a native calendar (`<input type="date">`) rather than stepping via
+  chevrons — the whole pill is the tap target. Off-today, the pill goes amber, every entry sheet
+  shows an amber "Saving to <date>" bar, and toasts append the date. This is a second, independent
+  path for prior-day logging alongside — not a replacement for — Stats' existing prior-day/backfill
+  picker.
 - **Top row** (bare artwork, no card/border): Voice Tracker, Presets, Meal Entry — replaces the old
   gold "Voice Entry" and blue "Use Presets" banner tiles. Voice Tracker opens a new non-functional
   preview sheet (text field + decorative mic icon, no parser — still not Smart Entry). Presets and
-  Meal Entry open the same sheets their removed predecessors did.
+  Meal Entry open the same sheets their removed predecessors did. As of v3.53.0 the icon boxes are
+  meaningfully smaller (`min(19vw, 10.5vh, 96px)`, was `min(28.5vw, 15vh, 144px)`) — the artwork
+  itself is still the original white-background placeholders (see Known Outstanding).
 - **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
   with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
-  columns at ≤4 enabled trackers.
+  columns at ≤4 enabled trackers. As of v3.53.0 icons are bigger (84px default / 100px in the
+  2-column state, was 64px/88px) and labels are bigger (14.5px / 15.5px, was a flat 12px).
 - **Redesigned ring, Log It!-only** (Today's full-detail rendering is unchanged) — a real neutral
   track ring under the accent fill (previously the "track" was just a dimmed copy of the fill
   color), a goal-met state (clamped arc, squared cap, glow, check badge), and a ring-less mode for
@@ -199,6 +204,28 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.53.0)
+
+Real-device review round 1 fixes for the Log It! redesign, per Rob's feedback. Full detail in
+`CHANGELOG.md` and `docs/DECISION-LOG.md` (amends `UX-30`/`UX-31`/`UX-32`).
+
+- **Date pill**: fixed a genuine `offsetDays` sign-inversion bug (yesterday was showing "PAST DAY"
+  instead of "YESTERDAY" since this was first built) — caught by a new harness test written for
+  this fix. Centered on screen (`.wt-header`'s `:only-child` case wasn't centering). Chevrons
+  replaced with a native `<input type="date">` calendar picker covering the whole pill, reusing the
+  same pattern already used in `BackfillSheet`/RX expiration fields elsewhere in the app.
+- **Top row**: icon boxes shrunk ~⅓, row padding/margin trimmed to free space for the grid.
+- **3×3 grid**: icons and labels bumped up meaningfully (see above).
+- **Top-row icon artwork still unresolved** — three rounds of images from Rob were all unusable
+  (opaque background, then a JPEG, then JPEGs with a transparency-preview checkerboard baked into
+  the pixels instead of real alpha). None applied; see Known Outstanding.
+- `tools/harness.js`: new dedicated `DatePill` coverage.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 516 checks pass, up from 503), lint unchanged at the 11-error vendor
+  baseline. One unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since
+  v3.44.0). **Not yet verified on a real device** — this entire pass is visual/interactive and
+  jsdom cannot confirm any of it.
 
 ## What shipped Aug 27, 2026 (v3.52.0)
 
@@ -598,6 +625,16 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **Top-row icon artwork (Voice Tracker/Presets/Meal Entry) still needs real transparent PNGs**
+  (v3.53.0): three rounds of images from Rob have all been unusable — see `CHANGELOG.md` v3.53.0
+  for the detail. What's needed: an actual exported PNG file with a real alpha channel, not a
+  screenshot of an editor's transparent-preview thumbnail (which bakes the preview's checkerboard
+  pattern in as opaque pixels and typically saves as a JPEG, which can't hold transparency at all).
+  Until then the three icons keep their original white-background art; the box size/spacing around
+  them was fixed in code regardless.
+- **v3.53.0's date-pill and sizing fixes need Rob's real-device confirmation** — centering, the
+  native calendar picker's actual feel on a phone, and whether the bigger grid icons/labels now fit
+  well are all things jsdom cannot verify.
 - **RX/Supplements split (v3.52.0) needs Rob's real-device confirmation.** Not yet verified: the
   new Supplements tile/icon's visual read next to RX on Log It!, My Plan's new "What I'm Tracking"
   row, and that the migration ran cleanly on Rob's own device data (not just the harness's seed).

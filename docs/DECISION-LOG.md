@@ -683,6 +683,57 @@ underlying numbers still had to stay correct.
 `UX-28` (RX page sections), `PROD-13` (Today's combined tile), `ARCH-OPEN-05` (first real use of the
 migration-chain hook it established)
 
+**UX-34 — Log It! real-device review round 1: date-pill centering/calendar-picker, top-row/grid
+sizing.**
+Rob's first real-device pass on the v3.51.0/v3.52.0 Log It! redesign found three problems, all
+explicit calls by Rob:
+1. **Date pill centered on screen** — was flush-left because `.wt-header`'s
+   `justify-content:space-between` only balances correctly with two children (a back button + the
+   date), and Log It! never renders the back button. Fixed with a `:only-child`-scoped CSS rule
+   that cannot affect the Profile page's back-button layout.
+2. **Chevron arrows replaced with a native calendar picker** — the prev/next-day chevrons were "too
+   small" with "unclear feedback on which day you actually pick." Replaced with a single tap target
+   covering the whole pill (`min-height:var(--touch)`, the app's existing 48px touch-target
+   standard) that opens a native `<input type="date">` — the OS/browser's own calendar UI, reusing
+   the exact pattern already used in `BackfillSheet` and RX/treatment expiration date fields rather
+   than building a custom calendar widget.
+3. **Top row shrunk, grid icons/labels enlarged** — the 3 top-row icon boxes were "too big"
+   (`min(28.5vw, 15vh, 144px)` → `min(19vw, 10.5vh, 96px)`); the freed vertical space (plus trimmed
+   row padding/margin) funds bigger 3×3 grid icons (64px → 84px default, 88px → 100px in the
+   2-column fallback) and labels (12px flat → 14.5px / 15.5px), per Rob's own request to trade top-
+   row size for grid legibility.
+*Found while implementing, not requested:* fixing the calendar picker surfaced a genuine
+sign-inversion bug in the pill's `offsetDays` math — `today - selectedDate` is positive for a past
+day, but the badge logic checked for `-1`, so picking "yesterday" had shown "PAST DAY" instead of
+"YESTERDAY" since `UX-30` first shipped it. A new harness test written to verify the calendar picker
+caught this; the original build had no coverage of the badge text at all.
+*Why:* Log It! is the most-used page and has to be intuitive enough that testers keep using it —
+Rob's framing. All three fixes are presentation-only (CSS/JSX, no data model), but genuinely need
+his eyes on a real device again since jsdom cannot verify layout, centering, or the native picker's
+actual appearance.
+*Status:* **Locked** · Aug 27, 2026 · v3.53.0 — amends `UX-30` (date pill), `UX-31`/`UX-32`
+(top-row/grid sizing)
+
+**UX-35 — Top-row icon artwork: three supplied rounds unusable, real transparent PNGs still
+needed.**
+Rob supplied replacement art for the Voice Tracker/Presets/Meal Entry top-row icons (addressing the
+"white square background" complaint from `UX-34`) across three separate rounds. None were usable:
+round 1 arrived as PNGs with an opaque background still present; round 2's Presets image arrived as
+a JPEG (no alpha channel possible in that format at all); round 3 — resent explicitly as
+"transparent and as png" per Rob's own description — still arrived as JPEGs for all three, and each
+one visibly has a checkerboard pattern baked into the actual pixels, matching the pattern
+image-editing tools use to *indicate* transparency in their own preview UI. The likely mechanism:
+whatever's reaching this chat is a flattened screenshot/export of that transparent-preview
+thumbnail rather than the actual PNG file, so the on-screen "this is transparent" indicator got
+captured as literal opaque gray/white pixels.
+*Decision:* do not apply any of the three rounds — using them would look worse (a visible
+checkerboard) than the current plain white-background icons. All three keep their original files
+until a genuine PNG export with real alpha is supplied.
+*Why:* recording this so a future session doesn't re-attempt the same round-trip blind — the fix
+needed is on the export side (save/export the actual PNG file directly, not a screenshot of a
+transparent-preview thumbnail), not anything on the code side.
+*Status:* **Open** · Aug 27, 2026 · v3.53.0 — blocks the visual half of `UX-34`'s top-row fix
+
 ---
 
 ## Legal & compliance
@@ -825,7 +876,11 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.52.0: TRACK-01 added — RX and Supplements split into two
+*Last updated: August 27, 2026 (v3.53.0: UX-34 added — real-device review round 1: date-pill
+centering, chevrons replaced with a native calendar picker, top-row/grid sizing, plus a genuine
+offsetDays sign-inversion bug found and fixed along the way; UX-35 added (Open) — three rounds of
+top-row icon art from Rob all unusable (opaque/JPEG/checkerboard-baked-in), real transparent PNGs
+still needed; earlier: v3.52.0: TRACK-01 added — RX and Supplements split into two
 independent trackers (separate settings.rx/settings.supplements arrays, new "rx" log-entry type,
 new showRx toggle, migration with a temporary rollback snapshot), My Plan's "What I'm Tracking" row
 split to match, Today's combined tile kept numerically correct without a visual change; earlier:
