@@ -20,6 +20,52 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.59.0] — 2026-08-27
+
+Rob's real-device feedback after v3.58.0, plus a Log It! tile reorder and a new Weight completion
+indicator:
+
+- **"RX" nav-tab label restored** (was briefly "Prescriptions" in v3.58.0). Rob's clarification:
+  "RX" is the umbrella term for all three trackers it groups — Treatments (partner-managed via
+  DripBar-style providers), Prescriptions (partner-managed via pharmacies/doctors/insurers, to
+  promote medication adherence), and Supplements (fully self-managed). The individual
+  "Prescriptions" tracker keeps its own label everywhere else (Log It!, My Plan, the entry sheet,
+  Today/My Day) — only the nav tab, which represents the RX page's all-three-sections umbrella
+  view, reverted.
+- **"Today" renamed "My Day"** everywhere it's a page/section label: the nav tab, "My Day at a
+  Glance" (was "Today at a Glance"), "My Day's log" (was "Today's log"), and the header context
+  label ("My Day's Summary for:", was "Today's Summary for:"). Generic calendar-day words like
+  "due today"/"taken today"/the date pill's TODAY badge are unrelated and untouched — those refer
+  to the day, not the page.
+- **Log It! and My Day swapped nav positions** — My Day is now the first tab, Log It! second. This
+  is the same swap v3.42.0 tried and v3.42.1 reverted the same day; Rob explicitly re-requested it
+  now, so it's not a regression of that revert, it's a new decision superseding it. App still boots
+  on Log It! by default (that wasn't part of this request).
+- **Log It!'s compact grid reordered**: Voice Tracker/Presets/Meal Entry moved from the first 3
+  tiles to the last 3 — Water/Protein/Calories/Sleep/Weight/Exercise/Treatments/Prescriptions/
+  Supplements now lead, the three broader fast-entry tiles trail. Pure reorder, no tiles
+  added/removed.
+- **Weight's compact tile gains a completion ring.** Previously ring-less (a deliberate v3.51.0
+  design choice — "a ring implies progress that doesn't exist for a reading"); Rob asked for a
+  ring that lights up when a weight is logged today, matching Supplements' glow-on-completion
+  treatment, adapted to a rounded-square shape since Weight's icon is square rather than circular.
+  The existing checkmark badge stays alongside it per Rob's explicit call. Implemented as a CSS
+  border+box-shadow toggle (`.wt-gauge-imageonly-lit`) rather than new SVG ring geometry — `lO`'s
+  existing ring component is circular by construction and wasn't a fit for a square icon.
+- **RX page's "Vitamins & Supplements" section renamed "Supplements"** for consistency with the
+  label used everywhere else in the app (Log It!, My Plan, My Day, entry sheets).
+- `tools/harness.js`: every `nav("Today")` call updated to `nav("My Day")`; the two `nav("RX")`
+  calls that had become `nav("Prescriptions")` in v3.58.0 reverted; nav-order check updated for the
+  swap (explicitly noting this supersedes the v3.42.1 revert, not regresses it); Log It! grid-order
+  checks updated for the new tile order; new test coverage for the Weight completion ring (confirm
+  unlit before logging, lit after, checkmark badge still present).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One pre-existing,
+  unrelated stale check still fails (`wt-tile-togo`, documented since v3.44.0).
+- **Not yet verified on a real device** — the nav swap's feel with real usage, the grid reorder's
+  effect on daily habit/muscle-memory, and the new square completion ring's visual proportions
+  next to Weight's existing checkmark badge are all things jsdom can't confirm.
+
 ## [3.58.0] — 2026-08-27
 
 Continues the Prescriptions/Supplements separation started by `TRACK-01` (v3.52.0): Today's tile

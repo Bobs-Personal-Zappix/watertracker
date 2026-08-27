@@ -273,7 +273,7 @@ const STEPS = [
     check("TrackerSheet opened", !!sheetContent);
     check("TrackerSheet paddingBottom", sheetContent ? sheetContent.style.paddingBottom : null, "88px");
   },
-  () => check("nav to Today", nav("Today")),
+  () => check("nav to Today", nav("My Day")),
   () => check("nav to Log It!", nav("Log It!")),
   () => check("open presets/log sheet", clickByText("Presets", "div")),
   () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
@@ -450,7 +450,7 @@ const STEPS = [
   },
 
   // ── v3.33.0 Part B: Enter Missed Items (backfill) ──────────────────────────────
-  () => check("nav to Today (for backfill test)", nav("Today")),
+  () => check("nav to Today (for backfill test)", nav("My Day")),
   () => {
     const preLen = logsToday().length;
     check("today's log starts empty before any backfill", preLen, 0);
@@ -532,7 +532,7 @@ const STEPS = [
   },
   // v3.50.0: Log It!'s tiles are now compact (icon/ring/name only, no goal/logged text) — this
   // check needs the full-detail markup, which now lives on Today (same MO component, unchanged).
-  () => check("nav to Today (verify today's Prescriptions tile ring unaffected)", nav("Today")),
+  () => check("nav to Today (verify today's Prescriptions tile ring unaffected)", nav("My Day")),
   () => {
     const rxTile = tiles().find((t) => t.startsWith("Prescriptions"));
     check("today's Prescriptions tile still shows 0 taken (rule 3: today's ring unaffected)", rxTile ? rxTile.includes("0 Taken") : null, "true");
@@ -610,8 +610,8 @@ const STEPS = [
   },
 
   // ── v3.34.0 item 6c: overdue items show an icon glyph alongside color, not color alone ──
-  // (surface moved from the removed "To Do Today" section to "Today at a Glance" in v3.43.0/v3.44.0)
-  () => check("nav to Today (for overdue icon check)", nav("Today")),
+  // (surface moved from the removed "To Do Today" section to "My Day at a Glance" in v3.43.0/v3.44.0)
+  () => check("nav to Today (for overdue icon check)", nav("My Day")),
   () => {
     const medsRow = [...window.document.querySelectorAll(".wt-tracked-row")].find((r) => r.textContent.includes("Prescriptions"));
     check("seeded OverdueMed is reflected in the Prescriptions due callout", !!medsRow);
@@ -655,7 +655,7 @@ const STEPS = [
   },
   // v3.50.0: this whole block inspects full-detail tile markup (chip/border/mid/ring) — Log It!
   // is compact now, so it runs against Today's tile grid (same MO component, unchanged there).
-  () => check("nav to Today (item 3/4 tile restructure checks)", nav("Today")),
+  () => check("nav to Today (item 3/4 tile restructure checks)", nav("My Day")),
   () => {
     const tiles = [...window.document.querySelectorAll(".wt-tracker-col")];
     check("all 9 Log It! tiles mount with all trackers enabled (Prescriptions/Supplements split)", tiles.length, 9);
@@ -747,7 +747,7 @@ const STEPS = [
       "true"
     );
   },
-  () => check("nav to Today (tab mounts without errors after tile restructure)", nav("Today")),
+  () => check("nav to Today (tab mounts without errors after tile restructure)", nav("My Day")),
   () => check("nav to Stats (tab mounts without errors)", nav("Stats")),
   () => check("no runtime errors on Stats tab", errors.length, 0),
   () => check("switch Stats to the All 3 combined view", clickByText("All 3")),
@@ -767,7 +767,7 @@ const STEPS = [
 
   // ── v3.36.0: Log It! icon fill + font sizes, warm-tan dark-bg text, My Plan tile updates ──
   // v3.50.0: chip-icon-color and tile-text font-size checks need full-detail markup (now Today).
-  () => check("nav to Today (item 1a/1b checks)", nav("Today")),
+  () => check("nav to Today (item 1a/1b checks)", nav("My Day")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     const icon = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
@@ -898,7 +898,7 @@ const STEPS = [
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title") && c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water re-enabled after the dimming check", waterCard ? !waterCard.classList.contains("off") : null, "true");
   },
-  () => check("nav to Today (tab mounts without errors after item 2/3 changes)", nav("Today")),
+  () => check("nav to Today (tab mounts without errors after item 2/3 changes)", nav("My Day")),
   () => check("nav to Stats (tab mounts without errors)", nav("Stats")),
   () => check("no runtime errors across the full v3.36.0 pass", errors.length, 0),
 
@@ -928,7 +928,7 @@ const STEPS = [
   // ── v3.37.0: manual entry input fix + dark tiles/sheets ────────────────────────
   // v3.50.0: Water tile lookup here needs full-detail markup (now Today); the presets-sheet
   // flow later in this block still needs Log It! specifically and navs there itself below.
-  () => check("nav to Today (v3.37.0 manual entry check)", nav("Today")),
+  () => check("nav to Today (v3.37.0 manual entry check)", nav("My Day")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     check("found Water tile to open manual entry", !!waterTile);
@@ -985,7 +985,7 @@ const STEPS = [
     check("My Presets sheet opened without errors", !!header);
     check("no runtime errors after opening My Presets sheet", errors.length, 0);
   },
-  () => check("nav to Today (mounts without errors, v3.37.0)", nav("Today")),
+  () => check("nav to Today (mounts without errors, v3.37.0)", nav("My Day")),
   () => check("nav to Stats (mounts without errors, v3.37.0)", nav("Stats")),
   () => check("no runtime errors after full v3.37.0 pass", errors.length, 0),
 
@@ -1034,7 +1034,7 @@ const STEPS = [
   () => check("no runtime errors on My Plan", errors.length, 0),
   () => check("nav to Stats (v3.38.0 dark-theme regression check)", nav("Stats")),
   () => check("no runtime errors on Stats", errors.length, 0),
-  () => check("nav to Today (manual entry regression check)", nav("Today")),
+  () => check("nav to Today (manual entry regression check)", nav("My Day")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     check("found Water tile for v3.38.0 regression check", !!waterTile);
@@ -1066,7 +1066,7 @@ const STEPS = [
     check("profile placeholder resized up to 40px", profileRule ? profileRule[0].includes("width:40px") : null, "true");
     check(".wt-topbanner-ai CSS rule removed along with the header icon (v3.40.0)", cssText.includes(".wt-topbanner-ai"), "false");
   },
-  () => check("nav to Today (v3.38.1 regression check)", nav("Today")),
+  () => check("nav to Today (v3.38.1 regression check)", nav("My Day")),
   () => check("all 9 Today tiles still mount after border-color change (Prescriptions/Supplements split)", [...window.document.querySelectorAll(".wt-tracker-col")].length, 9),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
@@ -1087,7 +1087,7 @@ const STEPS = [
       "true"
     );
   },
-  () => check("nav to Today (filled-icon check)", nav("Today")),
+  () => check("nav to Today (filled-icon check)", nav("My Day")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     const svg = waterTile ? waterTile.querySelector(".wt-tile-chip svg") : null;
@@ -1132,16 +1132,22 @@ const STEPS = [
   },
   () => {
     // v3.57.0: the standalone "fast paths" row (.wt-toprow) was removed and merged into the
-    // compact grid itself — Voice Tracker/Presets/Meal Entry are now the grid's first 3 tiles,
-    // giving one unified 4x3 grid (no divider, no separate row) instead of a row-plus-grid split.
+    // compact grid itself, giving one unified 4x3 grid (no divider, no separate row) instead of a
+    // row-plus-grid split. v3.59.0: Rob moved Voice Tracker/Presets/Meal Entry from the first 3
+    // tiles to the last 3 — testers preferred Water/Protein/Calories up top, matching the old
+    // top-row-plus-3x3-grid muscle memory, with the 3 broader entry tiles now at the bottom.
     const grid = window.document.querySelector(".wt-trackers-grid-compact");
     check("compact grid present on Log It!", !!grid);
     check("no leftover standalone top row (.wt-toprow) — merged into the grid", !window.document.querySelector(".wt-toprow"), "true");
     const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
     const firstThree = compactTiles.slice(0, 3).map((e) => e.textContent.trim());
-    check("grid's first tile is Voice Tracker (merged from the old top row)", firstThree[0], "Voice Tracker");
-    check("grid's second tile is Presets (merged from the old top row)", firstThree[1], "Presets");
-    check("grid's third tile is Meal Entry (merged from the old top row)", firstThree[2], "Meal Entry");
+    check("grid's first tile is Water (fast-entry tiles moved to the bottom, v3.59.0)", firstThree[0], "Water");
+    check("grid's second tile is Protein", firstThree[1], "Protein");
+    check("grid's third tile is Calories", firstThree[2], "Calories");
+    const lastThree = compactTiles.slice(-3).map((e) => e.textContent.trim());
+    check("grid's last tile is Meal Entry (moved to the bottom, v3.59.0)", lastThree[2], "Meal Entry");
+    check("grid's second-to-last tile is Presets", lastThree[1], "Presets");
+    check("grid's third-to-last tile is Voice Tracker", lastThree[0], "Voice Tracker");
   },
   () => {
     // v3.57.0: Log It! is now one unified 4x3 compact grid (12 tiles with all trackers enabled) —
@@ -1152,6 +1158,34 @@ const STEPS = [
     check("Log It! renders 12 compact tiles (top row merged in; RX/Supplements split)", compactTiles.length, 12);
     check("Meals tile no longer in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "false");
   },
+  // v3.59.0: Weight's compact tile gains a square-ish completion ring (border+glow) around the
+  // icon when a reading exists today, alongside the existing checkmark badge (Rob's explicit
+  // call to keep both) — matches Supplements' glow-on-completion treatment, adapted to a square
+  // shape since Weight's icon is square rather than circular.
+  () => {
+    const weightTile = [...window.document.querySelectorAll(".wt-tracker-col-compact")].find((t) => t.textContent.trim() === "Weight");
+    check("found Weight tile on Log It! compact grid", !!weightTile);
+    const ringBefore = weightTile ? weightTile.querySelector(".wt-gauge-imageonly") : null;
+    check("Weight tile ring not lit before any reading is logged", ringBefore ? ringBefore.className.includes("wt-gauge-imageonly-lit") : null, false);
+    if (weightTile) fire(weightTile);
+  },
+  () => {
+    const dialInput = window.document.querySelector('input[placeholder="0"]');
+    check("tapping Weight tile opens the weight dial sheet", !!dialInput);
+    if (dialInput) {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(dialInput, "165");
+      dialInput.dispatchEvent(new window.Event("input", { bubbles: true }));
+    }
+  },
+  () => check("save the logged weight", clickByText("Save weight", "button")),
+  () => {
+    const weightTile = [...window.document.querySelectorAll(".wt-tracker-col-compact")].find((t) => t.textContent.trim() === "Weight");
+    const ring = weightTile ? weightTile.querySelector(".wt-gauge-imageonly") : null;
+    check("Weight tile ring lights up after a reading is logged today", ring ? ring.className.includes("wt-gauge-imageonly-lit") : null, "true");
+    const badge = weightTile ? weightTile.querySelector(".wt-gauge-imageonly-badge") : null;
+    check("Weight tile still shows its existing checkmark badge alongside the new ring", !!badge, "true");
+  },
+  () => check("no runtime errors after Weight completion-ring check", errors.length, 0),
   () => check("open presets sheet (v3.51.0 top-row trigger)", clickByText("Presets", "div")),
   () => {
     const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Use Your Presets");
@@ -1231,10 +1265,10 @@ const STEPS = [
 
   // ── v3.42.0: Today becomes the landing page — Voice Tracker tile, Tracked So Far, nav swap ──
   // Voice Tracker tile was removed from Today again in v3.48.0 (see that section below).
-  () => check("nav to Today (v3.42.0 checks)", nav("Today")),
+  () => check("nav to Today (v3.42.0 checks)", nav("My Day")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    check("'Today's log' section still present", labels.some((l) => l.toLowerCase() === "today's log"));
+    check("'My Day's log' section still present", labels.some((l) => l.toLowerCase() === "my day's log"));
   },
   () => {
     const cssText = window.document.querySelector("style").textContent;
@@ -1243,8 +1277,10 @@ const STEPS = [
   },
   () => check("no runtime errors after v3.42.0 Today-page pass", errors.length, 0),
   () => {
+    // v3.59.0: Rob explicitly re-requested this exact swap (My Day first, Log It! second) after
+    // v3.42.1 had reverted it — this is now the intended order, not a regression of that revert.
     const navBtns = [...window.document.querySelectorAll(".wt-nav-btn")].map((b) => b.textContent.trim());
-    check("nav order is Log It!, Today, Stats, ... (swapped back per v3.42.1)", navBtns[0].includes("Log It!") && navBtns[1].includes("Today"), "true");
+    check("nav order is My Day, Log It!, RX, ... (re-swapped per Rob's v3.59.0 request)", navBtns[0].includes("My Day") && navBtns[1].includes("Log It!"), "true");
   },
   () => check("no runtime errors after v3.42.0 nav-swap pass", errors.length, 0),
 
@@ -1261,15 +1297,15 @@ const STEPS = [
   },
   () => check("no runtime errors after v3.42.1 pass", errors.length, 0),
 
-  // ── v3.43.0: Tracked So Far replaced with a compact "Today at a Glance" needs-attention summary ──
-  () => check("nav to Today (v3.43.0 checks)", nav("Today")),
+  // ── v3.43.0: Tracked So Far replaced with a compact "My Day at a Glance" needs-attention summary ──
+  () => check("nav to Today (v3.43.0 checks)", nav("My Day")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    check("'Today at a Glance' section present (renamed from 'Tracked So Far')", labels.includes("Today at a Glance"), "true");
+    check("'Today at a Glance' section present (renamed from 'Tracked So Far')", labels.includes("My Day at a Glance"), "true");
     check("old 'Tracked So Far' label is gone", labels.includes("Tracked So Far"), false);
-    const idxGlance = labels.indexOf("Today at a Glance");
-    const idxLog = labels.some((l) => l.toLowerCase() === "today's log");
-    check("'Today at a Glance' present alongside 'Today's log'", idxGlance >= 0 && idxLog, "true");
+    const idxGlance = labels.indexOf("My Day at a Glance");
+    const idxLog = labels.some((l) => l.toLowerCase() === "my day's log");
+    check("'Today at a Glance' present alongside 'My Day's log'", idxGlance >= 0 && idxLog, "true");
   },
   () => {
     const rows = [...window.document.querySelectorAll(".wt-tracked-row")];
@@ -1285,12 +1321,12 @@ const STEPS = [
 
   // ── v3.44.0: "To Do Today" removed (Today at a Glance now the only summary), "Voice Tracker" ──
   // renamed "Voice Assistant", header locked (sticky) and its dead space trimmed ──
-  () => check("nav to Today (v3.44.0 checks)", nav("Today")),
+  () => check("nav to Today (v3.44.0 checks)", nav("My Day")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
     check("'To Do Today' section removed from Today page", labels.includes("To Do Today"), false);
-    check("'Today at a Glance' still present", labels.includes("Today at a Glance"), "true");
-    check("'Today's log' still present", labels.some((l) => l.toLowerCase() === "today's log"));
+    check("'Today at a Glance' still present", labels.includes("My Day at a Glance"), "true");
+    check("'My Day's log' still present", labels.some((l) => l.toLowerCase() === "my day's log"));
   },
   () => {
     check("wt-todo-today-sticky / wt-todo-today-scroll classes no longer used", !window.document.querySelector(".wt-todo-today-sticky") && !window.document.querySelector(".wt-todo-today-scroll"), "true");
@@ -1383,7 +1419,7 @@ const STEPS = [
   // OverdueMed, TestRx), Supplements due = 1 (TestVitamin, added above, never taken). Two
   // different non-zero numbers on two independent tiles proves the split isn't silently still
   // summing the two trackers together (a summed tile would show 4 on both, or one combined tile).
-  () => check("nav to Today (verify Prescriptions/Supplements tiles show independent, non-summed numbers)", nav("Today")),
+  () => check("nav to Today (verify Prescriptions/Supplements tiles show independent, non-summed numbers)", nav("My Day")),
   () => {
     const rxTile = tiles().find((t) => t.startsWith("Prescriptions"));
     const supTile = tiles().find((t) => t.startsWith("Supplements"));
@@ -1399,7 +1435,7 @@ const STEPS = [
   // "Remaining RX/Treatments" section on Today ──
   // v3.50.0: this block tests full-detail tile sub-text trimming — now Today's tiles (Log It!
   // dropped all sub-text/hero-number content when it went compact).
-  () => check("nav to Today (v3.46.0 tile-trim checks)", nav("Today")),
+  () => check("nav to Today (v3.46.0 tile-trim checks)", nav("My Day")),
   () => {
     // Seed has no treatments and no low-supply/near-expiry alert yet, so no tile should show a
     // wt-tile-togo row at all right now — Weight's was removed outright, Treatments/RX's only
@@ -1421,7 +1457,7 @@ const STEPS = [
   () => check("no runtime errors after v3.46.0 tile-trim pass", errors.length, 0),
 
   // ── Today's Log row restack ──
-  () => check("nav to Today (log row restack checks)", nav("Today")),
+  () => check("nav to Today (log row restack checks)", nav("My Day")),
   () => {
     const cssText = window.document.querySelector("style").textContent;
     const stackRule = cssText.match(/\.wt-log-desc-stack \{[^}]*\}/);
@@ -1500,29 +1536,34 @@ const STEPS = [
   // takes over and expands it into three full groups — Treatments / Prescriptions / Vitamins &
   // Supplements — listing every item (not just inventory-tracked ones), plus partner-branded
   // cards (logo + link) for items with both a provider/pharmacy and a partner logo set ──
-  () => check("nav to Today (Remaining RX/Treatments retired check)", nav("Today")),
+  () => check("nav to Today (Remaining RX/Treatments retired check)", nav("My Day")),
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label, .wt-section-label-lg")].map((el) => el.textContent);
     check("'Remaining RX/Treatments' no longer present on Today (moved to the RX page)", labels.includes("Remaining RX/Treatments"), false);
   },
-  () => check("nav button 'Prescriptions' present in bottom nav", [...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.trim() === "Prescriptions"), "true"),
+  // v3.59.0: "RX" nav-tab label restored (was briefly "Prescriptions" in v3.58.0) — Rob clarified
+  // "RX" is the umbrella term for all three trackers (Treatments/Prescriptions/Supplements); the
+  // individual Prescriptions tracker keeps its own "Prescriptions" label everywhere else.
+  () => check("nav button 'RX' present in bottom nav", [...window.document.querySelectorAll(".wt-nav-btn")].some((b) => b.textContent.trim() === "RX"), "true"),
   () => {
-    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "Prescriptions");
+    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "RX");
     check("nav tab's internal route/active-class is unaffected by the label rename (still keys off 'rx')", rxBtn ? rxBtn.getAttribute("aria-current") !== "page" : null, "true");
   },
-  () => check("nav to RX page", nav("Prescriptions")),
+  () => check("nav to RX page", nav("RX")),
   () => check("RX page title starts with 'SCRIPTS FOR:'", (headerText() || "").startsWith("SCRIPTS FOR:"), "true"),
   () => {
-    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "Prescriptions");
+    const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "RX");
     check("nav tab shows active state after navigating to it (route key 'rx' still wired correctly)", rxBtn ? rxBtn.className.includes("active") : null, "true");
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label-lg")].map((el) => el.textContent);
     check("RX page has 'Treatments' section", labels.includes("Treatments"), "true");
     check("RX page has 'Prescriptions' section", labels.includes("Prescriptions"), "true");
-    check("RX page has 'Vitamins & Supplements' section", labels.includes("Vitamins & Supplements"), "true");
-    const idxT = labels.indexOf("Treatments"), idxP = labels.indexOf("Prescriptions"), idxV = labels.indexOf("Vitamins & Supplements");
-    check("sections ordered Treatments -> Prescriptions -> Vitamins & Supplements", idxT >= 0 && idxP > idxT && idxV > idxP, "true");
+    // v3.59.0: "Vitamins & Supplements" section renamed "Supplements" for consistency with the
+    // label used everywhere else in the app.
+    check("RX page has 'Supplements' section", labels.includes("Supplements"), "true");
+    const idxT = labels.indexOf("Treatments"), idxP = labels.indexOf("Prescriptions"), idxV = labels.indexOf("Supplements");
+    check("sections ordered Treatments -> Prescriptions -> Supplements", idxT >= 0 && idxP > idxT && idxV > idxP, "true");
   },
   () => {
     const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
@@ -1607,8 +1648,8 @@ const STEPS = [
   // Route through Today first: from My Plan, clickByText("Prescriptions") would instead hit My
   // Plan's own "Prescriptions" RegimenSummaryCard button (same literal text, earlier in document
   // order).
-  () => check("nav to Today (before RX, to avoid My Plan's own 'Prescriptions' button)", nav("Today")),
-  () => check("nav to RX (section card-border check)", nav("Prescriptions")),
+  () => check("nav to Today (before RX, to avoid My Plan's own 'Prescriptions' button)", nav("My Day")),
+  () => check("nav to RX (section card-border check)", nav("RX")),
   () => {
     const labelEl = [...window.document.querySelectorAll(".wt-section-label-lg")].find((el) => el.textContent === "Prescriptions");
     check("'Prescriptions' label found", !!labelEl);
@@ -1635,13 +1676,13 @@ const STEPS = [
   // Today (between Remaining RX/Treatments and Today's log, respecting My Plan's per-tracker
   // toggles, without re-adding the presets/manual-log action buttons); "Prior Days" moved to
   // Stats, renamed "Edit Prior Days Logs", bigger text/icon, in its own clickable tile ──
-  () => check("nav to Today (v3.48.0 checks)", nav("Today")),
+  () => check("nav to Today (v3.48.0 checks)", nav("My Day")),
   () => {
     check("Voice Entry tile removed from Today (renamed from Voice Assistant, class renamed .wt-voice-tile -> .wt-feature-tile.gold in v3.50.0)", !window.document.querySelector(".wt-feature-tile.gold"), "true");
   },
   () => {
     const labels = [...window.document.querySelectorAll(".wt-section-label")].map((el) => el.textContent);
-    const idxGlance = labels.indexOf("Today at a Glance"), idxLog = labels.findIndex((l) => l.toLowerCase() === "today's log");
+    const idxGlance = labels.indexOf("My Day at a Glance"), idxLog = labels.findIndex((l) => l.toLowerCase() === "my day's log");
     // v3.49.0: Remaining RX/Treatments retired from Today (moved to the RX page) — Today's order
     // is now Today at a Glance -> duplicated tile grid -> Today's log.
     check("Today at a Glance sits above Today's log with the duplicated tile grid between them", idxGlance >= 0 && idxLog > idxGlance, "true");
@@ -1668,7 +1709,7 @@ const STEPS = [
     check("found Water toggle on My Plan", !!waterToggle);
     if (waterToggle) fire(waterToggle);
   },
-  () => check("nav to Today (verify Water tile hidden)", nav("Today")),
+  () => check("nav to Today (verify Water tile hidden)", nav("My Day")),
   () => {
     check("Water tile no longer shown on Today's duplicated grid once toggled off on My Plan", tiles().some((t) => t.startsWith("Water")), false);
   },
@@ -1677,7 +1718,7 @@ const STEPS = [
     const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
     if (waterToggle) fire(waterToggle);
   },
-  () => check("nav to Today (Water tile restored)", nav("Today")),
+  () => check("nav to Today (Water tile restored)", nav("My Day")),
   () => {
     check("Water tile restored on Today's duplicated grid", tiles().some((t) => t.startsWith("Water")), "true");
   },

@@ -192,11 +192,11 @@ Goal counts treatments actually due today; done counts those actually logged tod
 
 **UX-06 — Navigation and titles.**
 Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STATS:" + date, "Setup for:" + date, "Settings" (no date).
-*Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.* — *amended Aug 23, 2026 (v3.42.0, see `UX-21`): nav order briefly changed to Today · Log It! · Stats · My Plan · Settings, then reverted the same day (v3.42.1) back to the original Log It! · Today · Stats · My Plan · Settings order per Rob after real-device testing.*
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 20, 2026: Setup renamed to "My Plan" throughout (`UX-OPEN-01` Phase 1, v3.22.0). Nav order and the other two titles unchanged.* — *amended Aug 23, 2026 (v3.42.0, see `UX-21`): nav order briefly changed to Today · Log It! · Stats · My Plan · Settings, then reverted the same day (v3.42.1) back to the original Log It! · Today · Stats · My Plan · Settings order per Rob after real-device testing.* — *amended Aug 27, 2026 (v3.59.0): Rob explicitly re-requested the same swap v3.42.1 had reverted — nav order is now My Day (renamed from Today) · Log It! · RX · Stats · My Plan · Settings. This is a new, explicit decision superseding the earlier revert, not a regression of it; the app still boots on Log It! by default, which wasn't part of this request. "Today" renamed "My Day" throughout (nav tab, "My Day at a Glance," "My Day's log," header context label) in the same pass.*
 
 **UX-07 — Tile order on Log It!**
 Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
-*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).* — *amended Aug 23, 2026: renamed back to "RX & Supplements" throughout, explicit call by Rob, v3.47.0.*
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).* — *amended Aug 23, 2026: renamed back to "RX & Supplements" throughout, explicit call by Rob, v3.47.0.* — *amended Aug 27, 2026 (v3.59.0): this entry describes the underlying 8/9-tracker set, which is unchanged; what changed is where the 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry, added to the same grid in v3.57.0) sit relative to it — moved from before this list to after it, per Rob's testing feedback that users prefer the core trackers up top. Full order is now Water/Protein/Calories/Sleep/Weight/Exercise/Treatments/Prescriptions/Supplements, then Voice Tracker/Presets/Meal Entry.*
 
 **UX-08 — Health Summary and doctor share live at the bottom of Stats.**
 Moved off Settings.
@@ -533,7 +533,11 @@ instead of after "Remaining RX/Treatments") — *amended Aug 27, 2026, v3.58.0: 
 visible label changed from "RX" to "Prescriptions" as part of an app-wide rename (see `TRACK-01`'s
 v3.58.0 amendment); this page's own title ("SCRIPTS FOR:") and its three section headers
 ("Treatments"/"Prescriptions"/"Vitamins & Supplements") were already correct from this entry and
-were not touched.*
+were not touched.* — *amended Aug 27, 2026, v3.59.0: the nav tab's label reverted to "RX" (see
+`TRACK-01`'s v3.59.0 amendment — "RX" is the umbrella term for the three sections this page shows).
+This page's third section also renamed "Vitamins & Supplements" → "Supplements," for consistency
+with the label used everywhere else in the app; "Treatments" and "Prescriptions" section headers
+unchanged.*
 
 **UX-29 — Log It! becomes pure fast-entry: compact 3x3 tile grid, "Meals" tile, "Use Presets" tile.**
 Now that Today (`UX-27`) and the RX page (`UX-28`) both show full tracked-metric detail, Rob judged
@@ -638,6 +642,16 @@ Today's tile/ring rendering untouched, was Rob's explicit scope boundary for thi
 *Status:* **Locked** · Aug 26, 2026 · v3.51.0 — amends `UX-25`/`UX-29` (tile borders), `UX-03`
 (all-8-tiles-get-rings, now qualified: true on Today/My Plan/RX page, not on Log It! for
 goal-less trackers)
+*Amendment (v3.59.0, Aug 27, 2026):* point 2's "drops the ring entirely" for Weight is superseded —
+Rob asked for a completion indicator back, having found the bare checkmark badge insufficient
+alongside the ringed trackers around it. Weight's compact tile now gets a rounded-square border+
+glow (`.wt-gauge-imageonly-lit`, CSS only — not `lO`'s SVG ring, which is circular by construction
+and doesn't fit a square icon) that lights up when a reading exists today, matching Supplements'
+glow-on-completion look, with the existing checkmark badge kept alongside it per Rob's explicit
+call. This is a deliberate reversal of this entry's original reasoning ("dropping the ring entirely
+for readings is a more honest fit than fabricating a percentage"), not an oversight — the new ring
+is a binary completion signal, not a fabricated percentage, so it doesn't reintroduce the original
+problem this entry was solving.
 
 **UX-33 — Quick-add chips and "Add to <tracker>" button relabel across Log It!'s entry sheets.**
 Every accumulating-tracker entry sheet gains 4 quick-add chips above its manual field: Water
@@ -713,6 +727,14 @@ this was a label rename only, not a further data-model change. The RX page itsel
 three section headers were already correctly named and were not touched. Partner configuration for
 Treatments/Prescriptions and any Stats-page work for these three trackers remain explicitly
 out of scope, deferred to a future session per Rob.
+*Amendment (v3.59.0, Aug 27, 2026):* one piece of the v3.58.0 rename reverted — Rob clarified that
+"RX" is meant as the umbrella term for all three trackers this whole decision chain manages
+(Treatments/Prescriptions/Supplements), so the bottom-nav tab (and only the nav tab — it represents
+the RX page's all-three-sections umbrella view) reverted from "Prescriptions" back to "RX". The
+individual Prescriptions tracker keeps "Prescriptions" everywhere else (Log It!, My Plan, My Day,
+the entry sheet) — that part of the v3.58.0 rename stands. The RX page's third section also renamed
+"Vitamins & Supplements" → "Supplements" in the same pass, for consistency with the label used
+everywhere else (see `UX-28` amendment below).
 
 **UX-34 — Log It! real-device review round 1: date-pill centering/calendar-picker, top-row/grid
 sizing.**
@@ -1027,7 +1049,16 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.58.0: TRACK-01 amended — Today's combined "RX & Supplements"
+*Last updated: August 27, 2026 (v3.59.0: TRACK-01/UX-28 amended — "RX" nav-tab label restored
+(umbrella term for Treatments/Prescriptions/Supplements; the individual Prescriptions tracker keeps
+its own label elsewhere), RX page's "Vitamins & Supplements" section renamed "Supplements"; UX-06
+amended — "Today" renamed "My Day" app-wide, Log It!/My Day nav positions swapped (explicitly
+re-requested by Rob, superseding the v3.42.1 revert of the same swap, not regressing it); UX-07
+amended — Log It!'s 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry) moved from the front of
+the grid to the back; UX-32 amended — Weight's compact tile regains a completion ring (rounded-
+square border+glow, CSS-only, not a fabricated percentage) alongside its existing checkmark badge,
+reversing that entry's "no ring for readings" reasoning by explicit request; earlier: v3.58.0:
+TRACK-01 amended — Today's combined "RX & Supplements"
 tile split into independent Prescriptions/Supplements tiles, "RX" relabeled "Prescriptions"
 app-wide (Log It!, My Plan, RX entry sheet, bottom nav, Backfill disclaimer, Tracked So Far row);
 My Plan's "Self-Managed RX" section became "Self-Managed Prescriptions & Supplements" (corrected

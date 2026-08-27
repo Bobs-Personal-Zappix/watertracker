@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.58.0*
+*As of: August 27, 2026 · Deployed version: 3.59.0*
 
 ---
 
@@ -14,17 +14,23 @@
 - Worker on its own `workers.dev` domain — deliberately ungated, which is what makes doctor-share links reachable without a login.
 
 **Tracked metrics (9 tiles as of v3.52.0, all with percentage progress rings except Weight)**
-Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · Prescriptions · Supplements — in that order. Prescriptions and Supplements were one combined "RX & Supplements" tracker through v3.51.0 (renamed from "RX & Vitamins" in v3.47.0); v3.52.0 split them into two fully independent trackers, and v3.58.0 finished the split's visual work — Today's full-detail grid now shows two independent tiles instead of one combined tile, and every user-facing "RX" label became "Prescriptions" — see below and `docs/DECISION-LOG.md` `TRACK-01`/its v3.58.0 amendment. As of v3.50.0, these display very differently on Log It! (compact) vs. Today (full detail) — see below.
+Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · Prescriptions · Supplements — this is still the underlying set of 9, but as of v3.59.0 the *display order* on Log It! is Water/Protein/Calories/Sleep/Weight/Exercise/Treatments/Prescriptions/Supplements followed by the 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry) — see Log It! below. Prescriptions and Supplements were one combined "RX & Supplements" tracker through v3.51.0 (renamed from "RX & Vitamins" in v3.47.0); v3.52.0 split them into two fully independent trackers, and v3.58.0 finished the split's visual work — My Day's full-detail grid shows two independent tiles instead of one combined tile. "RX" is now the umbrella term covering all three of Treatments/Prescriptions/Supplements (used for the nav tab and the RX page, which shows all three as sections); "Prescriptions" is the individual tracker's own label everywhere else — see below and `docs/DECISION-LOG.md` `TRACK-01`'s v3.58.0/v3.59.0 amendments. As of v3.50.0, these display very differently on Log It! (compact) vs. My Day (full detail) — see below.
 
-**Tabs:** Log It! · Today · **Prescriptions** · Stats · My Plan · Settings — 6 tabs as of v3.49.0, which added
-"RX" (icon `Pill`) between Today and Stats (v3.42.0 swapped Today first; v3.42.1 reverted that swap
-per Rob after real-device testing — Today's landing-page content additions from v3.42.0 remain,
-only the nav order reverted). Today's Voice Entry tile (renamed from "Voice Assistant" in v3.50.0)
-was removed from Today in v3.48.0 (Log It! keeps its own copy); Today now also shows Log It!'s
-full-detail 8-tile tracker grid (same component, same toggles, same tap behavior, goal/logged text,
-hero numbers, and low-supply/near-expiry alerts all intact). As of v3.49.0, Today's order is "Today
-at a Glance" → the 8-tile grid → "Today's log" — the "Remaining RX/Treatments" section that used to
-sit between them was removed from Today entirely and moved to the RX page.
+**Tabs:** **My Day** · Log It! · RX · Stats · My Plan · Settings — 6 tabs, nav order as of v3.59.0
+(My Day and Log It! swapped positions per Rob's explicit request — the app still boots on Log It!
+by default). "Today" was renamed "My Day" in v3.59.0 (nav tab, "My Day at a Glance" section,
+"My Day's log" section, header context label) — generic calendar-day words ("due today," the date
+pill's TODAY badge) are unrelated and unchanged. RX (icon `Pill`, between Log It! and Stats) briefly
+read "Prescriptions" in v3.58.0; Rob clarified RX is meant as the umbrella term for all three
+trackers it groups (Treatments/Prescriptions/Supplements) and asked for the tab label back — v3.42.0
+had swapped Today first before v3.42.1 reverted it; v3.59.0's My Day/Log It! swap is a distinct,
+explicitly-requested decision, not a regression of that revert. My Day's Voice Entry tile (renamed
+from "Voice Assistant" in v3.50.0) was removed from My Day in v3.48.0 (Log It! keeps its own copy);
+My Day now also shows Log It!'s full-detail 9-tile tracker grid (same component, same toggles, same
+tap behavior, goal/logged text, hero numbers, and low-supply/near-expiry alerts all intact). As of
+v3.49.0, My Day's order is "My Day at a Glance" → the tracker grid → "My Day's log" — the "Remaining
+RX/Treatments" section that used to sit between them was removed from My Day entirely and moved to
+the RX page.
 
 **Log It! rebuilt again (v3.51.0, Track 1 of a 2-part brief)** — pure fast-entry, now with a real
 date control and a redesigned tile grid:
@@ -36,10 +42,13 @@ date control and a redesigned tile grid:
   path for prior-day logging alongside — not a replacement for — Stats' existing prior-day/backfill
   picker.
 - **Unified 4×3 grid, borderless** (transparent at rest, subtle wash on press) — as of v3.57.0,
-  Voice Tracker/Presets/Meal Entry are no longer a separate top row: they're the first 3 tiles of
-  the same grid the 9 trackers render into (12 tiles total with all trackers enabled — a true
+  Voice Tracker/Presets/Meal Entry are no longer a separate top row: they're 3 tiles inside the
+  same grid the 9 trackers render into (12 tiles total with all trackers enabled — a true
   4-row × 3-column, evenly spaced grid), per Rob's real-device feedback that the divider between the
-  two sections should go and the whole thing should read as one grid. Voice Tracker opens a new
+  two sections should go and the whole thing should read as one grid. As of v3.59.0, those 3 tiles
+  sit at the **end** of the grid rather than the start — Water/Protein/Calories/Sleep/Weight/
+  Exercise/Treatments/Prescriptions/Supplements lead, Voice Tracker/Presets/Meal Entry trail — per
+  Rob's testing feedback that users prefer the core trackers up top. Voice Tracker opens a new
   non-functional preview sheet (text field + decorative mic icon, no parser — still not Smart
   Entry). Presets and Meal Entry open the same sheets they always have. Icons are a flat `102px`,
   matching every tracker tile's icon/ring size exactly; labels are `16.5px`. The old 2-column
@@ -52,16 +61,22 @@ date control and a redesigned tile grid:
   via a checkerboard-specific script after an earlier version turned out to be sourced from outdated
   artwork with text baked in (see `docs/DECISION-LOG.md` `UX-38`). All three were visually inspected
   before shipping, not just alpha-checked.
-- **Redesigned ring, Log It!-only** (Today's full-detail rendering is unchanged) — a real neutral
+- **Redesigned ring, Log It!-only** (My Day's full-detail rendering is unchanged) — a real neutral
   track ring under the accent fill (previously the "track" was just a dimmed copy of the fill
-  color), a goal-met state (clamped arc, squared cap, glow, check badge), and a ring-less mode for
-  readings (currently just Weight: artwork + label + check-badge-when-a-reading-exists, no ring —
-  a ring implies progress that doesn't exist for a reading).
+  color), a goal-met state (clamped arc, squared cap, glow, check badge). Weight's compact tile is a
+  reading, not a percentage-of-goal tracker, so it uses `imageOnlyTile` instead of the percentage
+  ring `lO` uses: artwork + label + a checkmark badge when a reading exists today. As of v3.59.0 it
+  also gets a rounded-square completion ring (border + glow, `.wt-gauge-imageonly-lit`) around the
+  icon when a reading exists today — a CSS-only treatment, not `lO`'s SVG ring (which is circular by
+  construction and didn't fit Weight's square icon) — matching Supplements' glow-on-completion look
+  while keeping the existing checkmark badge alongside it, per Rob's explicit request. This
+  supersedes the original v3.51.0 reasoning ("a ring implies progress that doesn't exist for a
+  reading") — not an oversight, a deliberate reversal after real-device feedback.
 - **Quick-add chips** in every accumulating-tracker sheet (Water/Protein/Calories/Sleep/Exercise);
-  Treatments/RX & Supplements keep their existing tap-to-select-item chips. Primary buttons relabel
-  to "Add to <tracker>" (Weight: "Save weight"; meal sheet: "Log meal").
-- `MO`, the tile-grid component shared with Today, kept its `compact` prop from v3.50.0 for all of
-  this — Today's usage and rendering path are unchanged and were verified byte-identical.
+  Treatments/Prescriptions/Supplements keep their existing tap-to-select-item chips. Primary buttons
+  relabel to "Add to <tracker>" (Weight: "Save weight"; meal sheet: "Log meal").
+- `MO`, the tile-grid component shared with My Day, kept its `compact` prop from v3.50.0 for all of
+  this — My Day's usage and rendering path are unchanged and were verified byte-identical.
 - **Track 2 of this brief shipped in v3.52.0** — see below.
 
 **RX and Supplements split into two independent trackers (v3.52.0)** — previously one combined
@@ -96,16 +111,17 @@ date control and a redesigned tile grid:
 - Supplements and Treatments, both with recurring schedules. Next-due-date editing lives on My
   Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
   edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
-- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; RX items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on the RX page (moved there from Today's "Remaining RX/Treatments" section in v3.49.0).
+- Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; Prescriptions items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on the RX page (moved there from My Day's "Remaining RX/Treatments" section in v3.49.0).
 - **RX page (v3.49.0)** — titled "SCRIPTS FOR: {date}", the single place to see everything a user
-  is subscribed to or prescribed. Three sections: Treatments, Prescriptions, Vitamins &
-  Supplements (reusing the `category` field split from v3.45.0) — lists every item of that type,
-  not just inventory-tracked ones. Treatments and RX-category prescriptions can carry an optional
-  partner logo + link (entered on My Plan next to provider/pharmacy); when both a name and a logo
-  are set, the item renders as a partner-branded card instead of plain text — the first step
-  toward the "promote our partners" direction. Vitamins & Supplements have no partner concept.
+  is subscribed to or prescribed; "RX" here is the umbrella term for all three trackers it sections.
+  Three sections: Treatments, Prescriptions, Supplements (renamed from "Vitamins & Supplements" in
+  v3.59.0 for consistency with the label used everywhere else) — lists every item of that type, not
+  just inventory-tracked ones. Treatments and Prescriptions items can carry an optional partner logo
+  + link (entered on My Plan next to provider/pharmacy); when both a name and a logo are set, the
+  item renders as a partner-branded card instead of plain text — the first step toward the "promote
+  our partners" direction. Supplements have no partner concept.
 - Past-days log viewer ("Edit Prior Days Logs" tile on Stats, between Sleep Over Time and Health
-  Summary, as of v3.48.0 — moved off Today, where it used to live behind a small calendar-icon
+  Summary, as of v3.48.0 — moved off My Day, where it used to live behind a small calendar-icon
   button); past-day entries are deletable
 - "Enter Missed Items" backfill on any past day (Stats → Edit Prior Days Logs → day → button)
 - Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines. The
@@ -211,6 +227,31 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.59.0)
+
+Rob's follow-up feedback after using v3.58.0, plus a Log It! tile reorder and a new Weight
+completion indicator. Full detail in `CHANGELOG.md`.
+
+- "RX" nav-tab label restored (was "Prescriptions" in v3.58.0) — RX is the umbrella term for all
+  three trackers it groups; the individual Prescriptions tracker keeps its own label elsewhere.
+- "Today" renamed "My Day" everywhere (nav tab, "My Day at a Glance", "My Day's log", header
+  context label) — generic calendar-day words untouched.
+- Log It! and My Day swapped nav positions (My Day first) — re-requested explicitly by Rob after
+  this same swap was tried and reverted in v3.42.0/v3.42.1; not a regression of that revert.
+- Log It!'s compact grid reordered: Voice Tracker/Presets/Meal Entry moved from first to last.
+- Weight's compact tile gained a rounded-square completion ring (border+glow) alongside its
+  existing checkmark badge, matching Supplements' glow-on-completion look — supersedes the original
+  v3.51.0 "no ring for readings" reasoning by explicit request, not by oversight.
+- RX page's "Vitamins & Supplements" section renamed "Supplements" for consistency.
+- `tools/harness.js`: every `nav("Today")` → `nav("My Day")`; nav-order and grid-order checks
+  updated; new coverage for the Weight completion ring (unlit → lit after logging, badge still
+  present).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One pre-existing,
+  unrelated stale check still fails (`wt-tile-togo`, documented since v3.44.0).
+- **Not yet verified on a real device**: the nav swap's real-world feel, the grid reorder's effect
+  on daily habit, and the new completion ring's visual proportions.
 
 ## What shipped Aug 27, 2026 (v3.58.0)
 
@@ -755,11 +796,15 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   icons/labels fit well, and whether the header's new left/right balance reads correctly are all
   things jsdom cannot verify.
 - **RX/Supplements split (v3.52.0/v3.58.0) needs Rob's real-device confirmation.** Not yet
-  verified: the Supplements tile/icon's visual read next to Prescriptions on Log It! and Today, My
-  Plan's "What I'm Tracking" row, and whether the bottom-nav "Prescriptions" label (longer than the
-  old "RX") fits well in the 6-tab, 420px-max-width nav row — flagged explicitly by Rob before
-  shipping v3.58.0.
-- ~~**Today has no Supplements tile**~~ **RESOLVED v3.58.0** — Today's full-detail grid now shows
+  verified: the Supplements tile/icon's visual read next to Prescriptions on Log It! and My Day, and
+  My Plan's "What I'm Tracking" row. The bottom-nav label concern (v3.58.0's "Prescriptions" was
+  longer than the old "RX" in a tight 6-tab row) was resolved by Rob's own v3.59.0 feedback — the
+  tab reverted to "RX" as the umbrella term for all three trackers.
+- **v3.59.0 changes need Rob's real-device confirmation**: the My Day/Log It! nav swap's real-world
+  feel (this exact swap was tried once before and reverted — worth confirming it holds up this
+  time), the Log It! grid reorder's effect on daily habit, and the new Weight completion ring's
+  visual proportions (rounded-square glow next to the existing checkmark badge).
+- ~~**Today has no Supplements tile**~~ **RESOLVED v3.58.0** — My Day's full-detail grid now shows
   independent Prescriptions and Supplements tiles instead of one combined "RX & Supplements" tile.
   See `docs/DECISION-LOG.md` `TRACK-01`'s v3.58.0 amendment.
 - **Pre-migration log-entry history stays tagged `type: "supplement"` regardless of which item it
