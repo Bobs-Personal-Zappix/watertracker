@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.56.0*
+*As of: August 27, 2026 · Deployed version: 3.57.0*
 
 ---
 
@@ -35,23 +35,23 @@ date control and a redesigned tile grid:
   shows an amber "Saving to <date>" bar, and toasts append the date. This is a second, independent
   path for prior-day logging alongside — not a replacement for — Stats' existing prior-day/backfill
   picker.
-- **Top row** (bare artwork, no card/border): Voice Tracker, Presets, Meal Entry — replaces the old
-  gold "Voice Entry" and blue "Use Presets" banner tiles. Voice Tracker opens a new non-functional
-  preview sheet (text field + decorative mic icon, no parser — still not Smart Entry). Presets and
-  Meal Entry open the same sheets their removed predecessors did. Icon boxes are a flat `102px`
-  (v3.55.0, matching the 3×3 grid's default icon size exactly — was a responsive
-  `min(19vw, 10.5vh, 96px)` in v3.53.0, `min(28.5vw, 15vh, 144px)` before that); labels are
-  `16.5px`, also matching the grid. The artwork has real transparent backgrounds — Presets
-  (`presets-v2.png`) and Meal Entry (`meal-entry-v2.png`) via a corner-sampled chroma-key script
-  (v3.54.0, visual edge quality not yet confirmed on a real device); Voice Tracker
-  (`voice-tracker-v3.png`, v3.56.0) via a checkerboard-specific script after the earlier version
-  turned out to be sourced from outdated artwork with text baked in — this one was visually
-  inspected and confirmed clean before shipping (see `docs/DECISION-LOG.md` `UX-38`).
-- **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
-  with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
-  columns at ≤4 enabled trackers. As of v3.54.0 icons are 102px default / 122px in the 2-column
-  state (was 64px/88px pre-v3.53.0, 84px/100px in v3.53.0) and labels are 16.5px/17.5px (was a flat
-  12px pre-v3.53.0); tile padding and grid gap/margin were tightened to make room.
+- **Unified 4×3 grid, borderless** (transparent at rest, subtle wash on press) — as of v3.57.0,
+  Voice Tracker/Presets/Meal Entry are no longer a separate top row: they're the first 3 tiles of
+  the same grid the 9 trackers render into (12 tiles total with all trackers enabled — a true
+  4-row × 3-column, evenly spaced grid), per Rob's real-device feedback that the divider between the
+  two sections should go and the whole thing should read as one grid. Voice Tracker opens a new
+  non-functional preview sheet (text field + decorative mic icon, no parser — still not Smart
+  Entry). Presets and Meal Entry open the same sheets they always have. Icons are a flat `102px`,
+  matching every tracker tile's icon/ring size exactly; labels are `16.5px`. The old 2-column
+  fallback for ≤4 enabled trackers was dropped — the grid is never that sparse now that 3 tiles are
+  always present. As of v3.57.0, Presets (`presets-v3.png`) and Meal Entry (`meal-entry-v3.png`)
+  use Rob-supplied artwork that arrived as real transparent PNGs (verified: corner alpha 0, no
+  checkerboard/JPEG-recompression artifact, so no chroma-key script was needed this round, just
+  crop-to-content/pad-to-square/resize-to-480 like every other icon) — superseding the v3.54.0
+  chroma-keyed versions. Voice Tracker (`voice-tracker-v3.png`, v3.56.0) is unchanged this round,
+  via a checkerboard-specific script after an earlier version turned out to be sourced from outdated
+  artwork with text baked in (see `docs/DECISION-LOG.md` `UX-38`). All three were visually inspected
+  before shipping, not just alpha-checked.
 - **Redesigned ring, Log It!-only** (Today's full-detail rendering is unchanged) — a real neutral
   track ring under the accent fill (previously the "track" was just a dimmed copy of the fill
   color), a goal-met state (clamped arc, squared cap, glow, check badge), and a ring-less mode for
@@ -211,6 +211,31 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.57.0)
+
+Log It!'s top row (Voice Tracker/Presets/Meal Entry) merged into the tracker grid, per Rob's
+real-device feedback. Full detail in `CHANGELOG.md`.
+
+- Standalone `TopRow`/`TopRowItem` components and the `.wt-toprow` divider removed; Voice Tracker/
+  Presets/Meal Entry are now the grid's first 3 tiles via the same `compactTile()` helper, using a
+  new `.wt-tile-plain-img` (102×102) image variant in place of a ring.
+- Grid is now always a single `wt-trackers-grid-compact` (2-column fallback removed — never sparse
+  enough to need it with 3 fixed tiles always present); gap made uniform, top margin removed to
+  close the seam where the divider used to sit.
+- `tools/harness.js` updated: tile-count checks bumped (7→10 at boot, 9→12 all-on), new checks
+  confirm no `.wt-toprow` remains and that the grid's first 3 tiles are Voice Tracker/Presets/Meal
+  Entry in document order.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. One unrelated
+  pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0; confirmed present
+  on the untouched v3.56.0 bundle too). **Not yet verified on a real device** — the "evenly spaced
+  4×3 grid" outcome is exactly what jsdom can't confirm.
+- **Presets/Meal Entry/Weight icon artwork replaced.** Rob sent all three, one at a time, later in
+  the same session; each verified as a real transparent PNG (corner alpha 0, no checkerboard/JPEG
+  artifact) before use — no chroma-key script needed this round, just the standard crop/pad/resize
+  to 480×480. New files: `presets-v3.png`, `meal-entry-v3.png`, `weight-v2.png` (old versions
+  removed). Weight's new artwork updated in both its Log It! and Today renderings for consistency.
 
 ## What shipped Aug 27, 2026 (v3.56.0)
 
@@ -680,6 +705,10 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **Presets/Meal Entry/Weight new icon artwork (v3.57.0) needs Rob's real-device confirmation.**
+  Verified programmatically (real alpha transparency, no checkerboard/JPEG artifact) and visually
+  inspected here before shipping, but the actual on-device look/scale/crop of all three is
+  jsdom-unverifiable.
 - **v3.55.0 misdiagnosed the Voice Tracker report as a caching issue; it was actually a stale
   source image on this session's side** (corrected v3.56.0, see `docs/DECISION-LOG.md` `UX-38`) —
   the v3.55.0 file rename wasn't wasted (renaming to bust any cache layer beyond this repo's

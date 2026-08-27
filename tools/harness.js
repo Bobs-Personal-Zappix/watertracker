@@ -216,9 +216,10 @@ const check = (label, actual, expected) => {
 const STEPS = [
   () => {
     check("app mounted", html().length > 1000);
-    // v3.51.0: app boots on Log It!, a compact grid — 6 real trackers (Water+Treatments off
-    // in seed); Meals moved to the top row so it's no longer a grid tile.
-    check("tile count (Water+Treatments off in seed, Meals moved to the top row, RX/Supplements split into two tiles)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 7);
+    // v3.57.0: app boots on Log It!, a single unified compact grid — Voice Tracker/Presets/Meal
+    // Entry are now the first 3 tiles in the grid itself (merged from the old standalone top row),
+    // plus 7 real trackers (Water+Treatments off in seed; RX/Supplements split into two tiles).
+    check("tile count (top-row items merged into the grid; Water+Treatments off in seed; RX/Supplements split into two tiles)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 10);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => {
@@ -1129,25 +1130,25 @@ const STEPS = [
     }
   },
   () => {
-    // v3.51.0: Voice Entry/Use Presets FeatureTile banners removed from Log It!, replaced by a
-    // 3-item bare-artwork "fast paths" row (.wt-toprow > .wt-toprow-item) above the compact grid:
-    // Voice Tracker, Presets, Meal Entry. The row sits before the grid in document order.
-    const topRow = window.document.querySelector(".wt-toprow");
-    check("top row present above the tracker grid", !!topRow);
-    const items = [...window.document.querySelectorAll(".wt-toprow-item")].map((e) => e.textContent.trim());
-    check("top row has Voice Tracker item", items.includes("Voice Tracker"), "true");
-    check("top row has Presets item", items.includes("Presets"), "true");
-    check("top row has Meal Entry item", items.includes("Meal Entry"), "true");
+    // v3.57.0: the standalone "fast paths" row (.wt-toprow) was removed and merged into the
+    // compact grid itself — Voice Tracker/Presets/Meal Entry are now the grid's first 3 tiles,
+    // giving one unified 4x3 grid (no divider, no separate row) instead of a row-plus-grid split.
     const grid = window.document.querySelector(".wt-trackers-grid-compact");
-    check("top row sits before the compact grid in document order", topRow && grid ? !!(topRow.compareDocumentPosition(grid) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
+    check("compact grid present on Log It!", !!grid);
+    check("no leftover standalone top row (.wt-toprow) — merged into the grid", !window.document.querySelector(".wt-toprow"), "true");
+    const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
+    const firstThree = compactTiles.slice(0, 3).map((e) => e.textContent.trim());
+    check("grid's first tile is Voice Tracker (merged from the old top row)", firstThree[0], "Voice Tracker");
+    check("grid's second tile is Presets (merged from the old top row)", firstThree[1], "Presets");
+    check("grid's third tile is Meal Entry (merged from the old top row)", firstThree[2], "Meal Entry");
   },
   () => {
-    // v3.51.0: Log It! is now a borderless 3x3 compact grid, Meals moved out to the top row, and
-    // RX & Supplements split into two independent tiles — 9 tiles with all trackers enabled. The
-    // old .wt-action-btn buttons still don't render here.
+    // v3.57.0: Log It! is now one unified 4x3 compact grid (12 tiles with all trackers enabled) —
+    // Voice Tracker/Presets/Meal Entry plus the 9 real trackers (RX & Supplements split into two
+    // independent tiles). The old .wt-action-btn buttons still don't render here.
     check("no .wt-action-btn buttons on the now-compact Log It!", !window.document.querySelector(".wt-action-btn"), "true");
     const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
-    check("Log It! renders 9 compact tiles (Meals moved to the top row; RX/Supplements split)", compactTiles.length, 9);
+    check("Log It! renders 12 compact tiles (top row merged in; RX/Supplements split)", compactTiles.length, 12);
     check("Meals tile no longer in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "false");
   },
   () => check("open presets sheet (v3.51.0 top-row trigger)", clickByText("Presets", "div")),

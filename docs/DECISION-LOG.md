@@ -830,6 +830,30 @@ failure mode worth naming.
 cache-busting mechanism `UX-37` introduced remains in place and is reused here (a third filename,
 `voice-tracker-v3.png`)
 
+**UX-39 — Log It!'s top row merged into the tracker grid; divider removed, now a single 4×3 grid.**
+Rob's real-device feedback: "remove the line divider you have between the top 3 tiles and the
+bottom 3x3 tiles and move the 3x3 up a little to close the space and it then should be a 4x3 grid...
+four down three across all evenly spaced out." The standalone `TopRow`/`TopRowItem` components and
+the `.wt-toprow` divider CSS (amends `UX-30`/`UX-31`/`UX-32`, which introduced them) are removed;
+Voice Tracker, Presets, and Meal Entry are now the first 3 tiles of the same
+`.wt-trackers-grid-compact` grid the trackers render into, via the same `compactTile()` helper used
+for every other tile, with a new plain-image variant (`.wt-tile-plain-img`) standing in for a ring.
+The old 2-column fallback for ≤4 enabled trackers was dropped in the same pass — with the 3 top-row
+items always present, the grid can no longer be sparse enough to need it.
+In the same request, Rob also asked for new Presets/Meal Entry/Weight images to replace the current
+ones. No images arrived attached to the original message; once flagged back, Rob sent all three
+one at a time later in the same session. Each was verified directly (not assumed) before use: real
+PNG format, real alpha transparency (corner alpha 0), no checkerboard or JPEG-recompression
+artifact — unlike every prior round of top-row art this session, none of this round needed a
+chroma-key or checkerboard-removal script. Each was cropped to its content bounding box, padded to
+a square canvas, and resized to 480×480 (the same pipeline used for the other tile icons), then
+visually inspected before shipping. New files: `presets-v3.png`, `meal-entry-v3.png`,
+`weight-v2.png` (old `presets-v2.png`/`meal-entry-v2.png`/`weight.png` removed). Weight's new
+artwork was applied to both its Log It! ring-less compact rendering and its Today/full-detail ring
+rendering, so the tracker's look stays consistent across both pages.
+*Status:* **Locked** · Aug 27, 2026 · v3.57.0 — amends `UX-30`/`UX-31`/`UX-32` (removes the top-row
+structure they introduced); image swap completed in the same release
+
 ---
 
 ## Legal & compliance
@@ -972,7 +996,11 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.56.0: UX-38 added — corrects UX-37's caching diagnosis (the real
+*Last updated: August 27, 2026 (v3.57.0: UX-39 added — Log It!'s standalone top row merged into the
+tracker grid (amends UX-30/UX-31/UX-32), divider removed, now a single evenly-spaced 4x3 grid;
+2-column grid fallback dropped; Presets/Meal Entry/Weight images Rob also requested arrived later in
+the same session and were swapped in, verified clean (real alpha transparency, no checkerboard/JPEG
+artifact) without needing a chroma-key script; earlier: v3.56.0: UX-38 added — corrects UX-37's caching diagnosis (the real
 cause was a stale source image on this session's side, not caching); Voice Tracker icon replaced
 with the correct text-free artwork via a checkerboard-specific strip script, visually confirmed
 before shipping; earlier: v3.55.0: UX-37 added — top-row icon staleness diagnosed as a CDN

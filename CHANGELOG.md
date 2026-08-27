@@ -20,6 +20,44 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.57.0] — 2026-08-27
+
+Log It! merges the 3-item top row (Voice Tracker/Presets/Meal Entry) into the tracker grid itself,
+so the page now reads as one unified grid instead of a row-plus-grid split.
+
+- **Divider removed, top row merged into the grid.** Rob's real-device feedback: "remove the line
+  divider you have between the top 3 tiles and the bottom 3x3 tiles and move the 3x3 up a little to
+  close the space... four down three across all evenly spaced out." The standalone `TopRow`/
+  `TopRowItem` components (and the `.wt-toprow` hairline-divider CSS they rendered inside) are gone
+  — Voice Tracker, Presets, and Meal Entry are now the first 3 tiles of the same
+  `.wt-trackers-grid-compact` grid the trackers render into, using the same `compactTile()` helper
+  and a new plain-image variant (`.wt-tile-plain-img`, 102×102, same size as the tracker rings/
+  images) in place of a ring. With all trackers enabled this is a true 4-row × 3-column, evenly
+  spaced grid (12 tiles); the old 2-column fallback for ≤4 enabled trackers was dropped since the
+  top row's 3 fixed items mean the grid is never that sparse anymore.
+- Grid CSS simplified: uniform `8px` gap (was `8px 6px`), top margin removed (`4px` → `0`) so the
+  grid sits directly under the date pill with no extra seam where the divider used to be.
+- **Presets, Meal Entry, and Weight icon artwork replaced.** Rob sent the three replacements one at
+  a time this session, each confirmed clean before use (real PNG, real alpha transparency, corner
+  alpha 0, no checkerboard/JPEG-recompression artifact — none of this round needed the chroma-key/
+  checkerboard scripts earlier rounds required). Each cropped to its content bounding box, padded to
+  a square canvas, and resized to the same 480×480 final size the other tile icons use, then
+  visually inspected before shipping. New files (cache-busted, matching this repo's established
+  practice): `presets-v3.png`, `meal-entry-v3.png`, `weight-v2.png` — old `presets-v2.png`,
+  `meal-entry-v2.png`, `weight.png` removed. Weight's new artwork is used in both its Log It!
+  ring-less compact tile and its Today/full-detail ring rendering, so the tracker looks consistent
+  across both pages.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. `tools/harness.js`
+  rewritten for the merged structure: tile-count checks bumped (7→10 at boot, 9→12 with all
+  trackers on), new checks assert no `.wt-toprow` remains and that Voice Tracker/Presets/Meal Entry
+  are the grid's first 3 tiles in document order. One pre-existing, unrelated failure noted and
+  confirmed present on the untouched v3.56.0 bundle too (a stale "32oz to go" assertion on the
+  full-size, non-compact water tile) — not touched by this change, not a regression.
+- **Not yet verified visually on a real device** — jsdom has no layout engine, so the "evenly
+  spaced 4×3 grid" outcome itself (spacing, alignment, whether it actually reads as one grid) needs
+  Rob's eyes.
+
 ## [3.56.0] — 2026-08-27
 
 Correction: v3.54.0/v3.55.0's Voice Tracker fix diagnosed the wrong problem. Rob's report of a
