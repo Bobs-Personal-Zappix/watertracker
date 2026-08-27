@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.54.0*
+*As of: August 27, 2026 · Deployed version: 3.55.0*
 
 ---
 
@@ -38,11 +38,14 @@ date control and a redesigned tile grid:
 - **Top row** (bare artwork, no card/border): Voice Tracker, Presets, Meal Entry — replaces the old
   gold "Voice Entry" and blue "Use Presets" banner tiles. Voice Tracker opens a new non-functional
   preview sheet (text field + decorative mic icon, no parser — still not Smart Entry). Presets and
-  Meal Entry open the same sheets their removed predecessors did. Icon boxes are
-  `min(19vw, 10.5vh, 96px)` (v3.53.0, was `min(28.5vw, 15vh, 144px)`). As of v3.54.0 the artwork
-  itself has real transparent backgrounds (programmatically chroma-keyed and normalized to an
-  identical 480×480 canvas across all three, after three rounds of manually-supplied images all
-  came back unusable — see Known Outstanding for the caveat on edge quality).
+  Meal Entry open the same sheets their removed predecessors did. Icon boxes are a flat `102px`
+  (v3.55.0, matching the 3×3 grid's default icon size exactly — was a responsive
+  `min(19vw, 10.5vh, 96px)` in v3.53.0, `min(28.5vw, 15vh, 144px)` before that); labels are
+  `16.5px`, also matching the grid. The artwork has real transparent backgrounds (v3.54.0,
+  programmatically chroma-keyed and normalized to an identical 480×480 canvas across all three,
+  after three rounds of manually-supplied images all came back unusable — see Known Outstanding
+  for the caveat on edge quality). As of v3.55.0 the three image files were also renamed
+  (`voice-tracker-v2.png` etc.) to cache-bust a stale-image issue Rob hit after v3.54.0 shipped.
 - **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
   with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
   columns at ≤4 enabled trackers. As of v3.54.0 icons are 102px default / 122px in the 2-column
@@ -207,6 +210,19 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.55.0)
+
+Two follow-ups from Rob's v3.54.0 real-device check. Full detail in `CHANGELOG.md`.
+
+- **Cache-busted the three top-row icon files** (renamed to `-v2` filenames) — Rob still saw
+  Voice Tracker's old white-background image after v3.54.0 shipped; the committed file was already
+  correct (re-verified), so this was a stale cached copy of the old asset, not a code bug. Renamed
+  all three (not just Voice Tracker) so the same issue can't recur silently for the other two.
+- **Top-row icon/label sizing now matches the 3×3 grid exactly** (102px icons, 16.5px labels, both
+  flat values instead of the previous responsive/smaller ones), per Rob's explicit request.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js`. **Not yet
+  verified on a real device.**
 
 ## What shipped Aug 27, 2026 (v3.54.0)
 
@@ -647,6 +663,14 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **Image assets under `site/app/tile-icons/` (and similar static files) are not provably
+  cache-busted by the app's own `_headers` no-cache rule** (found v3.55.0): Rob saw a stale cached
+  copy of the Voice Tracker icon after v3.54.0 shipped a corrected file. `_headers`'
+  `no-cache, no-store, must-revalidate` on `/app/*` controls *browser* caching, but a CDN edge cache
+  in front of the site is a separate layer this repo doesn't control and isn't guaranteed to respect
+  that rule for static binary assets. The fix applied was renaming the files (cache-busting via
+  filename) rather than relying on cache headers/purges — worth remembering as the standard fix if
+  any other static asset (icons, images) seems to not update after a deploy.
 - **Top-row icon backgrounds (v3.54.0) were fixed with an automated script, not real designed
   cutouts** — after three rounds of manually-supplied images all came back unusable (see
   `docs/DECISION-LOG.md` `UX-35`), a chroma-key script now strips each background programmatically.
@@ -654,7 +678,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   designed transparent export. Needs Rob's eyes on a real device; if the edges look rough, the
   fallback is still a properly-exported transparent PNG from Rob (see `UX-35` for what that actually
   requires on the export side).
-- **v3.53.0/v3.54.0's date-pill, sizing, and header changes all need Rob's real-device
+- **v3.53.0–v3.55.0's date-pill, sizing, and header changes all need Rob's real-device
   confirmation** — centering, the native calendar picker's feel on a phone, whether the bigger grid
   icons/labels fit well, and whether the header's new left/right balance reads correctly are all
   things jsdom cannot verify.

@@ -774,6 +774,30 @@ further code change needed either way.
 sizing), supersedes `UX-35`'s blocked state for the background specifically (edge-quality follow-up
 remains open)
 
+**UX-37 — Top-row icon staleness was a caching issue, not a code bug; icon files cache-busted; top
+row sized to match the 3×3 grid exactly.**
+Rob reported the Voice Tracker icon still showed its old white-background image after `UX-36`
+shipped. The committed file was re-verified as already correct (corner alpha 0, center alpha 255,
+matching what `UX-36` produced) — this was a stale cached copy, not a regression. `_headers`'
+`no-cache, no-store, must-revalidate` rule on `/app/*` (`OPS-05`) controls browser caching, but a
+CDN edge cache in front of the deployed site is a separate layer outside this repo's control and
+isn't guaranteed to honor that header for static binary assets the way it does for the JS bundle.
+Rather than rely on a cache purge outside this session's reach, the three top-row image files were
+renamed (`voice-tracker.png`→`voice-tracker-v2.png`, and the same for `presets`/`meal-entry`) —
+a stale URL simply stops resolving, forcing every client to fetch the new file regardless of any
+cache layer's behavior. All three were renamed, not only Voice Tracker, so the same silent
+staleness can't recur for the other two later.
+Separately, Rob asked for the top-row icon boxes and labels to match the 3×3 grid's size exactly:
+`.wt-toprow-art-wrap` changed from a responsive `min(19vw, 10.5vh, 96px)` to a flat `102px`, and
+`.wt-toprow-label` from `13.5px` to `16.5px` — both now identical to the grid's default (3-column)
+icon/label size rather than independently tuned values.
+*Why:* recording the caching root-cause explicitly so a future "the image didn't update" report
+gets diagnosed faster — check whether the file itself is correct before assuming a code bug, and
+prefer a filename rename over waiting on/requesting a cache purge, consistent with this project's
+existing hard-won lesson (`CHANGELOG.md`'s "Caching will strand users on stale builds" from v1–v2)
+that caching bugs recur in layers beyond the one already fixed once.
+*Status:* **Locked** · Aug 27, 2026 · v3.55.0 — amends `UX-36` (top-row sizing, icon filenames)
+
 ---
 
 ## Legal & compliance
@@ -916,7 +940,9 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.54.0: UX-36 added — top-row icon backgrounds fixed
+*Last updated: August 27, 2026 (v3.55.0: UX-37 added — top-row icon staleness diagnosed as a CDN
+caching issue (not a code bug), fixed via cache-busting filenames, top-row sizing matched exactly to
+the 3x3 grid; earlier: v3.54.0: UX-36 added — top-row icon backgrounds fixed
 programmatically (chroma-key script, supersedes UX-35's blocked state), grid sized up further,
 header rearranged (brand left, profile right); earlier: v3.53.0: UX-34 added — real-device review round 1: date-pill
 centering, chevrons replaced with a native calendar picker, top-row/grid sizing, plus a genuine

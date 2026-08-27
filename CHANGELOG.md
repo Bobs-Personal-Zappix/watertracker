@@ -20,6 +20,30 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.55.0] — 2026-08-27
+
+Two follow-ups from Rob's v3.54.0 review: the Voice Tracker icon was still showing its old
+white-background image, and the top-row icons/labels needed to match the 3×3 grid's new size.
+
+- **Cache-busted all three top-row icon files** (`voice-tracker.png`/`presets.png`/`meal-entry.png`
+  → `voice-tracker-v2.png`/`presets-v2.png`/`meal-entry-v2.png`). The actual committed file for
+  Voice Tracker was already the fixed, transparent v3.54.0 version (re-verified: corner alpha 0,
+  center alpha 255) — the stale white background Rob saw was a cached copy of the old file, not a
+  code bug. Renaming forces every client to fetch fresh regardless of any cache layer (the app's
+  own `_headers` no-cache rule covers `/app/*`, but that only controls browser caching — a CDN edge
+  cache in front of it is outside this repo's control and isn't guaranteed to respect that rule for
+  static assets). All three were renamed, not just Voice Tracker, so the same staleness can't recur
+  for Presets or Meal Entry later even though only Voice Tracker was reported this time.
+- **Top-row icon boxes and labels now match the 3×3 grid exactly** — `102px` fixed (was a responsive
+  `min(19vw, 10.5vh, 96px)`) and `16.5px` labels (was `13.5px`), same values as the grid's default
+  3-column state, per Rob's explicit request that they read as the same size.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 519 checks pass — unchanged from v3.54.0, no new checks needed since
+  this is a filename/sizing-only change), lint unchanged at the 11-error vendor baseline. One
+  unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0). **Not
+  yet verified on a real device** — need Rob to confirm both the fresh Voice Tracker image loads
+  and the new top-row sizing reads correctly.
+
 ## [3.54.0] — 2026-08-27
 
 Real-device review round 2: the top-row icon backgrounds are finally fixed (programmatically,
