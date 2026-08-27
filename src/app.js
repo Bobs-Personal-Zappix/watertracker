@@ -227,8 +227,8 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.51.0",
-        SCHEMA_VERSION = 2,
+        xS = "3.52.0",
+        SCHEMA_VERSION = 3,
         ES = {
             logs: {},
             activeSleepSession: null,
@@ -245,6 +245,7 @@ import {
                 showSleep: !0,
                 showWeight: !0,
                 showSupplements: !0,
+                showRx: !0,
                 showTreatments: !0,
                 showExercise: !0,
                 feedbackWatching: !1,
@@ -260,6 +261,8 @@ import {
                 },
                 presets: [],
                 supplements: [],
+                rx: [],
+                __preMigrationSupplementsBackup: null,
                 treatments: [],
                 profile: {
                     fullName: "",
@@ -323,6 +326,10 @@ import {
 
     function NS(e) {
         return !(!e || "supplement" !== e.type)
+    }
+
+    function RXTypeS(e) {
+        return !(!e || "rx" !== e.type)
     }
 
     function TS(e) {
@@ -393,7 +400,7 @@ import {
     var RS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
     function BS(e) {
-        return !e || "sleep" === e.type || "weight" === e.type || "supplement" === e.type || "treatment" === e.type || "exercise" === e.type || void 0 === e.type && void 0 !== e.oz && void 0 !== e.grams && void 0 !== e.calories ? e : {
+        return !e || "sleep" === e.type || "weight" === e.type || "supplement" === e.type || "rx" === e.type || "treatment" === e.type || "exercise" === e.type || void 0 === e.type && void 0 !== e.oz && void 0 !== e.grams && void 0 !== e.calories ? e : {
             id: e.id,
             time: e.time,
             timeMinutes: e.timeMinutes,
@@ -436,11 +443,10 @@ import {
         }))]
     }
 
-    function US(e) {
-        return (e && Array.isArray(e.supplements) ? e.supplements : []).map(e => ({
+    function USTracker(e) {
+        return (Array.isArray(e) ? e : []).map(e => ({
             id: e.id,
             name: e.name,
-            category: "rx" === e.category ? "rx" : "vitamin",
             intervalDays: "number" == typeof e.intervalDays ? e.intervalDays : 1,
             lastTakenDate: e.lastTakenDate || null,
             nextDueOverride: e.nextDueOverride || null,
@@ -494,10 +500,17 @@ import {
     }
 
     function migrateSettingsShape(e) {
+        let alreadySplit = e && Array.isArray(e.rx),
+            oldCombined = e && Array.isArray(e.supplements) ? e.supplements : [],
+            rxSource = alreadySplit ? e.rx : oldCombined,
+            supplementsSource = alreadySplit ? e && e.supplements : [],
+            preMigrationBackup = alreadySplit ? e && e.__preMigrationSupplementsBackup || null : oldCombined.length > 0 ? oldCombined : null;
         return {
             ...e,
             presets: FS(e),
-            supplements: US(e),
+            rx: USTracker(rxSource),
+            supplements: USTracker(supplementsSource),
+            __preMigrationSupplementsBackup: preMigrationBackup,
             treatments: normalizeTreatments(e && e.treatments)
         }
     }
@@ -635,7 +648,7 @@ import {
             o = document.createElement("a");
         o.href = a, o.download = e, document.body.appendChild(o), o.click(), document.body.removeChild(o), URL.revokeObjectURL(a)
     }
-    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; margin-left:-14px; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s6); margin:8px 0 6px; }\n.wt-trackers-grid + .wt-trackers-grid { margin-top:18px; }\n.wt-trackers-grid + .wt-action-btns { margin-top:18px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:10px var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }\n.wt-log-row { display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:7px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; margin-top:2px; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; padding-top:2px; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-desc-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }\n.wt-log-actions { display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-feature-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); }\n.wt-feature-tile.gold { background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-feature-tile.blue { background:var(--bg); border:2px solid var(--water); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); cursor:pointer; }\n.wt-feature-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; }\n.wt-feature-tile-icon svg { width:20px; height:20px; }\n.gold .wt-feature-tile-icon { background:#564216; color:#FFC428; }\n.blue .wt-feature-tile-icon { background:var(--water-chip); color:var(--water); }\n.wt-feature-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-feature-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-feature-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-feature-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }\n.gold .wt-feature-tile-badge { background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.gold .wt-feature-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.gold .wt-feature-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.blue .wt-feature-tile-badge { background:var(--water); color:#fff; }\n.wt-feature-tile-badge svg { width:22px; height:22px; }\n.wt-trackers-grid-compact { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s4) var(--s3); margin:8px 0 16px; }\n.wt-tracker-col-compact { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px; border-radius:var(--radius); background:transparent; box-sizing:border-box; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .1s ease, background .1s ease; }\n.wt-tracker-col-compact:active { transform:scale(0.955); background:var(--surface-dark); }\n.wt-trackers-grid-compact-2col { grid-template-columns:repeat(2, 1fr); }\n.wt-trackers-grid-compact-2col .wt-tracker-col-compact .wt-gauge-ring { width:88px; height:88px; }\n.wt-tracker-col-compact .wt-gauge-imageonly { width:64px; height:64px; }\n.wt-trackers-grid-compact-2col .wt-tracker-col-compact .wt-gauge-imageonly { width:88px; height:88px; }\n.wt-tracker-col-compact .wt-gauge-ring { width:64px; height:64px; }\n.wt-tile-compact-label { font-size:12px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-toprow { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:6px 4px 14px; margin-bottom:14px; border-bottom:1px solid; border-image:linear-gradient(90deg, transparent, var(--hairline-bright), transparent) 1; -webkit-tap-highlight-color:transparent; }\n.wt-toprow-item { flex:1 1 0; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; border-radius:var(--radius); padding:6px 4px; transition:transform .1s ease, background .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-toprow-item:active { transform:scale(.955); background:var(--surface-dark); }\n.wt-toprow-art-wrap { position:relative; width:min(28.5vw, 15vh, 144px); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }\n.wt-toprow-bloom::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 47%, rgba(76,154,255,.28), transparent 65%); opacity:.55; pointer-events:none; }\n.wt-toprow-art { width:100%; height:100%; object-fit:contain; position:relative; z-index:1; }\n.wt-toprow-label { font-size:13.5px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-datepill-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin:2px 0 10px; }\n.wt-datepill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1.5px solid var(--hairline-bright); background:var(--surface-dark); }\n.wt-datepill-past { border-color:#7a5c1e; background:#221c0e; }\n.wt-datepill-chevron { display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:999px; border:none; background:transparent; color:var(--ink-inverse); cursor:pointer; -webkit-tap-highlight-color:transparent; }\n.wt-datepill-chevron:disabled { opacity:.35; cursor:default; }\n.wt-datepill-date { font-size:14px; font-weight:600; color:var(--ink-inverse); white-space:nowrap; }\n.wt-datepill-badge { font-size:10px; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink); }\n.wt-datepill-past .wt-datepill-badge { background:#4a3a10; color:#e8c268; }\n.wt-datepill-subtitle { font-size:11px; color:#e8c268; text-align:center; }\n.wt-savingto-bar { font-size:11.5px; font-weight:600; color:#e8c268; background:#221c0e; border:1px solid #7a5c1e; border-radius:10px; padding:6px 10px; text-align:center; margin:-6px 0 14px; }\n.wt-gauge-imageonly { display:flex; align-items:center; justify-content:center; }\n.wt-gauge-imageonly-img { width:94%; height:94%; object-fit:contain; }\n.wt-gauge-imageonly-badge { position:absolute; right:2%; bottom:2%; }\n.wt-voice-text { width:100%; box-sizing:border-box; border-radius:12px; border:1.5px solid var(--line); padding:10px 12px; font:inherit; font-size:14px; resize:vertical; margin-bottom:14px; }\n.wt-meals-ring { width:64px; height:64px; border-radius:50%; background:var(--protein-chip); border:4px solid var(--protein); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
+    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --supplements:#a3e635; --supplements-chip:#28330e;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; margin-left:-14px; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s6); margin:8px 0 6px; }\n.wt-trackers-grid + .wt-trackers-grid { margin-top:18px; }\n.wt-trackers-grid + .wt-action-btns { margin-top:18px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:10px var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }\n.wt-log-row { display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:7px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; margin-top:2px; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; padding-top:2px; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-desc-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }\n.wt-log-actions { display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-feature-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); }\n.wt-feature-tile.gold { background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-feature-tile.blue { background:var(--bg); border:2px solid var(--water); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); cursor:pointer; }\n.wt-feature-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; }\n.wt-feature-tile-icon svg { width:20px; height:20px; }\n.gold .wt-feature-tile-icon { background:#564216; color:#FFC428; }\n.blue .wt-feature-tile-icon { background:var(--water-chip); color:var(--water); }\n.wt-feature-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-feature-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-feature-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-feature-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }\n.gold .wt-feature-tile-badge { background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.gold .wt-feature-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.gold .wt-feature-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.blue .wt-feature-tile-badge { background:var(--water); color:#fff; }\n.wt-feature-tile-badge svg { width:22px; height:22px; }\n.wt-trackers-grid-compact { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s4) var(--s3); margin:8px 0 16px; }\n.wt-tracker-col-compact { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px; border-radius:var(--radius); background:transparent; box-sizing:border-box; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .1s ease, background .1s ease; }\n.wt-tracker-col-compact:active { transform:scale(0.955); background:var(--surface-dark); }\n.wt-trackers-grid-compact-2col { grid-template-columns:repeat(2, 1fr); }\n.wt-trackers-grid-compact-2col .wt-tracker-col-compact .wt-gauge-ring { width:88px; height:88px; }\n.wt-tracker-col-compact .wt-gauge-imageonly { width:64px; height:64px; }\n.wt-trackers-grid-compact-2col .wt-tracker-col-compact .wt-gauge-imageonly { width:88px; height:88px; }\n.wt-tracker-col-compact .wt-gauge-ring { width:64px; height:64px; }\n.wt-tile-compact-label { font-size:12px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-toprow { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:6px 4px 14px; margin-bottom:14px; border-bottom:1px solid; border-image:linear-gradient(90deg, transparent, var(--hairline-bright), transparent) 1; -webkit-tap-highlight-color:transparent; }\n.wt-toprow-item { flex:1 1 0; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; border-radius:var(--radius); padding:6px 4px; transition:transform .1s ease, background .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-toprow-item:active { transform:scale(.955); background:var(--surface-dark); }\n.wt-toprow-art-wrap { position:relative; width:min(28.5vw, 15vh, 144px); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }\n.wt-toprow-bloom::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 47%, rgba(76,154,255,.28), transparent 65%); opacity:.55; pointer-events:none; }\n.wt-toprow-art { width:100%; height:100%; object-fit:contain; position:relative; z-index:1; }\n.wt-toprow-label { font-size:13.5px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-datepill-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin:2px 0 10px; }\n.wt-datepill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1.5px solid var(--hairline-bright); background:var(--surface-dark); }\n.wt-datepill-past { border-color:#7a5c1e; background:#221c0e; }\n.wt-datepill-chevron { display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:999px; border:none; background:transparent; color:var(--ink-inverse); cursor:pointer; -webkit-tap-highlight-color:transparent; }\n.wt-datepill-chevron:disabled { opacity:.35; cursor:default; }\n.wt-datepill-date { font-size:14px; font-weight:600; color:var(--ink-inverse); white-space:nowrap; }\n.wt-datepill-badge { font-size:10px; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink); }\n.wt-datepill-past .wt-datepill-badge { background:#4a3a10; color:#e8c268; }\n.wt-datepill-subtitle { font-size:11px; color:#e8c268; text-align:center; }\n.wt-savingto-bar { font-size:11.5px; font-weight:600; color:#e8c268; background:#221c0e; border:1px solid #7a5c1e; border-radius:10px; padding:6px 10px; text-align:center; margin:-6px 0 14px; }\n.wt-gauge-imageonly { display:flex; align-items:center; justify-content:center; }\n.wt-gauge-imageonly-img { width:94%; height:94%; object-fit:contain; }\n.wt-gauge-imageonly-badge { position:absolute; right:2%; bottom:2%; }\n.wt-voice-text { width:100%; box-sizing:border-box; border-radius:12px; border:1.5px solid var(--line); padding:10px 12px; font:inherit; font-size:14px; resize:vertical; margin-bottom:14px; }\n.wt-meals-ring { width:64px; height:64px; border-radius:50%; background:var(--protein-chip); border:4px solid var(--protein); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
 
     function lO({
         pct: e,
@@ -790,6 +803,21 @@ import {
             overText: "",
             imageSrc: "supplements",
             ringColor: "var(--meds)",
+            folder: "tile-icons",
+            compact: t
+        })
+    }
+
+    function newSupO({
+        pct: e,
+        compact: t = !1
+    }) {
+        return React.default.createElement(lO, {
+            pct: e,
+            over: !1,
+            overText: "",
+            imageSrc: "supplements-new",
+            ringColor: "var(--supplements)",
             folder: "tile-icons",
             compact: t
         })
@@ -2244,7 +2272,11 @@ import {
         onClose: r,
         onSubmit: a,
         onGoToSettings: o,
-        targetDateLabel: tdl
+        targetDateLabel: tdl,
+        title: sheetTitle = "Supplements & Prescriptions",
+        emptyCopy = "Nothing set up yet. Add the supplements, vitamins, and medicines you take regularly in Setup, and they'll show up here to log with one tap.",
+        addButtonLabel = "Add to Supplements & Prescriptions",
+        borderColor = "var(--meds)"
     }) {
         let [i, l] = (0, React.useState)([]), [u, s] = (0, React.useState)(JS());
         if ((0, React.useEffect)(() => {
@@ -2262,11 +2294,11 @@ import {
             onClick: r
         }, React.default.createElement("div", {
             className: "wt-sheet wt-sheet-tall",
-            style: { borderColor: "var(--meds)" },
+            style: { borderColor },
             onClick: e => e.stopPropagation()
         }, React.default.createElement("div", {
             className: "wt-sheet-header"
-        }, React.default.createElement("h3", null, n ? "Edit entry" : "Supplements & Prescriptions"), React.default.createElement("button", {
+        }, React.default.createElement("h3", null, n ? "Edit entry" : sheetTitle), React.default.createElement("button", {
             className: "wt-icon-btn",
             onClick: r,
             "aria-label": "Close"
@@ -2282,7 +2314,7 @@ import {
                 marginBottom: 18,
                 textAlign: "center"
             }
-        }, "Nothing set up yet. Add the supplements, vitamins, and medicines you take regularly in Setup, and they'll show up here to log with one tap."), React.default.createElement("button", {
+        }, emptyCopy), React.default.createElement("button", {
             className: "wt-btn-primary",
             onClick: o
         }, "Go to Settings")) : React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
@@ -2341,7 +2373,7 @@ import {
             },
             disabled: 0 === i.length,
             onClick: () => a(i, u)
-        }, n ? "Save changes" : "Add to Supplements & Prescriptions"))))
+        }, n ? "Save changes" : addButtonLabel))))
     }
 
     function TO({
@@ -2705,7 +2737,7 @@ import {
             k = !1 !== e.settings.showCalories,
             S = !1 !== e.settings.showSleep,
             O = !1 !== e.settings.showWeight,
-            P = !1 !== e.settings.showSupplements,
+            P = !1 !== e.settings.showRx,
             C = !1 !== e.settings.showTreatments,
             j = !1 !== e.settings.showExercise,
             N = x || E || k || S,
@@ -2720,13 +2752,13 @@ import {
                     })
                 }), t
             })(),
-            A = (T && (T.date === t ? T.value : (T.value, YS(MS(T.date)))), e.settings.supplements.length),
+            A = (T && (T.date === t ? T.value : (T.value, YS(MS(T.date)))), e.settings.rx.length),
             M = new Set;
         u.forEach(e => {
-            NS(e) && (e.items || []).forEach(e => M.add("string" == typeof e ? e : e.name))
+            RXTypeS(e) && (e.items || []).forEach(e => M.add("string" == typeof e ? e : e.name))
         });
         let _ = 0 === A ? "Add in Setup" : `${M.size} of ${A} taken`,
-            D = e.settings.supplements.filter(e => {
+            D = e.settings.rx.filter(e => {
                 let n = DS(e, t);
                 return ("overdue" === n.state || "today" === n.state) && !M.has(e.name)
             }).length,
@@ -2742,7 +2774,7 @@ import {
             F = e.settings.goalExerciseMinutes || 0,
             U = (B && $ > 0 && T.value, B ? Math.round(10 * (T.value - $)) / 10 : null),
             W = $ <= 0 ? "Set a goal" : B ? 0 === U ? "Right on goal! 🎯" : U > 0 ? `+${U}lbs` : `${U}lbs` : "Log today's weight",
-            H = e.settings.supplements.filter(e => {
+            H = e.settings.rx.filter(e => {
                 let n = DS(e, t);
                 return "overdue" === n.state || "today" === n.state
             }).length,
@@ -2755,10 +2787,28 @@ import {
             X = V.filter(e => e.lastTakenDate === t).length,
             Y = 0 === G ? 100 : X / G * 100,
             K = (Math.max(1, F), F <= 0 ? "Set a goal" : F - R > 0 ? F - R + "min to go" : R - F + "min over 🎉"),
-            Q = e.settings.supplements.map(QS).find(e => e) || null,
-            Z = e.settings.treatments.map(QS).find(e => e) || null;
+            Q = e.settings.rx.map(QS).find(e => e) || null,
+            Z = e.settings.treatments.map(QS).find(e => e) || null,
+            supShow = !1 !== e.settings.showSupplements,
+            supTotal = e.settings.supplements.length,
+            supTaken = new Set;
+        u.forEach(e => {
+            NS(e) && (e.items || []).forEach(e => supTaken.add("string" == typeof e ? e : e.name))
+        });
+        let supStatusText = 0 === supTotal ? "Add in Setup" : `${supTaken.size} of ${supTotal} taken`,
+            supDueCount = e.settings.supplements.filter(e => {
+                let n = DS(e, t);
+                return ("overdue" === n.state || "today" === n.state) && !supTaken.has(e.name)
+            }).length,
+            supOverdueCount = e.settings.supplements.filter(e => {
+                let n = DS(e, t);
+                return "overdue" === n.state || "today" === n.state
+            }).length,
+            supPct = 0 === supTotal ? 0 : 0 === supOverdueCount ? 100 : (supOverdueCount - supDueCount) / supOverdueCount * 100,
+            supAlert = e.settings.supplements.map(QS).find(e => e) || null;
         return {
-            u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z
+            u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z,
+            supShow, supTotal, supStatusText, supDueCount, supOverdueCount, supPct, supAlert, supTakenCount: supTaken.size
         }
     }
 
@@ -2769,6 +2819,7 @@ import {
         onOpenSleepSheet: r,
         onOpenWeightDial: a,
         onOpenSupplementSheet: o,
+        onOpenNewSupplementSheet: onOpenSup2,
         onOpenTreatmentSheet: i,
         onOpenExerciseSheet: l,
         onOpenPresetSheet,
@@ -2778,7 +2829,8 @@ import {
         compact = !1
     }) {
         let {
-            u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z
+            u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z,
+            supShow, supTotal, supDueCount, supOverdueCount, supPct, supAlert, supTakenCount
         } = computeTrackerStats(e, t),
             [voiceSheetOpen, setVoiceSheetOpen] = (0, React.useState)(!1);
         if (compact) {
@@ -2791,7 +2843,7 @@ import {
             }, ring, React.default.createElement("div", {
                 className: "wt-tile-compact-label"
             }, label)),
-                enabledCount = [x, E, k, S, O, j, C, P].filter(Boolean).length,
+                enabledCount = [x, E, k, S, O, j, C, P, supShow].filter(Boolean).length,
                 gridClass = "wt-trackers-grid-compact" + (enabledCount <= 4 ? " wt-trackers-grid-compact-2col" : "");
             return React.default.createElement(React.default.Fragment, null, React.default.createElement(TopRow, {
                 onOpenVoiceSheet: () => setVoiceSheetOpen(!0),
@@ -2799,7 +2851,7 @@ import {
                 onOpenManualSheet
             }), React.default.createElement("div", {
                 className: gridClass
-            }, x && compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 })), E && compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 })), k && compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 })), S && compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 })), O && compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 })), j && compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 })), C && compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 })), P && compactTile("RX & Supplements", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 }))), React.default.createElement(VoiceEntrySheet, {
+            }, x && compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 })), E && compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 })), k && compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 })), S && compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 })), O && compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 })), j && compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 })), C && compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 })), P && compactTile("RX", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 })), supShow && compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), React.default.createElement(VoiceEntrySheet, {
                 open: voiceSheetOpen,
                 onClose: () => setVoiceSheetOpen(!1)
             }))
@@ -3108,47 +3160,55 @@ import {
             className: "wt-tile-right"
         }, React.default.createElement(cO, {
             pct: Y
-        }))), P && React.default.createElement("div", {
-            className: "wt-tracker-col wt-tracker-col-clickable",
-            style: {
-                border: "2px solid var(--meds)"
-            },
-            onClick: o,
-            role: "button",
-            tabIndex: 0
-        }, React.default.createElement("div", {
-            className: "wt-tile-left"
-        }, React.default.createElement("div", {
-            className: "wt-tile-header"
-        }, React.default.createElement("div", {
-            className: "wt-tile-chip",
-            style: {
-                background: "var(--meds-chip)",
-                color: "var(--meds)"
-            }
-        }, React.default.createElement(Pill, {
-            size: 18,
-            color: "var(--meds)",
-            fill: "var(--meds)"
-        })), React.default.createElement("span", {
-            className: "wt-tile-title"
-        }, "RX & Supplements")), React.default.createElement("div", {
-            className: "wt-tile-goal"
-        }, 0 === A ? "Add in Setup" : H > 0 ? `Goal ${H} today` : "Nothing due"), Q && React.default.createElement("div", {
-            className: "wt-tile-togo"
-        }, Q), React.default.createElement("div", {
-            className: "wt-tile-logged"
-        }, M.size, " Taken")), React.default.createElement("div", {
-            className: "wt-tile-mid"
-        }, React.default.createElement("div", {
-            className: "wt-tile-mid-value"
-        }, 0 === A ? "–" : `${H}`), React.default.createElement("div", {
-            className: "wt-tile-mid-label"
-        }, 0 === A ? "Add in Setup" : "to take")), React.default.createElement("div", {
-            className: "wt-tile-right"
-        }, React.default.createElement(sO, {
-            pct: q
-        }))), !O && !P && !C && !j && React.default.createElement("p", {
+        }))), (P || supShow) && (() => {
+            let cTotal = A + supTotal,
+                cDueNow = H + supOverdueCount,
+                cRemaining = D + supDueCount,
+                cTaken = M.size + supTakenCount,
+                cAlert = Q || supAlert,
+                cPct = 0 === cTotal ? 0 : 0 === cDueNow ? 100 : (cDueNow - cRemaining) / cDueNow * 100;
+            return React.default.createElement("div", {
+                className: "wt-tracker-col wt-tracker-col-clickable",
+                style: {
+                    border: "2px solid var(--meds)"
+                },
+                onClick: o,
+                role: "button",
+                tabIndex: 0
+            }, React.default.createElement("div", {
+                className: "wt-tile-left"
+            }, React.default.createElement("div", {
+                className: "wt-tile-header"
+            }, React.default.createElement("div", {
+                className: "wt-tile-chip",
+                style: {
+                    background: "var(--meds-chip)",
+                    color: "var(--meds)"
+                }
+            }, React.default.createElement(Pill, {
+                size: 18,
+                color: "var(--meds)",
+                fill: "var(--meds)"
+            })), React.default.createElement("span", {
+                className: "wt-tile-title"
+            }, "RX & Supplements")), React.default.createElement("div", {
+                className: "wt-tile-goal"
+            }, 0 === cTotal ? "Add in Setup" : cDueNow > 0 ? `Goal ${cDueNow} today` : "Nothing due"), cAlert && React.default.createElement("div", {
+                className: "wt-tile-togo"
+            }, cAlert), React.default.createElement("div", {
+                className: "wt-tile-logged"
+            }, cTaken, " Taken")), React.default.createElement("div", {
+                className: "wt-tile-mid"
+            }, React.default.createElement("div", {
+                className: "wt-tile-mid-value"
+            }, 0 === cTotal ? "–" : `${cDueNow}`), React.default.createElement("div", {
+                className: "wt-tile-mid-label"
+            }, 0 === cTotal ? "Add in Setup" : "to take")), React.default.createElement("div", {
+                className: "wt-tile-right"
+            }, React.default.createElement(sO, {
+                pct: cPct
+            })))
+        })(), !O && !P && !supShow && !C && !j && React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 width: "100%"
@@ -3175,15 +3235,15 @@ import {
         todayKey: t
     }) {
         let {
-            p, m, h, g, y, v, b, w, x, E, k, S, j, H, I, F, R
-        } = computeTrackerStats(e, t), rows = [];
-        H > 0 && rows.push({
+            p, m, h, g, y, v, b, w, x, E, k, S, j, H, I, F, R, supOverdueCount
+        } = computeTrackerStats(e, t), rows = [], cDueNow = H + supOverdueCount;
+        cDueNow > 0 && rows.push({
             key: "meds",
             color: "var(--meds)",
             chip: "var(--meds-chip)",
             icon: AlertCircle,
             label: "RX & Supplements",
-            detail: `${H} due today`
+            detail: `${cDueNow} due today`
         }), I > 0 && rows.push({
             key: "treatments",
             color: "var(--treatment)",
@@ -3282,8 +3342,8 @@ import {
         data: e
     }) {
         let treatments = e.settings.treatments,
-            rx = e.settings.supplements.filter(e => "rx" === e.category),
-            vitamins = e.settings.supplements.filter(e => "rx" !== e.category);
+            rx = e.settings.rx,
+            vitamins = e.settings.supplements;
 
         function renderItem(item, kind) {
             let alert = QS(item),
@@ -3399,7 +3459,7 @@ import {
                         PS(e) ? u += e.hours || 0 : jS(e) ? c.push({
                             date: t,
                             value: e.value
-                        }) : NS(e) ? (e.items || []).forEach(e => {
+                        }) : NS(e) || RXTypeS(e) ? (e.items || []).forEach(e => {
                             let n = "string" == typeof e ? e : e.name;
                             f[n] || (f[n] = new Set), f[n].add(t)
                         }) : zS(e) ? (e.items || []).forEach(e => {
@@ -3698,7 +3758,7 @@ import {
                 color: yS,
                 fontWeight: 700
             }
-        }, e.value, "lbs")))) : NS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Pill, {
+        }, e.value, "lbs")))) : NS(e) || RXTypeS(e) ? React.default.createElement(React.default.Fragment, null, React.default.createElement(Pill, {
             size: 13,
             className: "wt-log-icon"
         }), React.default.createElement("span", {
@@ -3859,9 +3919,9 @@ import {
             [f, d] = (0, React.useState)(""), [p, m] = (0, React.useState)(""),
             [h, g] = (0, React.useState)(""), [y, v] = (0, React.useState)(""),
             [b, w] = (0, React.useState)(""), [x, E] = (0, React.useState)(""),
-            [k, S] = (0, React.useState)(""), [O, P] = (0, React.useState)([]);
+            [k, S] = (0, React.useState)(""), [O, P] = (0, React.useState)([]), [ORx, PRx] = (0, React.useState)([]);
         if ((0, React.useEffect)(() => {
-                e && (i(t || HS(new Date)), u(""), c(""), d(""), m(""), g(""), v(""), w(""), E(""), S(""), P([]))
+                e && (i(t || HS(new Date)), u(""), c(""), d(""), m(""), g(""), v(""), w(""), E(""), S(""), P([]), PRx([]))
             }, [e, t]), !e) return null;
         let C = !1 !== n.settings.showWater,
             j = !1 !== n.settings.showProtein,
@@ -3870,9 +3930,25 @@ import {
             A = !1 !== n.settings.showWeight,
             M = !1 !== n.settings.showExercise,
             _ = !1 !== n.settings.showSupplements,
+            showRxFlag = !1 !== n.settings.showRx,
             D = n.settings.supplements,
-            z = Number(l) > 0 || Number(f) > 0 || Number(h) > 0 || Number(b) > 0 || Number(x) > 0 || Number(k) > 0 || O.length > 0,
+            DRx = n.settings.rx,
+            z = Number(l) > 0 || Number(f) > 0 || Number(h) > 0 || Number(b) > 0 || Number(x) > 0 || Number(k) > 0 || O.length > 0 || ORx.length > 0,
             I = o && z;
+
+        function LRx(e) {
+            PRx(t => t.some(t => t.name === e) ? t.filter(t => t.name !== e) : [...t, {
+                name: e,
+                qty: "1"
+            }])
+        }
+
+        function RRx(e, t) {
+            PRx(n => n.map(n => n.name === e ? {
+                ...n,
+                qty: t
+            } : n))
+        }
 
         function L(e) {
             P(t => t.some(t => t.name === e) ? t.filter(t => t.name !== e) : [...t, {
@@ -4015,7 +4091,7 @@ import {
             value: k,
             onChange: e => S(e.target.value),
             "aria-label": "Backfill exercise minutes"
-        })), _ && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+        })), showRxFlag && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             style: {
                 fontSize: 11.5,
                 fontWeight: 700,
@@ -4024,12 +4100,51 @@ import {
                 letterSpacing: ".04em",
                 marginBottom: 8
             }
-        }, "RX & Supplements — tap everything taken"), 0 === D.length ? React.default.createElement("p", {
+        }, "RX — tap everything taken"), 0 === DRx.length ? React.default.createElement("p", {
             className: "wt-empty-note",
             style: {
                 marginBottom: 14
             }
-        }, "Nothing set up yet. Add supplements and prescriptions in My Plan first.") : React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
+        }, "Nothing set up yet. Add prescriptions in My Plan first.") : React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
+            className: "wt-chip-row",
+            style: {
+                marginBottom: ORx.length > 0 ? 14 : 18
+            }
+        }, DRx.map(e => React.default.createElement("button", {
+            key: e.id,
+            type: "button",
+            className: "wt-chip " + (ORx.some(t => t.name === e.name) ? "active" : ""),
+            onClick: () => LRx(e.name)
+        }, e.name))), ORx.length > 0 && React.default.createElement("div", {
+            style: {
+                marginBottom: 16
+            }
+        }, ORx.map(e => React.default.createElement("div", {
+            key: e.name,
+            className: "wt-qty-row"
+        }, React.default.createElement("span", {
+            className: "wt-qty-name"
+        }, e.name), React.default.createElement("input", {
+            type: "text",
+            className: "wt-qty-input",
+            placeholder: "Qty (e.g. 1 or 10mg)",
+            value: e.qty,
+            onChange: t => RRx(e.name, t.target.value)
+        })))))), _ && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: wD,
+                textTransform: "uppercase",
+                letterSpacing: ".04em",
+                marginBottom: 8
+            }
+        }, "Supplements — tap everything taken"), 0 === D.length ? React.default.createElement("p", {
+            className: "wt-empty-note",
+            style: {
+                marginBottom: 14
+            }
+        }, "Nothing set up yet. Add supplements in My Plan first.") : React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
             className: "wt-chip-row",
             style: {
                 marginBottom: O.length > 0 ? 14 : 18
@@ -4072,6 +4187,7 @@ import {
                     sleepHours: Number(b) || 0,
                     weight: Number(x) || 0,
                     exerciseMinutes: Number(k) || 0,
+                    rx: ORx.filter(e => e.name),
                     supplements: O.filter(e => e.name)
                 }), r()
             }
@@ -5173,6 +5289,7 @@ import {
         onToggleShowSleep: c,
         onToggleShowWeight: f,
         onToggleShowSupplements: d,
+        onToggleShowRx,
         onToggleShowTreatments: p,
         onToggleShowExercise: m,
         onAddPreset: h,
@@ -5208,10 +5325,11 @@ import {
             Q = !1 !== e.settings.showSleep,
             Z = !1 !== e.settings.showWeight,
             J = !1 !== e.settings.showSupplements,
+            JRx = !1 !== e.settings.showRx,
             ee = !1 !== e.settings.showTreatments,
             te = !1 !== e.settings.showExercise,
-            vitaminItems = e.settings.supplements.filter(e => "rx" !== e.category).sort((e, t) => e.name.localeCompare(t.name)),
-            rxItems = e.settings.supplements.filter(e => "rx" === e.category).sort((e, t) => e.name.localeCompare(t.name)),
+            vitaminItems = e.settings.supplements.slice().sort((e, t) => e.name.localeCompare(t.name)),
+            rxItems = e.settings.rx.slice().sort((e, t) => e.name.localeCompare(t.name)),
             vitaminPreview = vitaminItems.slice(0, 3).map(e => e.name).join(" · ") + (vitaminItems.length > 3 ? " · ..." : ""),
             rxPreview = rxItems.slice(0, 3).map(e => e.name).join(" · ") + (rxItems.length > 3 ? " · ..." : ""),
             treatmentPreview = [...e.settings.treatments].sort((e, t) => e.name.localeCompare(t.name)).slice(0, 3).map(e => e.name).join(" · ") + (e.settings.treatments.length > 3 ? " · ..." : "");
@@ -5367,13 +5485,26 @@ import {
             icon: Pill,
             iconBg: "var(--meds-chip)",
             iconColor: "var(--meds)",
-            label: "RX & Supplements",
+            label: "RX",
+            goalDisplay: null,
+            on: JRx,
+            onToggle: () => onToggleShowRx(!JRx),
+            onOpen: () => setOpenTracker({
+                label: "RX",
+                borderColor: "var(--meds)",
+                hasGoal: !1
+            })
+        }), React.default.createElement(TrackerRow, {
+            icon: Pill,
+            iconBg: "var(--supplements-chip)",
+            iconColor: "var(--supplements)",
+            label: "Supplements",
             goalDisplay: null,
             on: J,
             onToggle: () => d(!J),
             onOpen: () => setOpenTracker({
-                label: "RX & Supplements",
-                borderColor: "var(--meds)",
+                label: "Supplements",
+                borderColor: "var(--supplements)",
                 hasGoal: !1
             })
         }), React.default.createElement(TrackerRow, {
@@ -5434,15 +5565,15 @@ import {
             className: "wt-plan-section-label"
         }, "Self-Managed RX"), React.default.createElement(RegimenSummaryCard, {
             icon: Pill,
-            iconBg: "var(--meds-chip)",
-            iconColor: "var(--meds)",
-            label: "Vitamins & Supplements",
+            iconBg: "var(--supplements-chip)",
+            iconColor: "var(--supplements)",
+            label: "Supplements",
             count: vitaminItems.length,
             preview: vitaminPreview,
             expanded: "vitamins" === expandedList,
             onClick: () => setExpandedList("vitamins" === expandedList ? null : "vitamins")
         }), "vitamins" === expandedList && React.default.createElement(PlanSheet, {
-            title: "Vitamins & Supplements",
+            title: "Supplements",
             onClose: () => setExpandedList(null)
         }, 0 === vitaminItems.length && React.default.createElement("p", {
             className: "wt-empty-note",
@@ -6137,7 +6268,7 @@ import {
         if (e) return React.default.createElement(zO, {
             shareId: e
         });
-        let [t, n] = (0, React.useState)(null), [r, a] = (0, React.useState)("log"), [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), [s, c] = (0, React.useState)(null), [manualSheetOpen, setManualSheetOpen] = (0, React.useState)(!1), [f, d] = (0, React.useState)(null), [p, m] = (0, React.useState)(0), [h, g] = (0, React.useState)(!1), [y, v] = (0, React.useState)(0), [b, w] = (0, React.useState)(JS()), [x, E] = (0, React.useState)(null), [k, S] = (0, React.useState)(!1), [O, P] = (0, React.useState)(null), [C, j] = (0, React.useState)(!1), [N, T] = (0, React.useState)(!1), [A, M] = (0, React.useState)(null), [_, D] = (0, React.useState)(!1), [z, I] = (0, React.useState)(null), [L, R] = (0, React.useState)(!1), [B, $] = (0, React.useState)(null), [F, U] = (0, React.useState)(!1), W = (0, React.useRef)(null), H = (0, React.useRef)(null), q = (0, React.useRef)(null), V = (0, React.useRef)(null), G = (0, React.useRef)(!1), X = (0, React.useRef)(null), Y = (0, React.useRef)(null), [K, Q] = (0, React.useState)(null), [Z, J] = (0, React.useState)(null), [ee, te] = (0, React.useState)(typeof Notification < "u" ? Notification.permission : "unsupported"), [ne, re] = (0, React.useState)(!1), [ae, oe] = (0, React.useState)(null), ie = (0, React.useRef)(null), le = (0, React.useRef)(null), ue = (0, React.useRef)(null), se = (0, React.useRef)(!1), [logDate, setLogDate] = (0, React.useState)(() => new Date), [entryTargetDate, setEntryTargetDate] = (0, React.useState)(() => new Date);
+        let [t, n] = (0, React.useState)(null), [r, a] = (0, React.useState)("log"), [o, i] = (0, React.useState)(!1), [l, u] = (0, React.useState)(null), [s, c] = (0, React.useState)(null), [manualSheetOpen, setManualSheetOpen] = (0, React.useState)(!1), [f, d] = (0, React.useState)(null), [p, m] = (0, React.useState)(0), [h, g] = (0, React.useState)(!1), [y, v] = (0, React.useState)(0), [b, w] = (0, React.useState)(JS()), [x, E] = (0, React.useState)(null), [k, S] = (0, React.useState)(!1), [O, P] = (0, React.useState)(null), [C, j] = (0, React.useState)(!1), [N, T] = (0, React.useState)(!1), [A, M] = (0, React.useState)(null), [_, D] = (0, React.useState)(!1), [z, I] = (0, React.useState)(null), [L, R] = (0, React.useState)(!1), [B, $] = (0, React.useState)(null), [F, U] = (0, React.useState)(!1), W = (0, React.useRef)(null), H = (0, React.useRef)(null), q = (0, React.useRef)(null), V = (0, React.useRef)(null), G = (0, React.useRef)(!1), X = (0, React.useRef)(null), Y = (0, React.useRef)(null), [K, Q] = (0, React.useState)(null), [Z, J] = (0, React.useState)(null), [ee, te] = (0, React.useState)(typeof Notification < "u" ? Notification.permission : "unsupported"), [ne, re] = (0, React.useState)(!1), [ae, oe] = (0, React.useState)(null), ie = (0, React.useRef)(null), le = (0, React.useRef)(null), ue = (0, React.useRef)(null), se = (0, React.useRef)(!1), [logDate, setLogDate] = (0, React.useState)(() => new Date), [entryTargetDate, setEntryTargetDate] = (0, React.useState)(() => new Date), [rxSheetOpen, setRxSheetOpen] = (0, React.useState)(!1), [rxSheetInitial, setRxSheetInitial] = (0, React.useState)(null);
 
         function ce(e, t) {
             let dSuffix = HS(entryTargetDate) !== HS(new Date) ? ` · ${YS(entryTargetDate)}` : "";
@@ -6263,6 +6394,9 @@ import {
                 return r && "supplement" === r.type && (a = {
                     ...n.settings,
                     supplements: KS(n.settings.supplements, r.items || [], [])
+                }), r && "rx" === r.type && (a = {
+                    ...n.settings,
+                    rx: KS(n.settings.rx, r.items || [], [])
                 }), r && "treatment" === r.type && (a = {
                     ...n.settings,
                     treatments: KS(n.settings.treatments, r.items || [], [])
@@ -6349,6 +6483,17 @@ import {
                 backfilled: !0,
                 enteredAt: o
             });
+            let rxItems = (r.rx || []).filter(e => e.name);
+            rxItems.length > 0 && i.push({
+                id: a(),
+                type: "rx",
+                label: `Took: ${rxItems.map(e=>e.qty?`${e.name} (${e.qty})`:e.name).join(", ")}`,
+                items: rxItems,
+                time: "12:00 PM",
+                timeMinutes: 720,
+                backfilled: !0,
+                enteredAt: o
+            });
             let l = (r.supplements || []).filter(e => e.name);
             if (l.length > 0 && i.push({
                     id: a(),
@@ -6366,10 +6511,11 @@ import {
                     ...t.logs,
                     [e]: [...t.logs[e] || [], ...i]
                 },
-                settings: l.length > 0 ? {
+                settings: {
                     ...t.settings,
-                    supplements: KS(t.settings.supplements, [], l)
-                } : t.settings
+                    rx: rxItems.length > 0 ? KS(t.settings.rx, [], rxItems) : t.settings.rx,
+                    supplements: l.length > 0 ? KS(t.settings.supplements, [], l) : t.settings.supplements
+                }
             })), ce(`Backfilled ${i.length} item${1===i.length?"":"s"} to ${YS(MS(e))}.`)
         }
 
@@ -6729,6 +6875,9 @@ import {
                 setEntryTargetDate(logDate), v(0), w(JS()), E(null), g(!0)
             },
             onOpenSupplementSheet: () => {
+                setEntryTargetDate(logDate), setRxSheetInitial(null), setRxSheetOpen(!0)
+            },
+            onOpenNewSupplementSheet: () => {
                 setEntryTargetDate(logDate), P(null), S(!0)
             },
             onOpenTreatmentSheet: () => {
@@ -6750,7 +6899,7 @@ import {
                 me(HS(new Date), e)
             },
             onEditLogEntry: function(e) {
-                setEntryTargetDate(new Date), PS(e) ? ($(e), R(!0)) : jS(e) ? (E(e), v(e.value), w(eO(e.timeMinutes)), g(!0)) : NS(e) ? (P(e), S(!0)) : zS(e) ? (I({
+                setEntryTargetDate(new Date), PS(e) ? ($(e), R(!0)) : jS(e) ? (E(e), v(e.value), w(eO(e.timeMinutes)), g(!0)) : NS(e) ? (P(e), S(!0)) : RXTypeS(e) ? (setRxSheetInitial(e), setRxSheetOpen(!0)) : zS(e) ? (I({
                     ...e,
                     dateKeyStr: HS(new Date)
                 }), j(!0)) : IS(e) ? (M(e), T(!0)) : (u(e), setManualSheetOpen(!0))
@@ -6765,7 +6914,7 @@ import {
                 setEntryTargetDate(new Date), v(0), w(JS()), E(null), g(!0)
             },
             onOpenSupplementSheet: () => {
-                setEntryTargetDate(new Date), P(null), S(!0)
+                setEntryTargetDate(new Date), setRxSheetInitial(null), setRxSheetOpen(!0)
             },
             onOpenTreatmentSheet: () => {
                 setEntryTargetDate(new Date), I(null), j(!0)
@@ -6794,7 +6943,7 @@ import {
                     ...t,
                     settings: {
                         ...t.settings,
-                        supplements: t.settings.supplements.map(t => t.id === e ? {
+                        rx: t.settings.rx.map(t => t.id === e ? {
                             ...t,
                             nextDueOverride: r
                         } : t)
@@ -6909,6 +7058,15 @@ import {
                     }
                 }))
             },
+            onToggleShowRx: function(e) {
+                n(t => ({
+                    ...t,
+                    settings: {
+                        ...t.settings,
+                        showRx: e
+                    }
+                }))
+            },
             onToggleShowTreatments: function(e) {
                 n(t => ({
                     ...t,
@@ -6931,47 +7089,50 @@ import {
             onEditPreset: editPreset,
             onDeletePreset: deletePreset,
             onAddSupplement: function(e, t, r, a, o, c, ph, rf, logo, link) {
-                let i = {
-                    id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-                    name: e,
-                    category: "rx" === c ? "rx" : "vitamin",
-                    intervalDays: t || 1,
-                    lastTakenDate: null,
-                    nextDueOverride: null,
-                    trackInventory: !!r,
-                    qtyRemaining: a || 0,
-                    expirationDate: o || null,
-                    pharmacy: ph || null,
-                    refillsRemaining: null == rf ? null : rf,
-                    partnerLogoDataUri: logo || null,
-                    partnerLink: link || null
-                };
-                n(e => ({
-                    ...e,
+                let isRxCat = "rx" === c,
+                    i = {
+                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+                        name: e,
+                        intervalDays: t || 1,
+                        lastTakenDate: null,
+                        nextDueOverride: null,
+                        trackInventory: !!r,
+                        qtyRemaining: a || 0,
+                        expirationDate: o || null,
+                        pharmacy: ph || null,
+                        refillsRemaining: null == rf ? null : rf,
+                        partnerLogoDataUri: logo || null,
+                        partnerLink: link || null
+                    };
+                n(e2 => ({
+                    ...e2,
                     settings: {
-                        ...e.settings,
-                        supplements: [...e.settings.supplements, i]
+                        ...e2.settings,
+                        rx: isRxCat ? [...e2.settings.rx, i] : e2.settings.rx,
+                        supplements: isRxCat ? e2.settings.supplements : [...e2.settings.supplements, i]
                     }
                 }))
             },
             onEditSupplement: function(e, t, r, a, o, i, c, ph, rf, logo, link) {
-                n(n => ({
-                    ...n,
+                let isRxCat = "rx" === c,
+                    updater = arr => arr.map(n => n.id === e ? {
+                        ...n,
+                        name: t,
+                        intervalDays: r || 1,
+                        trackInventory: !!a,
+                        qtyRemaining: o || 0,
+                        expirationDate: i || null,
+                        pharmacy: ph || null,
+                        refillsRemaining: null == rf ? null : rf,
+                        partnerLogoDataUri: logo || null,
+                        partnerLink: link || null
+                    } : n);
+                n(n2 => ({
+                    ...n2,
                     settings: {
-                        ...n.settings,
-                        supplements: n.settings.supplements.map(n => n.id === e ? {
-                            ...n,
-                            name: t,
-                            category: "rx" === c ? "rx" : "vitamin",
-                            intervalDays: r || 1,
-                            trackInventory: !!a,
-                            qtyRemaining: o || 0,
-                            expirationDate: i || null,
-                            pharmacy: ph || null,
-                            refillsRemaining: null == rf ? null : rf,
-                            partnerLogoDataUri: logo || null,
-                            partnerLink: link || null
-                        } : n)
+                        ...n2.settings,
+                        rx: isRxCat ? updater(n2.settings.rx) : n2.settings.rx,
+                        supplements: isRxCat ? n2.settings.supplements : updater(n2.settings.supplements)
                     }
                 }))
             },
@@ -6980,6 +7141,7 @@ import {
                     ...t,
                     settings: {
                         ...t.settings,
+                        rx: t.settings.rx.filter(t => t.id !== e),
                         supplements: t.settings.supplements.filter(t => t.id !== e)
                     }
                 }))
@@ -7635,6 +7797,10 @@ import {
             supplements: t.settings.supplements,
             initial: O,
             targetDateLabel: entryTargetDateLabel,
+            title: "Supplements",
+            emptyCopy: "Nothing set up yet. Add the vitamins and supplements you take regularly in My Plan, and they'll show up here to log with one tap.",
+            addButtonLabel: "Add to Supplements",
+            borderColor: "var(--supplements)",
             onClose: () => {
                 S(!1), P(null)
             },
@@ -7694,6 +7860,75 @@ import {
             },
             onGoToSettings: () => {
                 S(!1), a("setup")
+            }
+        }), React.default.createElement(NO, {
+            open: rxSheetOpen,
+            supplements: t.settings.rx,
+            initial: rxSheetInitial,
+            targetDateLabel: entryTargetDateLabel,
+            title: "RX",
+            emptyCopy: "Nothing set up yet. Add prescriptions you manage yourself in My Plan, and they'll show up here to log with one tap.",
+            addButtonLabel: "Add to RX",
+            borderColor: "var(--meds)",
+            onClose: () => {
+                setRxSheetOpen(!1), setRxSheetInitial(null)
+            },
+            onSubmit: function(e, t) {
+                if (0 === e.length) return;
+                let r = nO(t),
+                    a = `Took: ${e.map(e=>e.qty?`${e.name} (${e.qty})`:e.name).join(", ")}`,
+                    o = e.map(e => e.name);
+
+                function i(e, t) {
+                    return e.settings.rx.map(e => o.includes(e.name) ? {
+                        ...e,
+                        lastTakenDate: t,
+                        nextDueOverride: null
+                    } : e)
+                }
+                if (rxSheetInitial) {
+                    let t = HS(entryTargetDate);
+                    return n(n => ({
+                        ...n,
+                        logs: {
+                            ...n.logs,
+                            [t]: (n.logs[t] || []).map(t => t.id === rxSheetInitial.id ? {
+                                ...t,
+                                items: e,
+                                label: a,
+                                time: tO(r),
+                                timeMinutes: r
+                            } : t)
+                        },
+                        settings: {
+                            ...n.settings,
+                            rx: KS(i(n, t), rxSheetInitial.items || [], e)
+                        }
+                    })), ce("Entry updated."), setRxSheetInitial(null), void setRxSheetOpen(!1)
+                }
+                let l = HS(entryTargetDate),
+                    u = {
+                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+                        type: "rx",
+                        label: a,
+                        items: e,
+                        time: tO(r),
+                        timeMinutes: r
+                    };
+                n(t => ({
+                    ...t,
+                    logs: {
+                        ...t.logs,
+                        [l]: [...t.logs[l] || [], u]
+                    },
+                    settings: {
+                        ...t.settings,
+                        rx: KS(i(t, l), [], e)
+                    }
+                })), setRxSheetOpen(!1), ce(`Logged ${e.length} item${e.length>1?"s":""}`, () => me(l, u.id))
+            },
+            onGoToSettings: () => {
+                setRxSheetOpen(!1), a("setup")
             }
         }), React.default.createElement(AO, {
             open: C,

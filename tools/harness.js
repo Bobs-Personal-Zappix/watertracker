@@ -193,6 +193,7 @@ function setInputByAria(label, value) {
 const nav = (tab) => clickByText(tab); // "Log It!" | "Today" | "Stats" | "My Plan" | "Settings"
 const stored = () => JSON.parse(window.localStorage.getItem(STORAGE_KEY));
 const supp = (name) => stored().settings.supplements.find((s) => s.name === name);
+const rxItem = (name) => stored().settings.rx.find((s) => s.name === name);
 const treat = (name) => stored().settings.treatments.find((t) => t.name === name);
 const logsToday = () => stored().logs[TODAY] || [];
 const headerText = () => {
@@ -217,7 +218,7 @@ const STEPS = [
     check("app mounted", html().length > 1000);
     // v3.51.0: app boots on Log It!, a compact grid — 6 real trackers (Water+Treatments off
     // in seed); Meals moved to the top row so it's no longer a grid tile.
-    check("tile count (Water+Treatments off in seed, Meals moved to the top row)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 6);
+    check("tile count (Water+Treatments off in seed, Meals moved to the top row, RX/Supplements split into two tiles)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 7);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => check("nav to Stats", nav("Stats")),
@@ -270,17 +271,18 @@ const STEPS = [
       .some((r) => r.textContent.includes("Test Preset"));
     check("preset removed after delete", !stillThere);
   },
-  () => check("nav to My Plan (for Vitamins & Supplements sheet check)", nav("My Plan")),
-  // "Self-Managed" (combined supplements+treatments) was split in this session into
-  // "Vitamins & Supplements" / "RX" (under a new "Self-Managed RX" header) plus a standalone
-  // "Self-Managed Treatments" tile — see docs/DECISION-LOG.md UX-22/UX-23.
-  () => check("open Vitamins & Supplements sheet", clickByText("Vitamins & Supplements", "button")),
+  () => check("nav to My Plan (for Supplements sheet check)", nav("My Plan")),
+  // "Self-Managed" (combined supplements+treatments) was split into "Vitamins & Supplements" /
+  // "RX" in an earlier session (see docs/DECISION-LOG.md UX-22/UX-23), then in v3.51.0 Track 2
+  // "Vitamins & Supplements" became a genuinely independent "Supplements" tracker (its own
+  // settings.supplements array, starting empty) rather than a category filter — see TRACK-01.
+  () => check("open Supplements sheet", clickByText("Supplements", "button")),
   () => {
     const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
-      .find((el) => el.textContent === "Vitamins & Supplements");
-    check("Vitamins & Supplements sheet title found", !!title);
+      .find((el) => el.textContent === "Supplements");
+    check("Supplements sheet title found", !!title);
   },
-  () => check("close Vitamins & Supplements sheet", clickByAria("Close")),
+  () => check("close Supplements sheet", clickByAria("Close")),
   () => check("open RX sheet", clickByText("RX", "button")),
   () => {
     const title = [...window.document.querySelectorAll(".wt-modal-header h3, h3")]
@@ -296,9 +298,9 @@ const STEPS = [
   // Add assertions for whatever changed this session.
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
-    check("My Plan always renders all 8 cards (Water off, Treatments off seeded)", cards.length, 8);
+    check("My Plan always renders all 9 cards (Water off, Treatments off seeded; RX/Supplements split into two rows)", cards.length, 9);
     const titles = cards.map((c) => c.querySelector(".wt-plan-card-title").textContent);
-    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX & Supplements,Treatments");
+    check("My Plan card order", titles.join(","), "Water,Protein,Calories,Sleep,Weight,Exercise,RX,Supplements,Treatments");
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water card renders dimmed (off class)", waterCard ? waterCard.classList.contains("off") : null, "true");
   },
@@ -309,7 +311,7 @@ const STEPS = [
   },
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
-    check("still 8 cards after toggling Water on", cards.length, 8);
+    check("still 9 cards after toggling Water on", cards.length, 9);
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water card no longer off after toggle-on", waterCard ? waterCard.classList.contains("off") : null, "false");
     check("settings.showWater persisted true", stored().settings.showWater, "true");
@@ -326,7 +328,7 @@ const STEPS = [
   },
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
-    check("still 8 cards after toggling Water back off", cards.length, 8);
+    check("still 9 cards after toggling Water back off", cards.length, 9);
     const waterCard = cards.find((c) => c.querySelector(".wt-plan-card-title").textContent === "Water");
     check("Water card off again (round-trip complete)", waterCard ? waterCard.classList.contains("off") : null, "true");
   },
@@ -472,7 +474,7 @@ const STEPS = [
   },
   () => {
     check("today's log is still empty after backfilling a past date (rule 3)", logsToday().length, 0);
-    const s = supp("TestVit");
+    const s = rxItem("TestVit");
     check("TestVit inventory decremented by backfilled dose (10 → 9)", s ? s.qtyRemaining : null, 9);
     check("TestVit lastTakenDate untouched by backfill (rule 2: schedule never recalculates)", s ? s.lastTakenDate : "MISSING", null);
     check("TestVit nextDueOverride untouched by backfill (rule 2)", s ? s.nextDueOverride : "MISSING", null);
@@ -510,8 +512,8 @@ const STEPS = [
   },
   () => {
     const entries = stored().logs[DAYS_AGO(10)] || [];
-    check("backfilled supplement entry removed after delete", entries.some((e) => e.type === "supplement"), "false");
-    const s = supp("TestVit");
+    check("backfilled RX entry removed after delete", entries.some((e) => e.type === "rx"), "false");
+    const s = rxItem("TestVit");
     check("TestVit inventory restored after deleting backfilled dose (9 → 10)", s ? s.qtyRemaining : null, 10);
   },
 
@@ -763,7 +765,7 @@ const STEPS = [
   () => check("nav to My Plan (item 3 checks)", nav("My Plan")),
   () => {
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
-    check("all 8 My Plan tiles mount", cards.length, 8);
+    check("all 9 My Plan tiles mount", cards.length, 9);
     check("no runtime errors on My Plan after item 3 changes", errors.length, 0);
   },
   () => {
@@ -775,7 +777,8 @@ const STEPS = [
       ["Sleep", "var(--sleep)", "var(--sleep-chip)"],
       ["Weight", "var(--weight)", "var(--weight-chip)"],
       ["Exercise", "var(--exercise)", "var(--exercise-chip)"],
-      ["RX & Supplements", "var(--meds)", "var(--meds-chip)"],
+      ["RX", "var(--meds)", "var(--meds-chip)"],
+      ["Supplements", "var(--supplements)", "var(--supplements-chip)"],
       ["Treatments", "var(--treatment)", "var(--treatment-chip)"],
     ];
     const cards = [...window.document.querySelectorAll(".wt-plan-card")];
@@ -1089,12 +1092,12 @@ const STEPS = [
     check("top row sits before the compact grid in document order", topRow && grid ? !!(topRow.compareDocumentPosition(grid) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
   },
   () => {
-    // v3.51.0: Log It! is now a borderless 3x3 compact grid, Meals moved out to the top row so
-    // the grid is back to one tile per tracker (8 with all trackers enabled). The old
-    // .wt-action-btn buttons still don't render here.
+    // v3.51.0: Log It! is now a borderless 3x3 compact grid, Meals moved out to the top row, and
+    // RX & Supplements split into two independent tiles — 9 tiles with all trackers enabled. The
+    // old .wt-action-btn buttons still don't render here.
     check("no .wt-action-btn buttons on the now-compact Log It!", !window.document.querySelector(".wt-action-btn"), "true");
     const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
-    check("Log It! renders 8 compact tiles (Meals moved to the top row)", compactTiles.length, 8);
+    check("Log It! renders 9 compact tiles (Meals moved to the top row; RX/Supplements split)", compactTiles.length, 9);
     check("Meals tile no longer in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "false");
   },
   () => check("open presets sheet (v3.51.0 top-row trigger)", clickByText("Presets", "div")),
@@ -1257,11 +1260,21 @@ const STEPS = [
     const labels = [...window.document.querySelectorAll(".wt-plan-section-label")].map((el) => el.textContent);
     check("'Self-Managed RX' section header present", labels.includes("Self-Managed RX"), "true");
   },
-  () => check("open Vitamins & Supplements sheet (legacy-item default check)", clickByText("Vitamins & Supplements", "button")),
+  // v3.51.0 (Track 2): RX & Supplements split into two fully independent trackers. Per the locked
+  // migration design, ALL pre-existing combined items (regardless of the old category field) seed
+  // the retained RX tracker (settings.rx); the new Supplements tracker (settings.supplements)
+  // starts empty. See docs/DECISION-LOG.md TRACK-01.
+  () => check("open RX sheet (legacy-item migration check)", clickByText("RX", "button")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
-    check("seeded TestVit (no category field) defaults into Vitamins & Supplements", rows.some((r) => r.includes("TestVit")), "true");
-    check("seeded OverdueMed (no category field) defaults into Vitamins & Supplements", rows.some((r) => r.includes("OverdueMed")), "true");
+    check("seeded TestVit (no category field) migrated into RX (all pre-split items seed RX)", rows.some((r) => r.includes("TestVit")), "true");
+    check("seeded OverdueMed (no category field) migrated into RX", rows.some((r) => r.includes("OverdueMed")), "true");
+  },
+  () => check("close RX sheet", clickByAria("Close")),
+  () => check("open Supplements sheet (new tracker starts empty)", clickByText("Supplements", "button")),
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-preset-row")];
+    check("Supplements tracker starts empty post-migration", rows.length, 0);
   },
   () => check("open Add-vitamin form", clickByText("Add vitamin or supplement", "button")),
   () => {
@@ -1272,14 +1285,14 @@ const STEPS = [
   () => check("save new vitamin", clickByText("Save", "button")),
   () => {
     const v = supp("TestVitamin");
-    check("new vitamin stored with category:'vitamin'", v ? v.category : null, "vitamin");
+    check("new vitamin stored in the Supplements tracker (settings.supplements)", !!v, "true");
     check("new vitamin implicitly daily (intervalDays:1) with no schedule prompt", v ? v.intervalDays : null, 1);
   },
-  () => check("close Vitamins & Supplements sheet", clickByAria("Close")),
+  () => check("close Supplements sheet", clickByAria("Close")),
   () => check("open RX sheet", clickByText("RX", "button")),
   () => {
     const rows = [...window.document.querySelectorAll(".wt-preset-row")].map((r) => r.textContent);
-    check("seeded TestVit does NOT appear in RX (it defaulted to vitamin)", rows.some((r) => r.includes("TestVit")), false);
+    check("new vitamin TestVitamin does NOT appear in RX (separate tracker)", rows.some((r) => r.includes("TestVitamin")), false);
   },
   () => check("open Add-prescription form", clickByText("Add prescription", "button")),
   () => {
@@ -1290,8 +1303,8 @@ const STEPS = [
   () => check("set new RX interval to every 3 days", setInput("1", "3")),
   () => check("save new RX item", clickByText("Save", "button")),
   () => {
-    const r = supp("TestRx");
-    check("new RX item stored with category:'rx'", r ? r.category : null, "rx");
+    const r = rxItem("TestRx");
+    check("new RX item stored in settings.rx", !!r, "true");
     check("new RX item keeps its entered interval (3 days)", r ? r.intervalDays : null, 3);
   },
   () => {
@@ -1307,7 +1320,7 @@ const STEPS = [
     }
   },
   () => {
-    const r = supp("TestRx");
+    const r = rxItem("TestRx");
     check("editing the date input updates TestRx's nextDueOverride (the capability lost when To Do Today was removed)", r ? r.nextDueOverride : null, DAYS_AGO(-5));
   },
   () => check("no runtime errors after Self-Managed RX pass", errors.length, 0),
@@ -1392,7 +1405,7 @@ const STEPS = [
   },
   () => check("save DetailedRx", clickByText("Save", "button")),
   () => {
-    const r = supp("DetailedRx");
+    const r = rxItem("DetailedRx");
     check("DetailedRx stored with pharmacy", r ? r.pharmacy : null, "Corner Pharmacy");
     check("DetailedRx stored with refillsRemaining", r ? r.refillsRemaining : null, 5);
     check("DetailedRx stored with trackInventory on", r ? r.trackInventory : null, "true");
@@ -1451,8 +1464,8 @@ const STEPS = [
   },
   () => {
     // Items with no inventory tracking still appear on the RX page (a real scope increase over
-    // the old Today section, which only listed trackInventory items) — TestVit (vitamin, no
-    // inventory tracking in the seed) must show up in Vitamins & Supplements.
+    // the old Today section, which only listed trackInventory items) — TestVit (no inventory
+    // tracking in the seed, migrated into RX per v3.51.0 Track 2) must show up in Prescriptions.
     const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
     check("non-inventory-tracked item (TestVit) still listed on the RX page", cards.some((c) => c.textContent.includes("TestVit")));
   },
@@ -1461,8 +1474,8 @@ const STEPS = [
     // seeded directly into localStorage with category/pharmacy/refillsRemaining/provider/partner
     // fields already set, as if saved in a prior session. Their surviving the boot-time migrate()
     // pass and rendering correctly here proves US()/normalizeTreatments() no longer strip them.
-    const seedRx = supp("SeedRx");
-    check("SeedRx category survived boot-time migrate()", seedRx ? seedRx.category : null, "rx");
+    const seedRx = rxItem("SeedRx");
+    check("SeedRx migrated into settings.rx (pre-split item with category:'rx' seed)", !!seedRx, "true");
     check("SeedRx pharmacy survived boot-time migrate()", seedRx ? seedRx.pharmacy : null, "Seed Pharmacy");
     check("SeedRx refillsRemaining survived boot-time migrate()", seedRx ? seedRx.refillsRemaining : null, 2);
     check("SeedRx partnerLogoDataUri survived boot-time migrate()", seedRx ? seedRx.partnerLogoDataUri : null, "data:image/jpeg;base64,SEEDRXLOGO");
@@ -1491,17 +1504,24 @@ const STEPS = [
     check("RX & Supplements→presets-button seam also gets the matching margin-top override", btnSeamRule ? btnSeamRule[0].includes("margin-top:18px") : null, "true");
   },
   () => {
-    const rxTile = tiles().find((t) => t.startsWith("RX & Supplements"));
-    check("Log It! tile renamed 'RX & Vitamins' -> 'RX & Supplements'", !!rxTile);
+    // v3.51.0 (Track 2): Log It!'s compact grid split the combined tile into two — "RX" and
+    // "Supplements" — so the old combined "RX & Supplements" label no longer appears there.
+    const rxTile = tiles().find((t) => t === "RX");
+    check("Log It! has a standalone 'RX' tile (split from the old combined tile)", !!rxTile);
+    const supTile = tiles().find((t) => t === "Supplements");
+    check("Log It! has a standalone 'Supplements' tile", !!supTile);
     const oldName = tiles().find((t) => t.startsWith("RX & Vitamins"));
     check("old 'RX & Vitamins' tile name is gone", !!oldName, false);
   },
   () => check("no runtime errors after v3.47.0 Log It! pass", errors.length, 0),
   () => check("nav to My Plan (rename check)", nav("My Plan")),
   () => {
+    // v3.51.0 (Track 2): the combined "RX & Supplements" What-I'm-Tracking row split into two
+    // independent rows.
     const cardTitles = [...window.document.querySelectorAll(".wt-plan-card-title")].map((el) => el.textContent);
-    check("My Plan tracker card renamed to 'RX & Supplements'", cardTitles.includes("RX & Supplements"), "true");
-    check("My Plan tracker card old name gone", cardTitles.includes("RX & Vitamins"), false);
+    check("My Plan has a standalone 'RX' tracker card", cardTitles.includes("RX"), "true");
+    check("My Plan has a standalone 'Supplements' tracker card", cardTitles.includes("Supplements"), "true");
+    check("My Plan tracker card old combined name gone", cardTitles.includes("RX & Vitamins"), false);
   },
   () => check("no runtime errors after My Plan rename check", errors.length, 0),
 

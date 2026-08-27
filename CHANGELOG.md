@@ -20,6 +20,62 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.52.0] — 2026-08-27
+
+Track 2 of Rob's Log It! redesign brief: **RX and Supplements split into two fully independent
+trackers**, each with its own data array, toggle, log-entry type, and entry sheet. Previously "RX &
+Supplements" was one combined tracker (`settings.supplements`) with items tagged
+`category: 'vitamin' | 'rx'`.
+
+- **Data model split, locked with Rob before writing the migration:** all pre-existing combined
+  items — both former `'vitamin'`- and `'rx'`-tagged — seed the retained **RX** tracker
+  (`settings.rx`, new array key), since no real RX usage existed yet in testing and Rob chose the
+  clean long-term shape over a lower-risk shortcut. The **Supplements** tracker
+  (`settings.supplements`, same key, retargeted) starts genuinely empty. `SCHEMA_VERSION` bumped to
+  3; the split runs once, inside `migrateSettingsShape()`, and is idempotent (checked via presence
+  of `settings.rx`, not just the version number so a partial/interrupted migration can't double-run).
+  A temporary `settings.__preMigrationSupplementsBackup` snapshot of the original combined array is
+  kept for one release cycle as a rollback path.
+- **Genuine new `"rx"` log-entry type** (not a shared `"supplement"` type with a tag) — full
+  CLAUDE.md new-entry-type treatment applied: added to the reload normalizer's pass-through list,
+  its own undo-on-delete branch, its own backfill path (both in `saveBackfill()` and a new "RX"
+  section in the "Enter Missed Items" sheet, alongside the existing "Supplements" section), its own
+  edit-on-tap routing from Today's log list, and its own entry sheet (reusing the existing
+  tap-to-select-item chip UI, wired to two independent data paths).
+- **Log It!'s grid**: the combined "RX & Supplements" tile is now two tiles, "RX" (keeps the
+  existing icon/color, all migrated history) and "Supplements" (new icon Rob supplied
+  — `supplements-new.png` — new lime-green `--supplements` token, starts with no items).
+- **Today stays visually unchanged** (explicit scope boundary) but its combined "RX & Supplements"
+  tile and "Today at a Glance" due-count callout now correctly sum both trackers' data again —
+  without this fix, Today would have silently shown RX-only numbers under a label that still says
+  "RX & Supplements," which would have been a real regression hiding behind an unchanged UI.
+- **My Plan**, the one page besides Log It! this session touches: the "What I'm Tracking" toggle
+  list splits its combined row into independent "RX" and "Supplements" rows/toggles
+  (`showRx` new key, `showSupplements` repurposed to mean Supplements-only going forward); the
+  existing "Self-Managed RX" section's two cards now read straight from the two arrays (no more
+  `category` filtering) and the "Vitamins & Supplements" card is relabeled "Supplements" for
+  consistency.
+- **RX page** ("SCRIPTS FOR:"), **Stats' Health Summary adherence report**, and the **CSV export**
+  all updated to read from the new arrays/type — verified via the harness rather than assumed, since
+  each had its own `category`-filtering or `type`-checking logic that would otherwise have silently
+  dropped RX or Supplements data.
+- `tools/harness.js`: extensive updates for the new shape — seed data's pre-migration items now
+  assert they land in RX (not "default to vitamin"), new add/edit/delete coverage for both trackers
+  independently, tile/card counts updated across Log It! and My Plan, backfill coverage extended to
+  assert RX-specific inventory decrement/restore and undo, reload-persistence checks (`SeedRx`)
+  updated to look up `settings.rx` instead of a `category` field that no longer exists.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 503 checks pass, up from 498 in v3.51.0 — net new coverage for the
+  split), lint unchanged at the 11-error vendor baseline. One unrelated pre-existing stale check
+  still fails (`wt-tile-togo`, documented since v3.44.0). **Not yet verified on a real device** —
+  jsdom can't confirm the new Supplements tile/icon's visual read next to RX, or the My Plan toggle
+  list's new row.
+- **Known, accepted limitation of the clean-build choice:** historical log entries created before
+  this migration remain tagged `type: "supplement"` regardless of which item they referenced: since
+  RX only gained a distinct `type: "rx"` going forward, a pre-migration dose of what is now an RX
+  item won't retroactively count toward RX's "taken today" state if backfilled onto today's date.
+  Accepted as low-risk given the trial data this replaces.
+
 ## [3.51.0] — 2026-08-26
 
 Log It! rebuilt per Rob's detailed brief (Track 1 of 2 — RX/Supplements split is Track 2, staged

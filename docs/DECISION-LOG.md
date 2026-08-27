@@ -639,6 +639,50 @@ plus a keyboard entry. The button relabel makes every sheet's primary action rea
 regardless of tracker.
 *Status:* **Locked** · Aug 26, 2026 · v3.51.0
 
+**TRACK-01 — RX and Supplements split into two independent trackers; migration design and
+reversibility.**
+Track 2 of Rob's Log It! redesign brief (`UX-30`–`UX-33` were Track 1). The combined "RX &
+Supplements" tracker (`settings.supplements`, items tagged `category: 'vitamin' | 'rx'`) becomes two
+fully independent trackers, each with its own array, toggle, log-entry type, and entry sheet.
+Resolved shape, all explicit calls by Rob (via three rounds of clarifying questions before any
+migration code was written, per this entry's own request in the original brief):
+1. **Data shape:** new array key `settings.rx` is seeded from *all* pre-existing combined items —
+   both former `'vitamin'`- and `'rx'`-tagged — with the now-redundant `category` field dropped.
+   `settings.supplements` (same key, retargeted) becomes the new tracker and starts empty. Rob's
+   reasoning: no real RX usage existed yet in testing ("trial data only"), so the cleaner long-term
+   data shape was worth choosing over a lower-risk shortcut that would have kept a shared array with
+   a tag.
+2. **Log-entry type:** a genuine new `"rx"` type, not a shared `"supplement"` type with a
+   discriminator field — matching decision 1's "build it clean" reasoning, and accepting the full
+   CLAUDE.md new-entry-type checklist (reload-normalizer guard, backfill support, undo-on-delete
+   branch, edit-routing, dedicated reload test) rather than the lower-risk alternative that would
+   have avoided it.
+3. **Toggle repurposing:** `showSupplements` (existing key) now gates the new Supplements tracker
+   going forward, matching its literal name. A new `showRx` key (default `true`, since existing
+   users have RX history) gates the retained RX tracker.
+4. **My Plan touch widened:** the original approval was for one narrow toggle addition inside the
+   existing Self-Managed RX section. Once this design was locked, Rob explicitly widened it to also
+   split the "What I'm Tracking" list's combined "RX & Supplements" row into two independent
+   rows/toggles, rather than ship a row whose label no longer matched what it controlled.
+*Migration:* `SCHEMA_VERSION` bumped 2→3. Runs once inside `migrateSettingsShape()`, gated on
+whether `settings.rx` already exists as an array (not just the version number, so a partial or
+interrupted migration can't double-run). Reversibility: a temporary
+`settings.__preMigrationSupplementsBackup` field snapshots the original combined array, kept for one
+release cycle and removable once confirmed stable on real devices.
+*Known, accepted limitation:* historical log entries created before this migration stay tagged
+`type: "supplement"` regardless of which item they referenced — since RX only gained a distinct
+`type: "rx"` going forward, a pre-migration dose of what is now an RX item won't retroactively count
+toward RX's "taken today" state if backfilled onto today's date. Accepted given the trial-data
+context that motivated decision 2.
+*Why:* keeps RX (continuous existing-user data, existing icon/color) and Supplements (net-new,
+Rob-supplied icon and accent) genuinely independent — separate goals, due-counts, and rings — while
+Today's combined "RX & Supplements" tile is deliberately kept summing both trackers rather than
+silently narrowing to RX-only, since Today's visual layout was out of scope for this session but its
+underlying numbers still had to stay correct.
+*Status:* **Locked** · Aug 27, 2026 · v3.52.0 — amends `UX-24` (Self-Managed RX split origin),
+`UX-28` (RX page sections), `PROD-13` (Today's combined tile), `ARCH-OPEN-05` (first real use of the
+migration-chain hook it established)
+
 ---
 
 ## Legal & compliance
@@ -781,10 +825,14 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 26, 2026 (v3.51.0: UX-30–UX-33 added — Log It! date pill (`logDate`/
+*Last updated: August 27, 2026 (v3.52.0: TRACK-01 added — RX and Supplements split into two
+independent trackers (separate settings.rx/settings.supplements arrays, new "rx" log-entry type,
+new showRx toggle, migration with a temporary rollback snapshot), My Plan's "What I'm Tracking" row
+split to match, Today's combined tile kept numerically correct without a visual change; earlier:
+v3.51.0: UX-30–UX-33 added — Log It! date pill (`logDate`/
 `entryTargetDate`), top row replacing Voice Entry/Use Presets banners, borderless grid + redesigned
 ring (track/goal-met/ring-less-Weight), quick-add chips + button relabel — all Log It!-only, Today
-untouched; Track 2 of this brief (RX/Supplements split) is a separate not-yet-built pass; earlier:
+untouched; earlier:
 v3.50.0: UX-29 added — Log It! reduced to a compact 3x3 tile grid
 plus new "Meals" and "Use Presets" tiles, Voice Assistant renamed Voice Entry, amends
 UX-02/UX-18/UX-25, notes PROD-04 satisfied via Today/My Plan/RX page; earlier: v3.49.0: UX-28 added — new "RX" nav page consolidating

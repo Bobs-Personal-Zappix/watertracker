@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 26, 2026 · Deployed version: 3.51.0*
+*As of: August 27, 2026 · Deployed version: 3.52.0*
 
 ---
 
@@ -13,8 +13,8 @@
 - `hydroprotracker.com/app/` — the tracker, gated by **Cloudflare Access** (email allowlist, closed testing group only).
 - Worker on its own `workers.dev` domain — deliberately ungated, which is what makes doctor-share links reachable without a login.
 
-**Tracked metrics (8 tiles, all with percentage progress rings)**
-Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX & Supplements — in that order. (Renamed from "RX & Vitamins" in v3.47.0.) As of v3.50.0, these display very differently on Log It! (compact) vs. Today (full detail) — see below.
+**Tracked metrics (9 tiles as of v3.52.0, all with percentage progress rings except Weight)**
+Water · Protein · Calories · Sleep · Weight · Exercise · Treatments · RX · Supplements — in that order. RX and Supplements were one combined "RX & Supplements" tracker through v3.51.0 (renamed from "RX & Vitamins" in v3.47.0); v3.52.0 split them into two fully independent trackers — see below and `docs/DECISION-LOG.md` `TRACK-01`. As of v3.50.0, these display very differently on Log It! (compact) vs. Today (full detail) — see below.
 
 **Tabs:** Log It! · Today · **RX** · Stats · My Plan · Settings — 6 tabs as of v3.49.0, which added
 "RX" (icon `Pill`) between Today and Stats (v3.42.0 swapped Today first; v3.42.1 reverted that swap
@@ -50,8 +50,33 @@ date control and a redesigned tile grid:
   to "Add to <tracker>" (Weight: "Save weight"; meal sheet: "Log meal").
 - `MO`, the tile-grid component shared with Today, kept its `compact` prop from v3.50.0 for all of
   this — Today's usage and rendering path are unchanged and were verified byte-identical.
-- **Track 2 of this brief — splitting RX & Supplements into two independent trackers — is not yet
-  built.** Log It!'s "RX & Supplements" tile is still the single combined tracker in this release.
+- **Track 2 of this brief shipped in v3.52.0** — see below.
+
+**RX and Supplements split into two independent trackers (v3.52.0)** — previously one combined
+"RX & Supplements" tracker (`settings.supplements`, items tagged `category: 'vitamin'|'rx'`).
+- **Data model:** `settings.rx` (new array) is seeded from *all* pre-existing combined items
+  (former vitamins and RX alike) — Rob's explicit call, since no real RX usage existed yet in
+  testing. `settings.supplements` (same key, retargeted) is the new tracker and starts empty. New
+  `showRx` toggle (default on); `showSupplements` now gates the new tracker specifically.
+  `SCHEMA_VERSION` 2→3; migration is idempotent and keeps a temporary
+  `settings.__preMigrationSupplementsBackup` rollback snapshot for one release cycle.
+- **Genuine new `"rx"` log-entry type** (not a shared type with a tag) — its own reload-normalizer
+  guard, undo-on-delete branch, backfill section (new "RX" section in "Enter Missed Items",
+  alongside "Supplements"), edit-routing, and entry sheet.
+- **Log It!'s grid**: "RX & Supplements" is now two tiles, "RX" (existing icon/color, all migrated
+  history) and "Supplements" (new icon Rob supplied, new lime-green `--supplements` token, starts
+  empty).
+- **Today stays visually unchanged**, but its combined "RX & Supplements" tile and "Today at a
+  Glance" due-count callout now correctly sum both trackers again (a fix, not a new feature — the
+  data-model split alone would have silently narrowed Today to RX-only numbers under an unchanged
+  label).
+- **My Plan**: "What I'm Tracking" list's combined row split into independent "RX"/"Supplements"
+  rows+toggles; the "Self-Managed RX" section's two cards read straight from the two arrays now
+  (no more `category` filtering); "Vitamins & Supplements" card relabeled "Supplements".
+- **Known, accepted limitation:** log entries created before this migration stay tagged
+  `type: "supplement"` regardless of which item they referenced, so a pre-migration dose of what is
+  now an RX item won't retroactively count toward RX's "taken today" state if backfilled onto
+  today's date. Low-risk given the trial-data context.
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -174,6 +199,28 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.52.0)
+
+Track 2 of Rob's Log It! redesign brief: RX and Supplements split into two independent trackers.
+Full detail in `CHANGELOG.md` and `docs/DECISION-LOG.md` `TRACK-01`.
+
+- `settings.rx` (new array, seeded from all pre-existing combined items) + `settings.supplements`
+  (retargeted, starts empty) + `showRx` (new toggle) + `SCHEMA_VERSION` 3 migration with a temporary
+  rollback snapshot.
+- New `"rx"` log-entry type with full new-entry-type treatment (reload guard, backfill, undo,
+  edit-routing, dedicated sheet).
+- Log It! grid: "RX & Supplements" → "RX" + "Supplements" tiles. Today unchanged visually; its
+  combined tile's numbers fixed to keep summing both trackers.
+- My Plan: "What I'm Tracking" row split; Self-Managed RX cards read the two arrays directly;
+  "Vitamins & Supplements" card relabeled "Supplements".
+- `tools/harness.js`: extensive updates — seed-data migration assertions, independent add/edit/
+  delete coverage for both trackers, tile/card counts, backfill coverage for RX specifically,
+  reload-persistence checks moved off the removed `category` field.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 503 checks pass, up from 498), lint unchanged at the 11-error vendor
+  baseline. One unrelated pre-existing stale check still fails (`wt-tile-togo`, documented since
+  v3.44.0). **Not yet verified on a real device.**
 
 ## What shipped Aug 26, 2026 (v3.51.0)
 
@@ -551,15 +598,18 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Track 2 of the Log It! redesign brief (v3.51.0) — splitting RX & Supplements into two
-  independent trackers — is not yet built.** Data-model design was locked with Rob (all existing
-  combined items seed the retained "RX" tracker; a new "Supplements" tracker starts empty; a real
-  distinct `"rx"` log-entry type, not a shared tag) but no code exists yet. Needs its own careful
-  build-and-verify pass — schema migration, new entry-type reload/backfill/undo guards, My Plan
-  toggle-list changes.
-- **Supplements tile icon supplied but not wired in** (v3.51.0): Rob sent the art
-  (`site/app/tile-icons/supplements-new.png`) after Track 1 shipped; it's saved but unused until
-  Track 2 builds the actual Supplements tracker.
+- **RX/Supplements split (v3.52.0) needs Rob's real-device confirmation.** Not yet verified: the
+  new Supplements tile/icon's visual read next to RX on Log It!, My Plan's new "What I'm Tracking"
+  row, and that the migration ran cleanly on Rob's own device data (not just the harness's seed).
+- **Today has no Supplements tile** (open item, not started): Today's combined "RX & Supplements"
+  tile still sums both trackers into one number rather than showing them separately — Today was
+  explicitly out of scope for the v3.52.0 session. A real fix (second tile, or a different combined
+  presentation) needs its own decision with Rob.
+- **Pre-migration log-entry history stays tagged `type: "supplement"` regardless of which item it
+  referenced** (v3.52.0, accepted limitation) — see `docs/DECISION-LOG.md` `TRACK-01`. A
+  pre-migration dose of what is now an RX item won't retroactively count toward RX's "taken today"
+  state if backfilled onto today's date. Low-risk given the trial-data context; revisit if it ever
+  matters for a real clinic user's history.
 - **Log It!'s one-screen sizing pass is implemented but unverified** (v3.51.0): the
   `100dvh`/flex-column CSS from Rob's brief is in place, but jsdom can't confirm it actually fits
   one screen with no scroll on a real phone. If it scrolls, the brief's own guidance is to lower the
