@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 25, 2026 · Deployed version: 3.50.0*
+*As of: August 26, 2026 · Deployed version: 3.51.0*
 
 ---
 
@@ -26,15 +26,32 @@ hero numbers, and low-supply/near-expiry alerts all intact). As of v3.49.0, Toda
 at a Glance" → the 8-tile grid → "Today's log" — the "Remaining RX/Treatments" section that used to
 sit between them was removed from Today entirely and moved to the RX page.
 
-**Log It! is now pure fast-entry (v3.50.0)** — a single "Voice Entry" tile at top (non-functional
-design preview, renamed from "Voice Assistant"), then a compact 3x3 grid (icon + progress ring +
-tracker name only, no goal/logged text or alerts — that detail lives on Today and My Plan now) for
-the 8 trackers plus a 9th **Meals** tile (absorbs "Manually Log a Meal," opens the same entry
-sheet; its ring is a placeholder — a static circle with a `Utensils` icon in Protein green, not a
-real illustrated asset like the other 8, and not tied to any real percentage yet), then a
-full-width **"Use Presets"** tile below the grid (renamed from the "Use Your Presets" button,
-restyled to match the Voice Entry tile's layout in blue rather than gold). `MO`, the tile-grid
-component shared with Today, gained a `compact` prop for this — Today's usage is unchanged.
+**Log It! rebuilt again (v3.51.0, Track 1 of a 2-part brief)** — pure fast-entry, now with a real
+date control and a redesigned tile grid:
+- **Date pill** under the header (Log It! only — every other tab's date text is unchanged): `‹ Wed,
+  Aug 26 [TODAY] ›`, chevrons step one day at a time, right chevron disabled at today, badge reads
+  TODAY/YESTERDAY/PAST DAY. Off-today, the pill goes amber, every entry sheet shows an amber
+  "Saving to <date>" bar, and toasts append the date. This is a second, independent path for
+  prior-day logging alongside — not a replacement for — Stats' existing prior-day/backfill picker.
+- **Top row** (bare artwork, no card/border): Voice Tracker, Presets, Meal Entry — replaces the old
+  gold "Voice Entry" and blue "Use Presets" banner tiles. Voice Tracker opens a new non-functional
+  preview sheet (text field + decorative mic icon, no parser — still not Smart Entry). Presets and
+  Meal Entry open the same sheets their removed predecessors did.
+- **3×3 grid, borderless** (transparent at rest, subtle wash on press) — one tile per tracker (8
+  with all enabled; Meals moved out to the top row, so it's no longer a 9th grid tile). Drops to 2
+  columns at ≤4 enabled trackers.
+- **Redesigned ring, Log It!-only** (Today's full-detail rendering is unchanged) — a real neutral
+  track ring under the accent fill (previously the "track" was just a dimmed copy of the fill
+  color), a goal-met state (clamped arc, squared cap, glow, check badge), and a ring-less mode for
+  readings (currently just Weight: artwork + label + check-badge-when-a-reading-exists, no ring —
+  a ring implies progress that doesn't exist for a reading).
+- **Quick-add chips** in every accumulating-tracker sheet (Water/Protein/Calories/Sleep/Exercise);
+  Treatments/RX & Supplements keep their existing tap-to-select-item chips. Primary buttons relabel
+  to "Add to <tracker>" (Weight: "Save weight"; meal sheet: "Log meal").
+- `MO`, the tile-grid component shared with Today, kept its `compact` prop from v3.50.0 for all of
+  this — Today's usage and rendering path are unchanged and were verified byte-identical.
+- **Track 2 of this brief — splitting RX & Supplements into two independent trackers — is not yet
+  built.** Log It!'s "RX & Supplements" tile is still the single combined tracker in this release.
 
 **Shipped features**
 - Drag-dial entry, one-tap logging, presets, combined multi-metric entries
@@ -157,6 +174,36 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 26, 2026 (v3.51.0)
+
+Log It! redesign, Track 1 of a 2-part brief from Rob (Track 2 — RX/Supplements split — is a
+separate, not-yet-built pass): date pill, top-row rebuild, borderless grid, ring redesign,
+quick-add chips. Full detail in `CHANGELOG.md` and `docs/DECISION-LOG.md` `UX-30`–`UX-33`.
+
+- New `logDate`/`entryTargetDate` app-shell state threads the selected day through every entry
+  sheet's write path on Log It! (previously all hardcoded to today); Today's sheets continue to
+  target today regardless. Stats' own prior-day/backfill picker is untouched.
+- Voice Entry/Use Presets banner tiles removed from Log It!, replaced by a 3-item bare-artwork top
+  row (Voice Tracker/Presets/Meal Entry) using images Rob supplied
+  (`site/app/tile-icons/voice-tracker.png`, `presets.png`, `meal-entry.png`). Voice Tracker opens a
+  new non-functional preview sheet (text field + mic icon, no parser).
+- Grid borders/backgrounds removed; Meals tile moved out of the grid to the top row, so the grid is
+  back to one tile per tracker (8 with all enabled); 2-column fallback at ≤4 enabled trackers.
+- Ring redesign scoped to Log It! only (Today verified unchanged): real neutral track ring, goal-met
+  clamp/glow/badge state, ring-less mode for Weight.
+- Quick-add chips in Water/Protein/Calories/Sleep/Exercise sheets; button relabels to "Add to
+  <tracker>" throughout.
+- Found and fixed in passing: the in-app Settings "Version" string had been stuck at "3.39.1" since
+  that release, missed by every subsequent version bump. Now tracks the real deployed version.
+- `tools/harness.js` updated: tile-count expectations, presets/meal-entry trigger selectors, and the
+  water quick-dial submit-button text all updated for the new structure.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 498 checks pass, matching the v3.50.0 baseline), lint unchanged at the
+  11-error vendor baseline. One unrelated pre-existing stale check still fails (`wt-tile-togo`,
+  documented since v3.44.0). **Not yet verified on a real device** — jsdom can't confirm the grid's
+  on-device fit (the `100dvh`/flex one-screen-sizing pass is implemented but unverified), the ring's
+  visual proportions, or the top-row art's crop/scale.
 
 ## What shipped Aug 25, 2026 (v3.50.0)
 
@@ -504,11 +551,23 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Meals tile has no real illustrated icon asset** (v3.50.0): it uses a hand-built placeholder
-  (static circle, `Utensils` icon) instead of a custom "gem" PNG like the other 8 tracker tiles
-  have. Needs a supplied or commissioned image if Rob wants it to visually match the others — same
-  gap the Voice Tracker/Voice Entry tile had until Rob supplied `voice-tracker-badge.png` in
-  v3.40.1.
+- **Track 2 of the Log It! redesign brief (v3.51.0) — splitting RX & Supplements into two
+  independent trackers — is not yet built.** Data-model design was locked with Rob (all existing
+  combined items seed the retained "RX" tracker; a new "Supplements" tracker starts empty; a real
+  distinct `"rx"` log-entry type, not a shared tag) but no code exists yet. Needs its own careful
+  build-and-verify pass — schema migration, new entry-type reload/backfill/undo guards, My Plan
+  toggle-list changes.
+- **Supplements tile icon supplied but not wired in** (v3.51.0): Rob sent the art
+  (`site/app/tile-icons/supplements-new.png`) after Track 1 shipped; it's saved but unused until
+  Track 2 builds the actual Supplements tracker.
+- **Log It!'s one-screen sizing pass is implemented but unverified** (v3.51.0): the
+  `100dvh`/flex-column CSS from Rob's brief is in place, but jsdom can't confirm it actually fits
+  one screen with no scroll on a real phone. If it scrolls, the brief's own guidance is to lower the
+  `vh` term in the art-sizing `min()` first (14vh, then 13.5vh) — not the `vw` term, which is
+  already the binding constraint at 3 columns.
+- **Voice Tracker sheet is a UI shell only** (v3.51.0): text field next to a decorative mic icon, no
+  parser behind it. Not a regression — Smart Entry Phase 1 (real text/voice parsing) was explicitly
+  out of scope for this brief and remains its own unstarted, separately-scoped build.
 - **Sheet standardization** (still not started): swipe-dismiss, focus trap, Escape key, one-sheet-at-a-time — React implementation of designer's Priority 5 spec. This was slated for v3.37.0 but that slot went to the manual-entry bug fix + dark tiles; still open.
 - **Recharts Tooltip popups on Stats** still use the library's default white background — deferred from the v3.38.0 dark sweep to avoid breaking charts. Follow-up item.
 - **Footer-hide is backdrop-based, not state-based** (v3.38.1): the footer is visually covered by a near-opaque sheet backdrop rather than removed, because there's no single "a sheet is open" flag (would mean touching ~15 scattered open/close variables). If the footer peeks through on an untested sheet, that's why. Candidate for a proper fix if it recurs.

@@ -560,6 +560,85 @@ Plan/RX page rather than Log It!'s tiles
 *Known gap:* the Meals tile has no illustrated icon asset — see `docs/CURRENT-STATE.md` Known
 outstanding.
 
+**UX-30 — Log It! date pill: prior-day logging gets its own control, separate from Stats' picker.**
+A new interactive date pill (`‹ Wed, Aug 26 [TODAY] ›`) replaces the static "Tracking for: <date>"
+text on Log It! only — every other tab's header date text is untouched. Left/right chevrons step
+one day; the right chevron is disabled at today and a future date is never reachable. New app-shell
+state (`logDate`, resets to today on cold start, no persistence) tracks which day Log It! is
+viewing; a second new state (`entryTargetDate`) carries that day into every entry sheet's actual
+write path, since Log It! and Today share the same underlying submit handlers (previously all
+hardcoded to `HS(new Date)`) — sheets opened from Today continue to target today regardless of
+Log It!'s selected day. Off-today, the pill turns amber, a subtitle reads "Everything you log goes
+to this day," every entry sheet shows an amber `Saving to <date>` bar, and confirmation toasts
+append `· <date>`.
+*Why:* explicit request from Rob's detailed brief — prior-day correction previously required going
+through Stats → Edit Prior Days Logs → Enter Missed Items, a heavier flow than Log It!'s fast-entry
+purpose calls for. This is deliberately a *second, independent* path — Stats' existing prior-day
+picker and backfill flow (`PROD-06`) are untouched, not replaced, since they serve a different
+purpose (browsing/correcting arbitrary past days generally, vs. quickly logging to "yesterday" or
+a nearby day from the fast-entry screen).
+*Status:* **Locked** · Aug 26, 2026 · v3.51.0
+
+**UX-31 — Log It! top row: bare-artwork Voice Tracker/Presets/Meal Entry replace the FeatureTile
+banners.**
+The gold "Voice Entry" and blue "Use Presets" `FeatureTile` banners are removed from Log It! (Today
+is unaffected — it never rendered "Use Presets" and its own Voice Entry tile was already removed in
+`UX-27`). Replaced with a 3-item row of bare artwork (icon + label only, no card/border at rest,
+subtle press state): **Voice Tracker** (art supplied by Rob, opens a new lightweight non-functional
+preview sheet — see below), **Presets** (opens the existing presets sheet, same as the old "Use
+Presets" tile), **Meal Entry** (opens the existing `ManualMealSheet`, taking over the role the
+"Meals" grid tile held in `UX-29`, which is removed — see `UX-32`).
+The Voice Tracker preview sheet adds a text field next to a decorative mic icon to the same
+non-functional preview concept established in `UX-19`/`UX-29` — **UI shell only, no parser wired
+up, nothing is ever auto-logged.** This is explicitly not Smart Entry Phase 1 (`PROD-10`/`PROD-11`),
+which remains its own unstarted, separately-scoped build.
+*Why:* per Rob's brief — Log It!'s fast paths (voice, presets, manual meal) read better as
+equal-weight bare icons than as two different banner styles plus a grid tile, and the icons Rob
+supplied are the real assets these tiles were always meant to use eventually (the Voice tile
+followed the same pattern in `UX-19`/v3.40.0 — CSS placeholder first, then a supplied image).
+*Status:* **Locked** · Aug 26, 2026 · v3.51.0 — amends `UX-19`/`UX-29` (Voice tile), supersedes the
+"Use Presets"/"Meals" tile placements from `UX-29`
+
+**UX-32 — Log It! grid goes borderless; progress ring gets a real track, a goal-met state, and a
+ring-less mode for readings.**
+Two related changes, both Log It!-only (Today's full-detail tile/ring rendering is verified
+byte-for-byte unchanged via a `compact` flag defaulting off on the shared ring component):
+1. The 3×3 grid's tile borders and background fills are removed — transparent at rest, a subtle
+   surface wash on press. The grid drops to 2 columns when 4 or fewer trackers are enabled, so
+   tiles grow rather than leaving a sparse 3-wide row. The Meals tile is removed from the grid
+   (moved to the top row, `UX-31`), bringing the grid back to one tile per tracker.
+2. The ring itself: a real neutral track ring (`#2a303a`) now sits under the accent fill — before,
+   the "track" was just a dimmed copy of the tile's own accent color, which is why 0% and "no ring"
+   read as nearly the same thing. Goal-met state (100%+) clamps the arc rather than wrapping a
+   second lap, squares off the stroke cap, adds a glow, and swaps the end-cap dot for a small check
+   badge. Weight — a reading, not something that accumulates toward a goal — drops the ring
+   entirely on Log It!, showing artwork and label only with the same check badge when a reading
+   exists for the day being viewed; the brief flags Resting HR and the bed-time trackers for the
+   same treatment when the partner tracker set lands.
+*Why:* per Rob's brief — a ring that can't visually distinguish 0% from "not tracked" is decoration,
+not information; the fix is a real two-layer ring (track + fill) rather than one ring doing both
+jobs. Weight showing a ring at all was always slightly misleading (`UX-04` already established "no
+celebration either direction" for Weight) — dropping the ring entirely for readings is a more
+honest fit than fabricating a percentage. Scoping every visual change to Log It! only, leaving
+Today's tile/ring rendering untouched, was Rob's explicit scope boundary for this session.
+*Status:* **Locked** · Aug 26, 2026 · v3.51.0 — amends `UX-25`/`UX-29` (tile borders), `UX-03`
+(all-8-tiles-get-rings, now qualified: true on Today/My Plan/RX page, not on Log It! for
+goal-less trackers)
+
+**UX-33 — Quick-add chips and "Add to <tracker>" button relabel across Log It!'s entry sheets.**
+Every accumulating-tracker entry sheet gains 4 quick-add chips above its manual field: Water
+(+8/12/16/24oz), Protein (+15/25/30/40g), Calories (+150/300/500/650), Sleep (+6/7/7.5/8hrs — sets
+"Woke Up" to Lights-Out-plus-N-hours, since Sleep is tracked as a start/end session rather than a
+raw duration), Exercise (+15/20/30/45min). Treatments and RX & Supplements already had a
+tap-to-select-item chip pattern per item, which already serves the same "two taps, no keyboard"
+goal — kept as-is rather than adding a redundant second chip row. Primary buttons across all
+sheets relabel from tracker-specific text (e.g. "Log 32oz") to "Add to <tracker>" (Weight: "Save
+weight"; the manual meal sheet: "Log meal").
+*Why:* per Rob's brief — the common case (adding a typical amount) should be two taps, not a drag
+plus a keyboard entry. The button relabel makes every sheet's primary action read consistently
+regardless of tracker.
+*Status:* **Locked** · Aug 26, 2026 · v3.51.0
+
 ---
 
 ## Legal & compliance
@@ -702,7 +781,11 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 25, 2026 (v3.50.0: UX-29 added — Log It! reduced to a compact 3x3 tile grid
+*Last updated: August 26, 2026 (v3.51.0: UX-30–UX-33 added — Log It! date pill (`logDate`/
+`entryTargetDate`), top row replacing Voice Entry/Use Presets banners, borderless grid + redesigned
+ring (track/goal-met/ring-less-Weight), quick-add chips + button relabel — all Log It!-only, Today
+untouched; Track 2 of this brief (RX/Supplements split) is a separate not-yet-built pass; earlier:
+v3.50.0: UX-29 added — Log It! reduced to a compact 3x3 tile grid
 plus new "Meals" and "Use Presets" tiles, Voice Assistant renamed Voice Entry, amends
 UX-02/UX-18/UX-25, notes PROD-04 satisfied via Today/My Plan/RX page; earlier: v3.49.0: UX-28 added — new "RX" nav page consolidating
 Treatments/Prescriptions/Vitamins & Supplements ("SCRIPTS FOR:"), partner-branded logo/link cards,

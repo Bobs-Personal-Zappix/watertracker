@@ -20,6 +20,69 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.51.0] — 2026-08-26
+
+Log It! rebuilt per Rob's detailed brief (Track 1 of 2 — RX/Supplements split is Track 2, staged
+separately): interactive date pill for prior-day logging, a bare-artwork top row replacing the old
+banner tiles, a borderless 3×3 grid, a redesigned progress ring, and quick-add chips across every
+entry sheet.
+
+- **Date pill (`DatePill`)** replaces the static "Tracking for: <date>" text on Log It! only (every
+  other tab's header text is unchanged). `‹ Wed, Aug 26 [TODAY] ›`, left/right chevrons step one day
+  at a time, right chevron disabled at today, badge reads `TODAY`/`YESTERDAY`/`PAST DAY`. New
+  `logDate` state (app-shell root, resets to today on cold start — no persistence) is the source of
+  truth for what day Log It! is viewing; it is separate from and does not replace Stats' own
+  prior-day/backfill picker, which is untouched.
+  - **Past-day mode:** pill turns amber, a subtitle reads "Everything you log goes to this day",
+    every entry sheet opened from Log It! shows an amber `Saving to <date>` bar under its header, and
+    confirmation toasts append `· <date>`. New `entryTargetDate` state carries the selected day into
+    every log-write path (quick dial, weight, supplements/RX, treatments, exercise, sleep, manual
+    meal, presets) — all previously hardcoded to `HS(new Date)`. Sheets opened from Today
+    continue to target today regardless of Log It!'s selected day (shared submit handlers, explicitly
+    reset per open-handler).
+- **Top row replaces the Voice Entry/Use Presets banners** — three bare-artwork items (`TopRow`):
+  Voice Tracker, Presets, Meal Entry, using the images Rob supplied. Tapping Meal Entry opens the
+  same `ManualMealSheet` the removed "Meals" grid tile used to open; Presets opens the existing
+  presets sheet; Voice Tracker opens a new lightweight preview sheet (text field next to a decorative
+  mic icon) — **UI shell only, no parser wired up, never auto-logs** — Smart Entry Phase 1 is still
+  out of scope.
+- **3×3 grid is now borderless** — tile borders/backgrounds removed (transparent at rest, subtle
+  surface wash on press). Meals tile removed from the grid (moved to the top row); grid is back to
+  one tile per tracker. Falls back to 2 columns when ≤4 trackers are enabled.
+- **Progress ring redesign, Log It!-only** — Today's full-detail ring rendering is byte-for-byte
+  unchanged (verified via a dedicated `compact` flag on the shared ring component, defaulting off).
+  On Log It!: a real neutral track ring (`#2a303a`, 5px) now sits under the fill (5.5px, was one
+  ring doing double duty as its own dimmed track); goal-met state clamps at 100%, squares off the
+  cap, adds a glow, and swaps the end-cap dot for a small check badge. Weight (a reading, not an
+  accumulation) now renders artwork + label only, no ring — with the same check badge when a reading
+  exists for the viewed day.
+- **Quick-add chips** added above the manual field in every accumulating-tracker sheet: Water
+  (+8/12/16/24oz), Protein (+15/25/30/40g), Calories (+150/300/500/650), Sleep (+6/7/7.5/8hrs, sets
+  Woke Up from the current Lights Out time), Exercise (+15/20/30/45min). Treatments/RX &
+  Supplements already had a tap-to-select chip pattern per item, kept as-is. Primary buttons relabel
+  to "Add to <tracker>" (or "Save weight" for Weight, "Log meal" for the meal sheet).
+- New image assets: `site/app/tile-icons/voice-tracker.png`, `presets.png`, `meal-entry.png` (all
+  supplied by Rob). A `supplements-new.png` was also saved from a follow-up upload, staged for
+  Track 2 — not wired into anything yet.
+- **Found and fixed in passing:** the in-app "Version" string shown on Settings (and sent as
+  `appVersion` in feedback submissions) had been stuck at "3.39.1" since that release — every version
+  bump since then updated `CHANGELOG.md`/docs but missed this literal. Now reads 3.51.0 and will be
+  bumped going forward with every release.
+- `tools/harness.js` updated for the new structure: tile-count expectations (8, not 9 — Meals moved
+  out), the presets/meal-entry triggers now click the top-row items by their new labels instead of
+  the removed banner text, and the water quick-dial submit-button assertion updated for its new
+  "Add to Water" label.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 498 checks pass, matching the v3.50.0 baseline count), lint unchanged at
+  the 11-error vendor baseline. One unrelated pre-existing stale check still fails (`wt-tile-togo`,
+  documented since v3.44.0). **Not yet verified on a real device** — jsdom has no layout engine, so
+  the 3×3 grid's on-device fit, the ring's visual proportions, and the top-row art's crop/scale all
+  need Rob's eyes. The `100dvh`/flex sizing pass from the brief (fit one screen, no scroll) is
+  implemented in CSS but is unverified for the same reason — if it scrolls on a real phone, the
+  brief's own tuning note applies (lower the `vh` term in the art-sizing `min()`, not the `vw` term).
+- **Track 2 (RX/Supplements split into two independent trackers) is a separate, not-yet-built pass**
+  — Log It!'s RX & Supplements tile is still the single combined tracker for this release.
+
 ## [3.50.0] — 2026-08-25
 
 Log It! becomes pure fast-entry: compact 3x3 tile grid, new "Meals" tile, restyled Presets tile,

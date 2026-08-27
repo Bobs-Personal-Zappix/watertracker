@@ -215,9 +215,9 @@ const check = (label, actual, expected) => {
 const STEPS = [
   () => {
     check("app mounted", html().length > 1000);
-    // v3.50.0: app boots on Log It!, now a compact grid — 6 real trackers (Water+Treatments off
-    // in seed) plus the always-on Meals tile = 7.
-    check("tile count (Water+Treatments off in seed, plus the always-on Meals tile)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 7);
+    // v3.51.0: app boots on Log It!, a compact grid — 6 real trackers (Water+Treatments off
+    // in seed); Meals moved to the top row so it's no longer a grid tile.
+    check("tile count (Water+Treatments off in seed, Meals moved to the top row)", [...window.document.querySelectorAll(".wt-tracker-col-compact")].length, 6);
     console.log("tiles:", JSON.stringify(tiles(), null, 1));
   },
   () => check("nav to Stats", nav("Stats")),
@@ -234,7 +234,7 @@ const STEPS = [
   },
   () => check("nav to Today", nav("Today")),
   () => check("nav to Log It!", nav("Log It!")),
-  () => check("open presets/log sheet", clickByText("Use Presets", "div")),
+  () => check("open presets/log sheet", clickByText("Presets", "div")),
   () => check("click Edit Presets link", clickByText("✏ Edit Presets")),
   () => {
     const headers = [...window.document.querySelectorAll(".wt-sheet-header h3")].map((h) => h.textContent);
@@ -363,7 +363,7 @@ const STEPS = [
   },
 
   // ── v3.33.0 Part A: OO (add/edit preset) modal must portal to document.body ──
-  () => check("open presets/log sheet (for OO portal check)", clickByText("Use Presets", "div")),
+  () => check("open presets/log sheet (for OO portal check)", clickByText("Presets", "div")),
   () => check("open My Presets sheet (for OO portal check)", clickByText("✏ Edit Presets")),
   () => check("click Add Preset (opens OO modal)", clickByText("Add Preset")),
   () => {
@@ -678,7 +678,7 @@ const STEPS = [
     check("tapping Water tile opens the quick-dial sheet (tap handler unchanged)", !!dialInput);
   },
   () => check("set water amount to 32 in the quick dial", setInput("0", "32")),
-  () => check("log 32oz of water", clickByText("Log 32oz")),
+  () => check("log 32oz of water", clickByText("Add to Water")),
   () => {
     const waterTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((t) => t.textContent.includes("Water"));
     const togo = waterTile ? waterTile.querySelector(".wt-tile-togo") : null;
@@ -891,10 +891,10 @@ const STEPS = [
   () => {
     const input = window.document.querySelector('input[placeholder="0"]');
     check("Water manual entry input accepted the typed value", input ? input.value : null, "32");
-    const logBtn = [...window.document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Log 32oz");
+    const logBtn = [...window.document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Add to Water");
     check("Log button visible/present for typed value", !!logBtn);
   },
-  () => check("log 32oz of water (manual entry submit works)", clickByText("Log 32oz")),
+  () => check("log 32oz of water (manual entry submit works)", clickByText("Add to Water")),
   () => {
     const cssText = window.document.querySelector("style").textContent;
     const tileRule = cssText.match(/\.wt-tracker-col \{[^}]*\}/);
@@ -917,7 +917,7 @@ const STEPS = [
   },
   () => check("nav to Log It! (presets flow)", nav("Log It!")),
   () => {
-    const presetsBtn = clickByText("Use Presets", "div");
+    const presetsBtn = clickByText("Presets", "div");
     check("found 'Use Presets' tile to open presets sheet", presetsBtn);
   },
   () => {
@@ -1076,28 +1076,28 @@ const STEPS = [
     }
   },
   () => {
-    // v3.50.0: renamed "Voice Assistant" -> "Voice Entry", generalized into FeatureTile
-    // (.wt-feature-tile.gold), and moved to sit BEFORE the compact grid as a sibling rather than
-    // as the grid's first child (Rob's request: "a single tile across the top", then the grid).
-    const tile = window.document.querySelector(".wt-feature-tile.gold");
-    check("Voice Entry tile present above the tracker grid", !!tile);
+    // v3.51.0: Voice Entry/Use Presets FeatureTile banners removed from Log It!, replaced by a
+    // 3-item bare-artwork "fast paths" row (.wt-toprow > .wt-toprow-item) above the compact grid:
+    // Voice Tracker, Presets, Meal Entry. The row sits before the grid in document order.
+    const topRow = window.document.querySelector(".wt-toprow");
+    check("top row present above the tracker grid", !!topRow);
+    const items = [...window.document.querySelectorAll(".wt-toprow-item")].map((e) => e.textContent.trim());
+    check("top row has Voice Tracker item", items.includes("Voice Tracker"), "true");
+    check("top row has Presets item", items.includes("Presets"), "true");
+    check("top row has Meal Entry item", items.includes("Meal Entry"), "true");
     const grid = window.document.querySelector(".wt-trackers-grid-compact");
-    check("Voice Entry tile sits before the compact grid in document order", tile && grid ? !!(tile.compareDocumentPosition(grid) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
-    check("Voice Entry tile marked aria-disabled (not yet functional)", tile ? tile.getAttribute("aria-disabled") : null, "true");
-    check("Voice Entry tile labeled 'Voice Entry' (renamed from 'Voice Assistant')", tile ? tile.textContent.includes("Voice Entry") : null, "true");
+    check("top row sits before the compact grid in document order", topRow && grid ? !!(topRow.compareDocumentPosition(grid) & window.Node.DOCUMENT_POSITION_FOLLOWING) : null, "true");
   },
   () => {
-    // v3.50.0: Log It! is now a 3x3 compact grid (8 trackers + Meals) with the old action
-    // buttons replaced by a "Use Presets" tile below the grid; "Manually Log a Meal" is now the
-    // Meals tile inside the grid. The old .wt-action-btn buttons no longer render here at all.
+    // v3.51.0: Log It! is now a borderless 3x3 compact grid, Meals moved out to the top row so
+    // the grid is back to one tile per tracker (8 with all trackers enabled). The old
+    // .wt-action-btn buttons still don't render here.
     check("no .wt-action-btn buttons on the now-compact Log It!", !window.document.querySelector(".wt-action-btn"), "true");
     const compactTiles = [...window.document.querySelectorAll(".wt-tracker-col-compact")];
-    check("Log It! renders 9 compact tiles (8 trackers + Meals)", compactTiles.length, 9);
-    check("Meals tile present in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "true");
-    const useTile = window.document.querySelector(".wt-feature-tile.blue");
-    check("'Use Presets' tile present below the grid (renamed from 'Use Your Presets' button)", useTile ? useTile.textContent.includes("Use Presets") : null, "true");
+    check("Log It! renders 8 compact tiles (Meals moved to the top row)", compactTiles.length, 8);
+    check("Meals tile no longer in the compact grid", compactTiles.some((t) => t.textContent.trim() === "Meals"), "false");
   },
-  () => check("open presets sheet (v3.40.0 split check)", clickByText("Use Presets", "div")),
+  () => check("open presets sheet (v3.51.0 top-row trigger)", clickByText("Presets", "div")),
   () => {
     const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Use Your Presets");
     check("presets-only sheet header found", !!header);
@@ -1106,7 +1106,7 @@ const STEPS = [
     const closeBtn = window.document.querySelector('button[aria-label="Close"]');
     if (closeBtn) fire(closeBtn);
   },
-  () => check("open manual meal sheet (v3.40.0 split check, now triggered by the Meals tile)", clickByText("Meals", "div")),
+  () => check("open manual meal sheet (v3.51.0 top-row trigger)", clickByText("Meal Entry", "div")),
   () => {
     const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Manually Log a Meal");
     check("manual meal sheet header found", !!header);
