@@ -2,9 +2,8 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.62.1 (Smart Entry Phase A app side — see below; text
-sheet's white-on-white textarea/close-button bugs fixed after Rob's first real-device test, not yet
-re-verified against the live worker or by Rob on-device)*
+*As of: August 28, 2026 · Deployed version: 3.63.0 (Smart Entry voice layer — see below; not yet
+verified on a real device)*
 
 ---
 
@@ -149,13 +148,18 @@ date control and a redesigned tile grid:
 - In-app tutorial (lives in Settings)
 - Profile page (Full Name, Email, Phone, photo upload) — reached only via the header profile icon,
   local-only storage (`settings.profile`), not tied to account sign-in
-- **Smart Entry, text-only (v3.62.0), NOT YET VERIFIED against the live worker or on a real
-  device** — the Voice Tracker tile (Log It! only) opens `SmartEntrySheet`: describe what you had
-  in plain language, `POST /api/interpret` interprets it, a mandatory confirm card (editable/
-  removable rows, low-confidence cue, candidate picker with nothing pre-selected) is the only path
-  to actually logging anything. Writes go through the same functions manual entry uses per
-  tracker, tagged `source:"smart"` plus the original `sourceText`. Voice input and usage analytics
-  are separate, unbuilt future work. See `docs/DECISION-LOG.md` `PROD-16`.
+- **Smart Entry — text (v3.62.0/3.62.1) real-device confirmed working; voice (v3.63.0) NOT YET
+  verified on a real device.** The Voice Tracker tile (Log It! only) opens either a voice overlay
+  (`VoiceEntryOverlay`, when `SpeechRecognition` is available) or the text sheet (`SmartEntrySheet`,
+  the fallback and text path — describe what you had, `POST /api/interpret` interprets it). Either
+  way, a mandatory confirm card (editable/removable rows, low-confidence cue, candidate picker with
+  nothing pre-selected) is the only path to actually logging anything. Writes go through the same
+  functions manual entry uses per tracker, tagged `source:"manual"|"smart"|"voice"` plus the
+  original `sourceText` (the real transcript for voice). The voice loop: mic starts immediately,
+  interim transcript streams live, confirm card shows before any spoken prompt, a short
+  non-enumerating spoken prompt, listens for yes/correction (capped at 3 rounds). Usage analytics
+  remain separate, unbuilt future work. See `docs/DECISION-LOG.md` `PROD-16` (text) and `PROD-17`
+  (voice).
 
 ---
 
@@ -875,8 +879,21 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   `water-tracker-push.bob-barrows.workers.dev` route works end to end (banana, grilled cheese both
   interpreted correctly). Still needed: Rob re-confirming the two v3.62.1 visibility fixes on the
   same device, and the usual real-device pass for the confirm card's visual/touch-target feel.
-  Analytics event logging (A5) and the
-  voice layer (v3.63.0) are explicitly deferred, not built this session.
+  Analytics event logging (A5) remains deferred, not built yet.
+- **Smart Entry voice layer (v3.63.0), NOT YET verified on a real device** — see
+  `docs/DECISION-LOG.md` `PROD-17`. `VoiceEntryOverlay` implements the brief's §B loop (mic starts
+  on open, interim transcript streams live, confirm card shows before any spoken prompt, short
+  non-enumerating spoken prompt, listens for yes/correction capped at 3 rounds); falls back to the
+  existing text sheet when `SpeechRecognition` is unavailable. Built by extracting two shared
+  functions (`callSmartEntryInterpret`, `buildSmartEntryConfirmPayload`) rather than duplicating the
+  interpret call or the confirm/write logic — text and voice now both call the same code. A real
+  stale-closure bug (voice's spoken "yes" silently wrote nothing and never closed the overlay,
+  because the whole auto-confirm chain traced back to one mount-time `useEffect` holding empty
+  arrays from the initial render) was found via the harness's own mocked-`SpeechRecognition`
+  coverage and fixed with mirror refs. 5-step pipeline passed (618 harness checks, 0 runtime
+  errors). **This entire feature needs Rob's real-device pass before wider use** — jsdom cannot test
+  mic permission flow, actual speech recognition/synthesis, or whether the ~10-12s target timing
+  feels right in practice.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to

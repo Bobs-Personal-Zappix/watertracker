@@ -346,6 +346,63 @@ pipeline re-run and passed against the exact shipped `bundle.js` (607 checks, 0 
 this is a jsdom-verified fix for a bug jsdom cannot itself detect (no layout engine, no real color
 rendering), so device confirmation is the only way to actually close this out.
 
+**PROD-17 — Smart Entry Phase A, voice layer (v3.63.0).** Session ran from
+`docs/CC-BRIEF-smart-entry-app-v3.62.0.md` section B, scoped by Rob to voice only — v3.62.0 was
+already deployed and real-device verified (interpretation confirmed correct against the live
+worker, and the v3.62.1 visibility fixes shipped) before this started, per the brief's own "do not
+attempt both in one session" instruction.
+
+**What shipped:** `VoiceEntryOverlay`, opened by the Voice Tracker tile when `SpeechRecognition` is
+available, falling back to the existing text sheet otherwise (B5, never a dead tile). Implements the
+full B4 loop — mic starts on open, interim transcript streams, the confirm card renders with values
+visible *before* any spoken prompt, a short non-enumerating prompt (B2), listens for a yes or a
+correction (capped at 3 rounds, then falls back to manual tap-edit on the already-visible card).
+Candidate disambiguation stays tap-only, never read aloud, matching `PROD-10` exactly as it already
+worked for text.
+
+**Confirmed by design, not new code, per Rob's explicit framing before this started:** "build
+nothing new in the confirm card, the interpretation layer, or the write path — voice is a front-end
+onto what already ships" meant *reuse*, not *never touch*. Two extractions made that reuse literal
+rather than aspirational: `callSmartEntryInterpret()` (the one `/api/interpret` call site, now
+shared by text and voice) and `buildSmartEntryConfirmPayload()` (the confirm-to-write aggregation,
+also shared). `applySmartEntryConfirm` was touched by exactly one line — reading `payload.channel`
+instead of hardcoding `source:"smart"` — confirmed with Rob as the correct read of A4/B4: `source`
+was specced `manual|smart|voice` from v3.62.0's own A4 section, so the hardcoded value was an
+incomplete implementation of the existing spec, not a deliberate boundary this session had to
+respect. No parallel write path was created; the boundary held.
+
+**A real bug found before shipping, not by review:** the voice loop's auto-confirm (triggered by a
+spoken "yes") was silently writing nothing and never closing the overlay. Root cause: the entire
+listen→interpret→propose→speak→relisten→confirm chain runs through callbacks that all trace back to
+one mount-time `useEffect`, whose closure captured `workingEntries`/`candidateGroups` as the empty
+arrays they were at mount. Later `setState` calls updated the real state — and correctly re-rendered
+the visible confirm card, which is why this wasn't obvious from the UI — but never reached the stale
+callback chain still holding the original empty arrays, so `doConfirm` always computed
+`loggedCount === 0` and silently no-op'd. A tap on the card's own Confirm button was never affected,
+since that handler is wired fresh from the current render's JSX on every render, not chained through
+the mount-time effect. Fixed with mirror refs (`workingEntriesRef`/`candidateGroupsRef`) updated
+alongside the state, which `doConfirm` reads instead of the closed-over state variables. Found by
+the harness's own mocked-`SpeechRecognition` coverage (added specifically to prove the state
+machine, not to test Apple's API), not by code review — worth remembering: a long-lived effect
+chaining a sequence of async callbacks is exactly the shape that hides this bug class, and a
+tap-triggered handler sitting right next to a broken auto-triggered one won't reveal it by
+comparison, since the tap path is structurally immune for reasons that don't apply to the chain.
+
+**Numbering note:** the brief's own B4 text cites "(`PROD-16`)" for the "card on screen before the
+spoken prompt" rule — that number was already taken by this session's own `PROD-16` (the app-side
+confirm card work, logged before the voice brief's section B was read in detail). Same pattern as
+the old superseded brief's `UX-18` collision — not treated as authoritative, logged fresh here as
+`PROD-17` instead.
+
+**Verification:** full 5-step pipeline run and passed against the exact shipped `bundle.js` (618
+checks pass, 0 runtime errors, 11-error vendor lint baseline unchanged; the same pre-existing
+`wt-tile-togo` stale check still fails, unrelated). Real device behavior (B1, verified by Rob on
+iPhone/iOS 18.7 standalone PWA before this session started) was built to, not re-derived or
+re-verified here — jsdom cannot test mic permission flow, actual recognition, TTS, or whether the
+target ~10-12s timing feels right in practice (B7).
+*Status:* **Locked** · Aug 28, 2026 · v3.63.0. **Not yet verified on a real device** — this feature
+is real-device-only to meaningfully test; needs Rob's pass before wider use.
+
 ---
 
 ## Architecture
@@ -1346,7 +1403,12 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 28, 2026 (v3.62.1: PROD-16 amended — Rob's first real-device test confirmed
+*Last updated: August 28, 2026 (v3.63.0: PROD-17 added — Smart Entry voice layer, built onto
+v3.62.0's already-deployed confirm card/interpretation/write path via two shared extractions
+(callSmartEntryInterpret, buildSmartEntryConfirmPayload) rather than new logic; found and fixed a
+real stale-closure bug in the voice auto-confirm chain via the harness's own mocked-SpeechRecognition
+coverage; not yet verified on a real device; earlier, v3.62.1: PROD-16 amended — Rob's first
+real-device test confirmed
 Smart Entry's interpretation works against the live worker (banana, grilled cheese both correct),
 but found two visibility bugs (white-on-white textarea, white-on-white close button), both simple
 CSS mistakes fixed same-day; still needs Rob's re-confirmation on-device; earlier, v3.62.0: PROD-16

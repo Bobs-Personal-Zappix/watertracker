@@ -219,6 +219,30 @@ function findCompactTile(label) {
   return [...window.document.querySelectorAll(".wt-tracker-col-compact")]
     .find((e) => e.textContent.trim().startsWith(label));
 }
+// Voice layer (v3.63.0) — jsdom has no real SpeechRecognition/speechSynthesis (the app's own code
+// already treats a missing speechSynthesis as "skip straight to onDone", so no TTS mock is needed
+// here). This fake constructor lets the harness exercise VoiceEntryOverlay's own state-machine
+// logic (listening -> thinking -> proposing -> auto-relisten -> confirm) — it proves the app's
+// code is correct, not that Apple's real API behaves this way; that's real-device-only (B7).
+// installMockSpeechRecognition(transcripts) queues one transcript per listenOnce() call.
+function installMockSpeechRecognition(transcripts) {
+  const queue = transcripts.slice();
+  window.SpeechRecognition = class {
+    start() {
+      const transcript = queue.length ? queue.shift() : "";
+      setTimeout(() => {
+        if (this.onresult) {
+          const resultList = [Object.assign([{ transcript }], { isFinal: true })];
+          this.onresult({ results: resultList });
+        }
+      }, 10);
+    }
+    stop() {}
+  };
+}
+function uninstallMockSpeechRecognition() {
+  delete window.SpeechRecognition;
+}
 function setInputByAria(label, value) {
   const el = window.document.querySelector(`[aria-label="${label}"]`);
   if (!el) return false;
@@ -1899,7 +1923,11 @@ const STEPS = [
     if (tile) fire(tile);
   },
   () => {
-    check("Smart Entry sheet opens in idle (text-input) state", !!window.document.querySelector(".wt-voice-text"));
+    // v3.63.0 (B5): jsdom has no SpeechRecognition, so the tile must fall open to the v3.62.0 text
+    // sheet directly — never a dead tile, and never the voice overlay's "Listening…" state, since
+    // there's genuinely no mic support to back it.
+    check("Smart Entry sheet opens in idle (text-input) state — SpeechRecognition unsupported in jsdom falls back correctly", !!window.document.querySelector(".wt-voice-text"));
+    check("voice overlay's title never rendered (fell back to text sheet, not the voice overlay)", ![...window.document.querySelectorAll(".wt-sheet-header span")].some((s) => s.textContent === "My AI Voice Tracker"));
     const interpretBtn = [...window.document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Interpret");
     check("Interpret button present and disabled with empty text", interpretBtn ? String(interpretBtn.disabled) : null, "true");
   },
@@ -1992,6 +2020,57 @@ const STEPS = [
   },
   () => check("close the network-failure sheet", clickByText("Got it")),
   () => check("no runtime errors after Smart Entry network-failure check", errors.length, 0),
+
+  // ── Smart Entry v3.63.0 (B1-B5): voice layer, using a fake SpeechRecognition (proves the app's
+  // own state-machine logic, not Apple's real API — that's real-device-only per B7) ──
+  () => {
+    // No mid-flight "did the overlay open" check here on purpose: the mocked round trip
+    // (recognition -> interpret -> propose -> speak -> re-listen -> confirm) now correctly
+    // completes and closes the overlay in ~20-30ms — too fast to reliably observe open against
+    // this suite's 500ms step cadence, and racing it would test timing, not behavior. The next
+    // step's checks (entry landed with source:voice, overlay closed) already prove it opened,
+    // ran, and closed correctly — that's the behavior that actually matters.
+    installMockSpeechRecognition(["a banana", "yes"]);
+    mockInterpretFetch({
+      entries: [{ tracker: "calories", value: 105, unit: "kcal", source: "a banana", confidence: "high" }],
+      unmatched: [], candidates: [], declined: null,
+    });
+    const tile = findCompactTile("Voice Tracker");
+    check("found Voice Tracker tile (voice path, SpeechRecognition mocked as supported)", !!tile);
+    if (tile) fire(tile);
+  },
+  () => {
+    // By now: mock recognition resolved with "a banana" -> interpretAndPropose -> mocked fetch
+    // resolved -> proposing state renders the confirm card -> spoken prompt (no speechSynthesis in
+    // jsdom, so it resolves immediately per the app's own fallback) -> re-listens -> mock resolves
+    // "yes" -> doConfirm -> write -> overlay closes itself.
+    const entry = logsToday().find((e) => e.source === "voice" && e.calories === 105);
+    check("voice-confirmed entry landed with source:voice", !!entry);
+    check("voice entry's sourceText carries the recognized transcript, not the confirmation word", entry ? entry.sourceText : null, "a banana");
+    check("voice overlay closed itself after the spoken 'yes' auto-confirmed", ![...window.document.querySelectorAll(".wt-sheet-header span")].some((s) => s.textContent === "My AI Voice Tracker"));
+  },
+  () => check("no runtime errors after Smart Entry voice entries-path check", errors.length, 0),
+
+  () => {
+    // Mic-permission-denied path: the mock's start() immediately errors instead of resolving.
+    window.SpeechRecognition = class {
+      start() { setTimeout(() => { this.onerror && this.onerror({ error: "not-allowed" }); }, 10); }
+      stop() {}
+    };
+    const tile = findCompactTile("Voice Tracker");
+    if (tile) fire(tile);
+  },
+  () => {
+    const sub = [...window.document.querySelectorAll(".wt-sheet-sub")].find((p) => p.textContent.includes("Microphone access was denied"));
+    check("mic-permission-denied shows distinct copy with a manual escape", !!sub);
+    check("'Type instead' escape button present on the permission-denied error state", clickByText("Type instead"));
+  },
+  () => {
+    check("'Type instead' opened the text sheet as the manual escape", !!window.document.querySelector(".wt-voice-text"));
+    check("close the text sheet opened from the voice error escape", clickByAria("Close"));
+    uninstallMockSpeechRecognition();
+  },
+  () => check("no runtime errors after Smart Entry voice error-path check", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

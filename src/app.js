@@ -236,6 +236,80 @@ import {
     function smartEntryRegimenSettingsKey(kind) {
         return "rx" === kind ? "rx" : "supplement" === kind ? "supplements" : "treatments"
     }
+
+    // The one call site for /api/interpret (PROD-15/A1) — shared by the text sheet (v3.62.0) and
+    // the voice overlay (v3.63.0, B4: "POST /api/interpret (unchanged from v3.62.0)") so the
+    // request shape and error handling can't drift between the two input channels. Returns the
+    // normalized {declined, entries, unmatched, candidates} shape; throws on a genuine failure
+    // (caller decides how to present that — the text sheet shows temporarily_unavailable, the
+    // voice overlay moves to its own "error" state per B5).
+    async function callSmartEntryInterpret(text, targetDateKey, data) {
+        let base = rS();
+        if (!base) throw new Error("Smart Entry isn't configured yet.");
+        let res = await fetch(`${base}/api/interpret`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text,
+                deviceId: wtDeviceId(),
+                date: targetDateKey,
+                trackers: smartEntryTrackersPayload(data.settings),
+                userItems: smartEntryUserItemsPayload(data.settings)
+            })
+        });
+        if (!res.ok) throw new Error(`Smart Entry request failed (${res.status})`);
+        return res.json()
+    }
+
+    // Spoken unit vocabulary (B3) — display units and spoken units are different strings ("kcal"
+    // reads oddly aloud; say "calories"). Say the unit once, not per value (B2: never enumerate).
+    function smartEntrySpokenUnit(unit) {
+        return {
+            oz: "ounces",
+            g: "grams",
+            kcal: "calories",
+            hours: "hours",
+            minutes: "minutes",
+            lbs: "pounds"
+        }[unit] || unit
+    }
+
+    // Shared confirm-payload builder (A4/B4) — both the text sheet and the voice overlay call this
+    // with their own workingEntries/candidateGroups/sourceText/channel; the aggregation logic (one
+    // combined water/protein/calories write, per-tracker sums, resolved-candidate list) lives in
+    // exactly one place so the two input channels can't drift on what actually gets logged.
+    function buildSmartEntryConfirmPayload(workingEntries, candidateGroups, sourceText, channel) {
+        let payload = {
+            water: 0,
+            protein: 0,
+            calories: 0,
+            comboSources: [],
+            sleepHours: null,
+            sleepSource: null,
+            exerciseMinutes: null,
+            exerciseSource: null,
+            weightValue: null,
+            weightSource: null,
+            regimen: [],
+            sourceText,
+            channel
+        };
+        return workingEntries.forEach(e => {
+            let v = Number(e.value);
+            Number.isFinite(v) && ("water" === e.tracker ? (payload.water += v, payload.comboSources.push(e.source)) : "protein" === e.tracker ? (payload.protein += v, payload.comboSources.push(e.source)) : "calories" === e.tracker ? (payload.calories += v, payload.comboSources.push(e.source)) : "sleep" === e.tracker ? (payload.sleepHours = (payload.sleepHours || 0) + v, payload.sleepSource = e.source) : "exercise" === e.tracker ? (payload.exerciseMinutes = (payload.exerciseMinutes || 0) + v, payload.exerciseSource = e.source) : "weight" === e.tracker && (payload.weightValue = v, payload.weightSource = e.source))
+        }), candidateGroups.forEach(c => {
+            c.picked && payload.regimen.push({
+                kind: c.tracker,
+                name: c.picked,
+                source: c.heard
+            })
+        }), {
+            payload,
+            loggedCount: workingEntries.length + candidateGroups.filter(c => c.picked).length
+        }
+    }
     async function wtActivityPing() {
         let e = wtDeviceId(),
             n = rS();
@@ -262,7 +336,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.62.1",
+        xS = "3.63.0",
         SCHEMA_VERSION = 4,
         ES = {
             logs: {},
@@ -2740,23 +2814,7 @@ import {
             if (!trimmed) return;
             setStatus("loading"), setDeclined(null);
             try {
-                let base = rS();
-                if (!base) throw new Error("Smart Entry isn't configured yet.");
-                let res = await fetch(`${base}/api/interpret`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        text: trimmed,
-                        deviceId: wtDeviceId(),
-                        date: targetDateKey,
-                        trackers: smartEntryTrackersPayload(data.settings),
-                        userItems: smartEntryUserItemsPayload(data.settings)
-                    })
-                });
-                if (!res.ok) throw new Error(`Smart Entry request failed (${res.status})`);
-                let json = await res.json();
+                let json = await callSmartEntryInterpret(trimmed, targetDateKey, data);
                 if (json.declined) return setDeclined(json.declined), void setStatus("result");
                 setWorkingEntries((json.entries || []).map((e, i) => ({
                     ...e,
@@ -2772,31 +2830,10 @@ import {
         }
 
         function confirmAndLog() {
-            let payload = {
-                water: 0,
-                protein: 0,
-                calories: 0,
-                comboSources: [],
-                sleepHours: null,
-                sleepSource: null,
-                exerciseMinutes: null,
-                exerciseSource: null,
-                weightValue: null,
-                weightSource: null,
-                regimen: [],
-                sourceText: text.trim()
-            };
-            workingEntries.forEach(e => {
-                let v = Number(e.value);
-                Number.isFinite(v) && ("water" === e.tracker ? (payload.water += v, payload.comboSources.push(e.source)) : "protein" === e.tracker ? (payload.protein += v, payload.comboSources.push(e.source)) : "calories" === e.tracker ? (payload.calories += v, payload.comboSources.push(e.source)) : "sleep" === e.tracker ? (payload.sleepHours = (payload.sleepHours || 0) + v, payload.sleepSource = e.source) : "exercise" === e.tracker ? (payload.exerciseMinutes = (payload.exerciseMinutes || 0) + v, payload.exerciseSource = e.source) : "weight" === e.tracker && (payload.weightValue = v, payload.weightSource = e.source))
-            }), candidateGroups.forEach(c => {
-                c.picked && payload.regimen.push({
-                    kind: c.tracker,
-                    name: c.picked,
-                    source: c.heard
-                })
-            });
-            let loggedCount = workingEntries.length + candidateGroups.filter(c => c.picked).length;
+            let {
+                payload,
+                loggedCount
+            } = buildSmartEntryConfirmPayload(workingEntries, candidateGroups, text.trim(), "text");
             0 !== loggedCount && (onConfirm(payload, loggedCount), onClose())
         }
         let confirmDisabled = 0 === workingEntries.length && 0 === candidateGroups.filter(c => c.picked).length;
@@ -2879,6 +2916,230 @@ import {
             onConfirm: confirmAndLog,
             confirmDisabled
         }))), document.body)
+    }
+
+    // Voice layer (v3.63.0, brief §B). A front end onto the same interpret call and confirm/write
+    // path the text sheet uses — see callSmartEntryInterpret/buildSmartEntryConfirmPayload above
+    // and ConfirmCard, all shared, none duplicated. The Voice Tracker tile opens this when
+    // SpeechRecognition is available and falls back to SmartEntrySheet when it isn't (never a dead
+    // tile — B5); this component itself also degrades to an "unsupported" error state with a
+    // manual escape if it's ever opened without support, as a second line of defense.
+    function VoiceEntryOverlay({
+        open,
+        onClose,
+        onFallbackToText,
+        data,
+        targetDateKey,
+        targetDateLabel,
+        onConfirm
+    }) {
+        let [phase, setPhase] = (0, React.useState)("listening"),
+            [interim, setInterim] = (0, React.useState)(""),
+            [errorKind, setErrorKind] = (0, React.useState)(null),
+            [workingEntries, setWorkingEntriesState] = (0, React.useState)([]),
+            [unmatched, setUnmatched] = (0, React.useState)([]),
+            [candidateGroups, setCandidateGroupsState] = (0, React.useState)([]),
+            recognitionRef = (0, React.useRef)(null),
+            baseTextRef = (0, React.useRef)(""),
+            roundsRef = (0, React.useRef)(0),
+            // Mirror refs for workingEntries/candidateGroups. The whole voice loop (listen ->
+            // interpret -> propose -> speak -> re-listen -> confirm) chains through callbacks
+            // originating from ONE mount-time useEffect (see below) — those callbacks close over
+            // whatever workingEntries/candidateGroups were at mount (empty arrays), not the
+            // updated state from later renders. doConfirm reads these refs instead, so the
+            // auto-confirm-by-voice path sees the same current values a tap on the card would.
+            workingEntriesRef = (0, React.useRef)([]),
+            candidateGroupsRef = (0, React.useRef)([]),
+            SpeechRecognitionCtor = typeof window < "u" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+        function setWorkingEntries(updater) {
+            setWorkingEntriesState(prev => {
+                let next = "function" == typeof updater ? updater(prev) : updater;
+                return workingEntriesRef.current = next, next
+            })
+        }
+
+        function setCandidateGroups(updater) {
+            setCandidateGroupsState(prev => {
+                let next = "function" == typeof updater ? updater(prev) : updater;
+                return candidateGroupsRef.current = next, next
+            })
+        }
+
+        function stopListening() {
+            if (!recognitionRef.current) return;
+            let rec = recognitionRef.current;
+            rec.onresult = null, rec.onerror = null, rec.onend = null;
+            try {
+                rec.stop()
+            } catch {}
+            recognitionRef.current = null
+        }
+
+        function listenOnce(onFinal) {
+            let rec = new SpeechRecognitionCtor;
+            rec.continuous = !1, rec.interimResults = !0, rec.lang = "en-US", rec.onresult = e => {
+                let text = "";
+                for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+                setInterim(text), e.results[e.results.length - 1].isFinal && (recognitionRef.current = null, onFinal(text.trim()))
+            }, rec.onerror = e => {
+                recognitionRef.current = null;
+                let kind = "not-allowed" === e.error || "service-not-allowed" === e.error ? "permission" : "no-speech" === e.error ? "no-speech" : "network" === e.error ? "network" : "generic";
+                setPhase("error"), setErrorKind(kind)
+            }, rec.onend = () => {
+                recognitionRef.current = null
+            }, recognitionRef.current = rec;
+            try {
+                rec.start()
+            } catch {
+                setPhase("error"), setErrorKind("generic")
+            }
+        }
+
+        function speak(text, onDone) {
+            if (typeof speechSynthesis > "u") return void (onDone && onDone());
+            let utter = new SpeechSynthesisUtterance(text);
+            utter.onend = () => onDone && onDone(), utter.onerror = () => onDone && onDone(), speechSynthesis.speak(utter)
+        }
+
+        async function interpretAndPropose(text) {
+            setPhase("thinking"), setInterim("");
+            try {
+                let json = await callSmartEntryInterpret(text, targetDateKey, data);
+                if (json.declined) return setPhase("error"), void setErrorKind("daily_limit" === json.declined ? "over_cap" : "declined");
+                let entryCount = (json.entries || []).length,
+                    candidateCount = (json.candidates || []).length;
+                setWorkingEntries((json.entries || []).map((e, i) => ({
+                    ...e,
+                    id: `sv-${i}`
+                }))), setUnmatched(json.unmatched || []), setCandidateGroups((json.candidates || []).map((c, i) => ({
+                    ...c,
+                    key: `svc-${i}`,
+                    picked: null
+                }))), setPhase("proposing"), speakAndListenForConfirmation(entryCount + candidateCount)
+            } catch {
+                setPhase("error"), setErrorKind("network")
+            }
+        }
+
+        function speakAndListenForConfirmation(count) {
+            // B2: never enumerate values — the card already shows them on screen. A bare count,
+            // under two seconds spoken, is the entire prompt.
+            let phrase = count <= 0 ? "I didn't catch anything to log. Try again, or edit the card." : `Got ${count} — say yes?`;
+            speak(phrase, () => {
+                roundsRef.current < 3 && listenOnce(handleConfirmationResponse)
+            })
+        }
+
+        function handleConfirmationResponse(transcript) {
+            if (/\b(yes|yeah|yep|confirm|correct)\b/i.test(transcript)) return void doConfirm();
+            if (roundsRef.current += 1, roundsRef.current >= 3) return;
+            let combined = `${baseTextRef.current} ${transcript}`.trim();
+            baseTextRef.current = combined, interpretAndPropose(combined)
+        }
+
+        function doConfirm() {
+            let {
+                payload,
+                loggedCount
+            } = buildSmartEntryConfirmPayload(workingEntriesRef.current, candidateGroupsRef.current, baseTextRef.current, "voice");
+            0 !== loggedCount && (setPhase("confirmed"), onConfirm(payload, loggedCount), onClose())
+        }
+
+        if ((0, React.useEffect)(() => {
+                if (!open) return;
+                if (!SpeechRecognitionCtor) return setPhase("error"), void setErrorKind("unsupported");
+                setPhase("listening"), setInterim(""), setErrorKind(null), setWorkingEntries([]), setUnmatched([]), setCandidateGroups([]), baseTextRef.current = "", roundsRef.current = 0, listenOnce(text => {
+                    text ? (baseTextRef.current = text, interpretAndPropose(text)) : (setPhase("error"), setErrorKind("no-speech"))
+                });
+                return stopListening
+            }, [open]), !open) return null;
+
+        let errorCopy = {
+                permission: "Microphone access was denied. Allow it in your browser/device settings, or log this one by typing.",
+                "no-speech": "Didn't catch anything. Try again, or log this one by typing.",
+                network: "Couldn't reach Smart Entry — check your connection, or log this one by typing.",
+                unsupported: "Voice isn't supported on this device/browser. Log this one by typing.",
+                declined: "That's outside what Smart Entry can help with. Log this one by typing.",
+                over_cap: "You've reached today's Smart Entry limit. Log this one by typing.",
+                generic: "Something went wrong. Try again, or log this one by typing."
+            }[errorKind] || "Something went wrong. Try again, or log this one by typing.",
+            fallbackBtn = React.default.createElement("button", {
+                className: "wt-btn-primary",
+                style: {
+                    minHeight: 48
+                },
+                onClick: () => {
+                    stopListening(), onClose(), onFallbackToText && onFallbackToText()
+                }
+            }, "Type instead");
+        return createPortal(React.default.createElement("div", {
+            className: "wt-backdrop",
+            style: {
+                zIndex: 190
+            },
+            onClick: () => {
+                stopListening(), onClose()
+            }
+        }, React.default.createElement("div", {
+            className: "wt-sheet",
+            style: {
+                position: "fixed",
+                zIndex: 191,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                width: "100%",
+                margin: 0,
+                boxSizing: "border-box",
+                maxHeight: "85vh",
+                overflowY: "auto",
+                background: "#151A21",
+                color: "#FFF6DB",
+                borderColor: "var(--water)"
+            },
+            onClick: e => e.stopPropagation()
+        }, React.default.createElement("div", {
+            className: "wt-sheet-header"
+        }, React.default.createElement("span", null, "My AI Voice Tracker"), React.default.createElement("button", {
+            className: "wt-icon-btn",
+            onClick: () => {
+                stopListening(), onClose()
+            },
+            "aria-label": "Close"
+        }, "\xd7")), targetDateLabel && React.default.createElement(SavingToBar, {
+            label: targetDateLabel
+        }), "listening" === phase && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "Listening…"), React.default.createElement("p", {
+            className: "wt-smart-entry-source",
+            style: {
+                fontStyle: "italic"
+            }
+        }, interim || "Describe what you had or did."), fallbackBtn), "thinking" === phase && React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "Thinking…"), "proposing" === phase && React.default.createElement(React.default.Fragment, null, React.default.createElement(ConfirmCard, {
+            entries: workingEntries,
+            unmatched,
+            candidateGroups,
+            onEntryValueChange: (id, value) => setWorkingEntries(list => list.map(e => e.id === id ? {
+                ...e,
+                value
+            } : e)),
+            onEntryRemove: id => setWorkingEntries(list => list.filter(e => e.id !== id)),
+            onCandidatePick: (key, name) => setCandidateGroups(list => list.map(c => c.key === key ? {
+                ...c,
+                picked: name
+            } : c)),
+            onConfirm: doConfirm,
+            confirmDisabled: 0 === workingEntries.length && 0 === candidateGroups.filter(c => c.picked).length
+        }), React.default.createElement("p", {
+            className: "wt-smart-entry-source"
+        }, "🎤 Say \"yes\" to confirm, or tap Confirm.")), "confirmed" === phase && React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "Logged."), "error" === phase && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, errorCopy), fallbackBtn))), document.body)
     }
 
     function computeTrackerStats(e, t) {
@@ -2998,7 +3259,8 @@ import {
             u, s, c, f, d, p, m, h, g, y, v, b, w, x, E, k, S, O, P, C, j, N, T, A, M, _, D, z, I, L, R, B, $, F, U, W, H, q, V, G, X, Y, K, Q, Z,
             supShow, supTotal, supDueCount, supOverdueCount, supPct, supAlert, supTakenCount
         } = computeTrackerStats(e, t),
-            [voiceSheetOpen, setVoiceSheetOpen] = (0, React.useState)(!1);
+            [voiceSheetOpen, setVoiceSheetOpen] = (0, React.useState)(!1),
+            [voiceOverlayOpen, setVoiceOverlayOpen] = (0, React.useState)(!1);
         if (compact) {
             let compactTile = (label, colorVar, onClick, ring) => React.default.createElement("div", {
                 key: label,
@@ -3023,8 +3285,18 @@ import {
             return React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
                 className: gridClass
             }, compactSlot(x, "Water", compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 }))), compactSlot(E, "Protein", compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 }))), compactSlot(k, "Calories", compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 }))), compactSlot(S, "Sleep", compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 }))), compactSlot(O, "Weight", compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 }))), compactSlot(j, "Exercise", compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 }))), compactSlot(C, "Treatments", compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 }))), compactSlot(P, "Prescriptions", compactTile("Prescriptions", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 }))), compactSlot(supShow, "Supplements", compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), compactTile("Voice Tracker", "voice", () => {
-                onOpenSmartEntry && onOpenSmartEntry(), setVoiceSheetOpen(!0)
-            }, plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3"))), React.default.createElement(SmartEntrySheet, {
+                onOpenSmartEntry && onOpenSmartEntry();
+                let supported = typeof window < "u" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+                supported ? setVoiceOverlayOpen(!0) : setVoiceSheetOpen(!0)
+            }, plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3"))), React.default.createElement(VoiceEntryOverlay, {
+                open: voiceOverlayOpen,
+                onClose: () => setVoiceOverlayOpen(!1),
+                onFallbackToText: () => setVoiceSheetOpen(!0),
+                data: e,
+                targetDateKey: t,
+                targetDateLabel,
+                onConfirm: onSmartEntryConfirm
+            }), React.default.createElement(SmartEntrySheet, {
                 open: voiceSheetOpen,
                 onClose: () => setVoiceSheetOpen(!1),
                 data: e,
@@ -6808,7 +7080,7 @@ import {
         // to a manually-logged entry of the same type.
         function applySmartEntryConfirm(payload, loggedCount) {
             let sourceMeta = {
-                source: "smart",
+                source: "voice" === payload.channel ? "voice" : "smart",
                 sourceText: payload.sourceText
             };
             if (payload.water > 0 || payload.protein > 0 || payload.calories > 0) {

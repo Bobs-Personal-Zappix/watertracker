@@ -20,6 +20,63 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.0] — 2026-08-28
+
+Smart Entry Phase A, voice layer (`docs/CC-BRIEF-smart-entry-app-v3.62.0.md` section B). Built onto
+v3.62.0's already-deployed, real-device-verified confirm card/interpretation/write path — nothing
+new in any of those three; voice is purely a front end that drives the same pieces. See
+`docs/DECISION-LOG.md` `PROD-17`.
+
+- **New `VoiceEntryOverlay`**, opened by the Voice Tracker tile when `SpeechRecognition` is
+  available (falls back to the existing v3.62.0 text sheet otherwise — never a dead tile, per B5).
+  Loop: mic starts immediately on open (no opening prompt, per B2) → interim transcript streams
+  live → recognition ends → `/api/interpret` (unchanged) → the confirm card renders **with values
+  visible before any spoken prompt** → a short spoken prompt that never enumerates values ("Got
+  3 — say yes?", under 2s, per B2) → listens for a yes/correction → confirmed writes go through the
+  exact same shared write path as text and manual entry, tagged `source:"voice"`.
+- **States**: `listening · thinking · proposing · confirmed · error`, each with distinct copy and a
+  visible non-voice "Type instead" escape to the text sheet (mic permission denied, no speech
+  detected, network failure, unsupported, declined, over cap — all separately worded).
+- **Candidate disambiguation is tap-only** — never read aloud, matching `PROD-10`'s inventory
+  safeguard exactly as it already works for text. Corrections (anything that isn't a yes/confirm)
+  re-interpret the combined utterance and re-prompt, capped at 3 rounds, after which the card stays
+  on screen for manual tap-edit rather than continuing to listen indefinitely.
+- **Shared, not duplicated, per A4/B4's own instruction**: the `/api/interpret` fetch call was
+  extracted into `callSmartEntryInterpret()` (one call site for both the text sheet and the voice
+  overlay), and the confirm-to-write aggregation logic into `buildSmartEntryConfirmPayload()` (same
+  reasoning — both channels build the identical payload shape, tagged with their own `channel`).
+  The dispatcher that actually writes (`applySmartEntryConfirm`) now reads `payload.channel` instead
+  of hardcoding `source:"smart"` — a one-line parameterization, not new write logic, since `source`
+  was specced `manual|smart|voice` from the start and the hardcoded value was always an incomplete
+  v3.62.0 implementation of that spec, not a deliberate scope boundary.
+- **A real bug found and fixed before this shipped**: the voice loop's auto-confirm (triggered by a
+  spoken "yes", not a tap) was silently writing nothing and never closing the overlay — a classic
+  stale-closure-in-`useEffect` bug. The whole listen→interpret→propose→speak→relisten→confirm chain
+  runs through callbacks that all trace back to one mount-time `useEffect`, whose closure captured
+  `workingEntries`/`candidateGroups` as empty arrays from the initial render; later `setState` calls
+  updated the real state (and correctly re-rendered the visible card) but never reached the stale
+  callback chain still holding the original empty arrays. Fixed with mirror refs
+  (`workingEntriesRef`/`candidateGroupsRef`) kept in sync alongside the state, which `doConfirm`
+  reads instead. A tap on the card's own Confirm button was never affected — that path always reads
+  the current render's closure directly. Caught by the harness's own coverage (a mocked
+  `SpeechRecognition` proving the app's state machine, not Apple's real API — see below), not by
+  code review; worth remembering as a real risk in this exact "long-lived effect chains a sequence
+  of async callbacks" pattern.
+- `tools/harness.js`: mocked-`SpeechRecognition` coverage for the full entries→confirm round trip
+  (proves `source:"voice"` and `sourceText` land correctly, not just that nothing crashes) and the
+  mic-permission-denied error path with its "Type instead" escape; confirmed the unsupported-device
+  fallback opens the text sheet directly, never the voice overlay. Real device behavior (mic
+  permission UX, actual speech recognition/synthesis, timing feel) is explicitly **not** testable in
+  jsdom (B7) — this coverage proves the app's own logic is correct, not that Apple's API behaves as
+  documented; that's real-device-only.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` (618
+  harness checks, 0 runtime errors, 11-error vendor lint baseline unchanged). One unrelated
+  pre-existing stale check still fails (`wt-tile-togo`, documented since v3.44.0).
+- **Not yet verified on a real device** — this entire feature is real-device-only to meaningfully
+  test (mic permission flow, actual recognition accuracy, the mic-reopens-after-TTS behavior B1
+  verified on iPhone/iOS 18.7 standalone PWA, whether the ~10-12s target timing feels right in
+  practice). Needs Rob's real-device pass before wider use, same as v3.62.0 needed and got.
+
 ## [3.62.1] — 2026-08-28
 
 Real-device fix, found by Rob on his first live test of Smart Entry (banana and grilled cheese both
