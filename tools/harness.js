@@ -56,6 +56,11 @@ function makeSeed(overrides = {}) {
       presets: [],
       supplements: [],
       treatments: [],
+      // GOTCHA (v3.60.0): deliberately no `partners: []` here — its presence/absence is the
+      // migration gate (`Array.isArray(e.settings.partners)` in migrateSettingsShape). Seeding an
+      // empty array makes the seed look "already migrated" and silently skips
+      // promotePartnersFromLegacyItems, which is exactly the path SeedRx/SeedTreatment below exist
+      // to test. Real pre-migration users never had this key at all — match that.
       reminders: {
         inApp: { enabled: false, intervalMin: 60 },
         calendar: { startTime: "08:00", endTime: "20:00", intervalHours: 2 },
@@ -194,6 +199,7 @@ const nav = (tab) => clickByText(tab); // "Log It!" | "Today" | "Stats" | "My Pl
 const stored = () => JSON.parse(window.localStorage.getItem(STORAGE_KEY));
 const supp = (name) => stored().settings.supplements.find((s) => s.name === name);
 const rxItem = (name) => stored().settings.rx.find((s) => s.name === name);
+const partnerRecord = (name) => stored().settings.partners.find((p) => p.name === name);
 const treat = (name) => stored().settings.treatments.find((t) => t.name === name);
 const logsToday = () => stored().logs[TODAY] || [];
 const headerText = () => {
@@ -1350,6 +1356,42 @@ const STEPS = [
     const labels = [...window.document.querySelectorAll(".wt-plan-section-label")].map((el) => el.textContent);
     check("'Self-Managed Prescriptions & Supplements' section header present", labels.includes("Self-Managed Prescriptions & Supplements"), "true");
   },
+  () => {
+    // v3.60.0: the old hardcoded "Austin Drip Lounge" demo card (unconditional, dead buttons) is
+    // gone — replaced by a real partner list driven by settings.partners. Assert its distinguishing
+    // content is absent (not just the name, since "Austin Drip Lounge" also appears as legitimate
+    // placeholder text on the treatment form) and that the migrated Seed Pharmacy/Seed Provider
+    // partners (promoted from SeedRx/SeedTreatment above) render as real partner cards instead.
+    const body = window.document.body.textContent;
+    check("old hardcoded demo card content ('IV Hydration Protocol') is gone", body.includes("IV Hydration Protocol"), false);
+    check("old hardcoded demo card's '● Live' badge is gone", body.includes("● Live"), false);
+    const cards = [...window.document.querySelectorAll(".wt-regimen-card.clinic")];
+    const seedPharmacyCard = cards.find((c) => c.textContent.includes("Seed Pharmacy"));
+    check("My Plan shows a real partner card for the migrated Seed Pharmacy partner", !!seedPharmacyCard, "true");
+    check("Seed Pharmacy partner card is typed as Pharmacy", seedPharmacyCard ? seedPharmacyCard.textContent.includes("Pharmacy") : null, "true");
+    const seedProviderCard = cards.find((c) => c.textContent.includes("Seed Provider"));
+    check("My Plan shows a real partner card for the migrated Seed Provider partner", !!seedProviderCard, "true");
+    check("Seed Provider partner card lists its referencing item (SeedTreatment)", seedProviderCard ? seedProviderCard.textContent.includes("SeedTreatment") : null, "true");
+  },
+  () => check("open Add Partner sheet", clickByText("Add Partner", "button")),
+  () => {
+    check("fill new partner name", setInput("e.g. Austin Drip Lounge", "TestPartnerClinic"));
+    const typeSelect = [...window.document.querySelectorAll("select")].find((s) => [...s.options].some((o) => o.value === "treatment"));
+    check("found partner Type selector", !!typeSelect);
+  },
+  () => {
+    const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Add Partner");
+    const sheet = header ? header.closest(".wt-sheet") : null;
+    const saveBtn = sheet ? [...sheet.querySelectorAll("button")].find((b) => b.textContent.trim() === "Add Partner") : null;
+    check("found Add Partner sheet's own save button", !!saveBtn);
+    if (saveBtn) fire(saveBtn);
+  },
+  () => {
+    const p = partnerRecord("TestPartnerClinic");
+    check("new partner stored in settings.partners", !!p, "true");
+    check("new partner defaults to type 'treatment'", p ? p.type : null, "treatment");
+  },
+  () => check("no runtime errors after Add Partner flow", errors.length, 0),
   // v3.51.0 (Track 2): RX & Supplements split into two fully independent trackers. Per the locked
   // migration design, ALL pre-existing combined items (regardless of the old category field) seed
   // the retained RX/Prescriptions tracker (settings.rx); the new Supplements tracker
@@ -1496,7 +1538,6 @@ const STEPS = [
   () => check("toggle inventory tracking on for DetailedRx", clickByAria("Toggle inventory tracking")),
   () => check("set DetailedRx qty low enough to trigger a low-supply alert", setInput("e.g. 30", "2")),
   () => check("set DetailedRx refills remaining", setInput("e.g. 3", "5")),
-  () => check("Partner link field appears once pharmacy is filled", setInput("https://...", "https://corner-pharmacy.example.com")),
   () => {
     // Scoped to .wt-modal — the RX PlanSheet underneath may still have its own due-date inputs
     // mounted (e.g. TestRx's), which would otherwise be matched first by a bare type="date" query.
@@ -1513,8 +1554,10 @@ const STEPS = [
     check("DetailedRx stored with pharmacy", r ? r.pharmacy : null, "Corner Pharmacy");
     check("DetailedRx stored with refillsRemaining", r ? r.refillsRemaining : null, 5);
     check("DetailedRx stored with trackInventory on", r ? r.trackInventory : null, "true");
-    check("DetailedRx stored with partnerLink even with no logo uploaded", r ? r.partnerLink : null, "https://corner-pharmacy.example.com");
-    check("DetailedRx has no partnerLogoDataUri (none uploaded)", r ? r.partnerLogoDataUri : "MISSING", null);
+    // v3.60.0: per-item logo/link upload was removed from this form — that data now lives once on
+    // the partner record (settings.partners), entered via My Plan's Add Partner sheet. DetailedRx
+    // was saved with no partner selected, so it falls back to the free-text pharmacy label.
+    check("DetailedRx has no partnerId (no partner selected in this form)", r ? r.partnerId : "MISSING", null);
   },
   () => check("close RX sheet", clickByAria("Close")),
   () => check("open Self-Managed Treatments sheet", clickByText("Self-Managed Treatments", "button")),
@@ -1607,7 +1650,42 @@ const STEPS = [
     const seedTrCard = cards.find((c) => c.textContent.includes("SeedTreatment"));
     check("SeedTreatment renders as a partner-branded card (has a logo image and outbound link)", seedTrCard ? !!seedTrCard.querySelector("img") && !!seedTrCard.querySelector('a[href="https://example.com/seedtreatment"]') : null, "true");
   },
+  () => {
+    // v3.60.0: settings.partners migration — the legacy SeedRx/SeedTreatment items above (no
+    // partnerId, only inline pharmacy/provider + partnerLogoDataUri/partnerLink) should have been
+    // promoted into real settings.partners records on boot, with partnerId stamped back onto them.
+    const seedRxPartner = partnerRecord("Seed Pharmacy");
+    check("SeedRx's pharmacy promoted into a real settings.partners record on boot", !!seedRxPartner, "true");
+    check("promoted Seed Pharmacy partner has type 'rx'", seedRxPartner ? seedRxPartner.type : null, "rx");
+    check("promoted Seed Pharmacy partner carries the logo/link that used to live on the item", seedRxPartner ? seedRxPartner.logoDataUri : null, "data:image/jpeg;base64,SEEDRXLOGO");
+    const seedRx = rxItem("SeedRx");
+    check("SeedRx item stamped with the promoted partner's id", seedRx && seedRxPartner ? seedRx.partnerId === seedRxPartner.id : null, "true");
+    const seedTrPartner = partnerRecord("Seed Provider");
+    check("SeedTreatment's provider promoted into a real settings.partners record on boot", !!seedTrPartner, "true");
+    check("promoted Seed Provider partner has type 'treatment'", seedTrPartner ? seedTrPartner.type : null, "treatment");
+    const seedTr = stored().settings.treatments.find((t) => t.name === "SeedTreatment");
+    check("SeedTreatment item stamped with the promoted partner's id", seedTr && seedTrPartner ? seedTr.partnerId === seedTrPartner.id : null, "true");
+  },
   () => check("no runtime errors after RX page pass", errors.length, 0),
+  () => check("nav to My Plan (partner-delete flow — Delete button only exists there, not on the read-only RX page)", nav("My Plan")),
+  () => {
+    // Deleting a partner should clear partnerId on referencing items, not delete the items.
+    // Placed after (not before) the migration-promotion checks above, since deleting Seed Pharmacy
+    // would otherwise remove the very fixture those checks depend on.
+    const p = partnerRecord("Seed Pharmacy");
+    check("found Seed Pharmacy partner to delete", !!p);
+    const card = [...window.document.querySelectorAll(".wt-regimen-card.clinic")].find((c) => c.textContent.includes("Seed Pharmacy"));
+    const deleteBtn = card ? [...card.querySelectorAll("button")].find((b) => b.textContent.trim() === "Delete") : null;
+    check("found Delete button on Seed Pharmacy partner card", !!deleteBtn);
+    if (deleteBtn) fire(deleteBtn);
+  },
+  () => {
+    check("Seed Pharmacy partner removed from settings.partners after delete", !!partnerRecord("Seed Pharmacy"), false);
+    const seedRx = rxItem("SeedRx");
+    check("SeedRx item still exists after its partner was deleted (no cascade-delete)", !!seedRx, "true");
+    check("SeedRx item's partnerId cleared after partner delete (falls back to self-managed)", seedRx ? seedRx.partnerId : "MISSING", null);
+  },
+  () => check("no runtime errors after partner-delete pass", errors.length, 0),
 
   // ── v3.47.0: Sleep→Weight gap fixed to match the rest, RX & Supplements→presets-button gap ──
   // added, "RX & Vitamins" renamed "RX & Supplements", Remaining RX/Treatments gets its own card ──

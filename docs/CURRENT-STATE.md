@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.59.0*
+*As of: August 27, 2026 · Deployed version: 3.60.0*
 
 ---
 
@@ -116,10 +116,20 @@ date control and a redesigned tile grid:
   is subscribed to or prescribed; "RX" here is the umbrella term for all three trackers it sections.
   Three sections: Treatments, Prescriptions, Supplements (renamed from "Vitamins & Supplements" in
   v3.59.0 for consistency with the label used everywhere else) — lists every item of that type, not
-  just inventory-tracked ones. Treatments and Prescriptions items can carry an optional partner logo
-  + link (entered on My Plan next to provider/pharmacy); when both a name and a logo are set, the
-  item renders as a partner-branded card instead of plain text — the first step toward the "promote
-  our partners" direction. Supplements have no partner concept.
+  just inventory-tracked ones. Treatments and Prescriptions items can optionally link to a real
+  partner record (`settings.partners`, v3.60.0 — see below) via `partnerId`; when a linked partner
+  has a logo set, the item renders as a partner-branded card instead of plain text. Supplements
+  have no partner concept.
+- **Partner configuration (v3.60.0)** — `settings.partners` (device-local only, no clinic/server
+  infrastructure): each partner is `{ id, name, type: "treatment"|"rx", logoDataUri, link }`,
+  managed via a real "Add Partner" sheet on My Plan (replacing a non-functional design placeholder)
+  and a real partner list (replacing a hardcoded, always-visible "Austin Drip Lounge" demo card with
+  dead buttons). Treatment/RX entry forms offer a partner picker (existing partners of the matching
+  type, or "No partner" — the default, preserving today's self-managed behavior) instead of a
+  free-text field with its own per-item logo/link upload; logo/link now live once on the partner
+  record. Deleting a partner clears `partnerId` on referencing items without deleting them. Existing
+  items with a legacy `provider`/`pharmacy` + logo/link were promoted into real partner records on
+  boot (one-time migration, `SCHEMA_VERSION` 4). See `docs/DECISION-LOG.md` `TRACK-02`.
 - Past-days log viewer ("Edit Prior Days Logs" tile on Stats, between Sleep Over Time and Health
   Summary, as of v3.48.0 — moved off My Day, where it used to live behind a small calendar-icon
   button); past-day entries are deletable
@@ -227,6 +237,33 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.60.0)
+
+Phase 1 of partner-configuration work, scoped and greenlit this session — continues `TRACK-01`'s
+explicit deferral of this exact work. Full detail in `CHANGELOG.md` and `docs/DECISION-LOG.md`
+`TRACK-02`.
+
+- New `settings.partners` array (device-local only), `SCHEMA_VERSION` 3→4 with a one-time migration
+  promoting existing per-item provider/pharmacy + logo/link into real partner records.
+- Hardcoded "Austin Drip Lounge" demo card (dead buttons, unconditional) replaced with a real
+  partner list; "Add Partner" placeholder sheet wired up for real (Name/Type/Logo/Link — dropped
+  the placeholder's protocol-code/session-count/appointment-date fields, which weren't partner-level
+  data).
+- Treatment/RX entry forms: free-text provider/pharmacy field replaced by a partner picker; per-item
+  logo/link upload removed (now lives once on the partner record) — a real behavior change, not
+  incidental.
+- `RxPage` partner-card rendering resolves through `partnerId` first, legacy fields as fallback.
+- `tools/harness.js`: new migration/CRUD coverage; caught and fixed a test-ordering bug during this
+  session (an early delete-partner test was destroying a fixture a later assertion needed).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. Two pre-existing,
+  unrelated flakes confirmed present on the untouched v3.59.0 bundle too.
+- **Not yet verified on a real device.**
+- **Explicitly out of scope this pass** (Phase 2/3, scoped not built): Stats-page content
+  (adherence over time, inventory/expiration timeline, per-partner breakdown) for Treatments/
+  Prescriptions/Supplements — see `docs/DECISION-LOG.md` `TRACK-02` for the scoped shape of this
+  future work.
 
 ## What shipped Aug 27, 2026 (v3.59.0)
 
@@ -772,6 +809,14 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
+  file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
+  present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to
+  check the agreed working order per `CLAUDE.md`'s own instruction to read
+  `docs/SEQUENCING-PLAN.md` before proposing anything. If these live elsewhere (project knowledge,
+  a doc outside this repo), fine — but if not, this is a real continuity gap worth closing, since
+  it's exactly the kind of drifting, no-deadline item `CLAUDE.md` asks to surface rather than wait
+  to be asked about.
 - **Presets/Meal Entry/Weight new icon artwork (v3.57.0) needs Rob's real-device confirmation.**
   Verified programmatically (real alpha transparency, no checkerboard/JPEG artifact) and visually
   inspected here before shipping, but the actual on-device look/scale/crop of all three is
@@ -832,12 +877,11 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   Treatments" wasn't in scope for that fix — a wrong next-due date on a treatment currently can't be
   corrected without deleting and re-adding the item. Worth raising with Rob before "My Treatments"
   gets built out further.
-- **"Add Partner"/"Add Treatment Provider" sheet on My Plan is still a design-review placeholder**
-  (name, protocol code, contact, sessions, appointment date — none wired to any data model). This is
-  a separate concern from the per-item "Partner logo"/"Partner link" fields added in v3.49.0 (which
-  attach to an existing Treatment/RX item's provider/pharmacy name) — the placeholder sheet is for
-  onboarding a whole new partner relationship, not decorating an existing item. Not touched by
-  v3.49.0; still needs a real spec and data model before it can be wired up.
+- ~~**"Add Partner"/"Add Treatment Provider" sheet on My Plan is still a design-review
+  placeholder**~~ **RESOLVED v3.60.0** — real, wired-up "Add Partner" sheet (Name/Type/Logo/Link),
+  backed by a new `settings.partners` array; the hardcoded "Austin Drip Lounge" demo card replaced
+  with a real partner list. See `docs/DECISION-LOG.md` `TRACK-02`. Needs Rob's real-device
+  confirmation — not yet checked outside jsdom.
 
 ---
 

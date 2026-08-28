@@ -20,6 +20,69 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.60.0] — 2026-08-27
+
+Phase 1 of the partner-configuration work scoped and greenlit this session: a real, device-local
+partner data model, replacing the two non-functional placeholders that had been sitting on My Plan
+since v3.49.0. `TRACK-01`'s own text had explicitly deferred this exact work to a future session —
+this is that session.
+
+- **New `settings.partners` array** — each partner is `{ id, name, type: "treatment"|"rx",
+  logoDataUri, link }`. Treatment/Prescription items reference a partner by `partnerId` instead of
+  carrying their own free-text provider/pharmacy name plus a per-item logo/link. Deliberately
+  device-local only — no server-side/multi-tenant/clinic infrastructure, consistent with what the
+  roadmap flags as unvalidated (clinic pilot validation hasn't happened yet).
+- **One-time migration** (`SCHEMA_VERSION` 3→4): existing items with a `provider`/`pharmacy` value
+  are promoted into real partner records on boot, deduped by name+type (not name+logo, so a user
+  who'd only uploaded a logo on one of several same-clinic items still collapses to one partner
+  record), with `partnerId` stamped back onto the item. Legacy `partnerLogoDataUri`/`partnerLink`
+  fields are kept present but non-authoritative for one release cycle (`__prePartnerMigrationBackup`
+  snapshot), mirroring `TRACK-01`'s own rollback-safety pattern.
+- **The hardcoded "Austin Drip Lounge" demo card removed** — it was fully static (unconditional,
+  two buttons with no `onClick` handlers at all) and never connected to real data. Replaced with a
+  real partner list driven by `settings.partners`: each partner shows its referencing items, with
+  working Edit and Delete. Deleting a partner clears `partnerId` on referencing items rather than
+  cascade-deleting them or blocking the delete.
+- **The "Add Partner" sheet wired up** — was an explicitly-commented placeholder ("fields for
+  design review only, no data model wired") with 5 unbound fields. Scoped down to the 4 fields that
+  are actually partner-level data: Name, Type, Logo, Link. The other 3 (protocol code, session
+  count, next appointment date) were dropped — protocol code is a distinct, separately-sequenced
+  roadmap item (clinic-issued onboarding codes, implies server-side clinic distribution, bigger
+  than what this session scoped in); session count and appointment date are already per-item
+  concerns handled by each Treatment/RX item's own inventory/due-date fields, not partner-level.
+- **Treatment/RX entry forms**: the free-text provider/pharmacy field is replaced by a partner
+  picker (existing partners of the matching type, or "No partner" to keep today's self-managed
+  behavior — the default, since most items today have no provider/pharmacy set at all). The
+  per-item logo/link upload block is removed from these forms entirely — that data now lives once
+  on the partner record, entered via My Plan's Add Partner sheet. **This is a real behavior
+  change**, not incidental: uploading a partner logo now happens once per partner, not once per
+  item.
+- `RxPage`'s partner-branded card rendering now resolves through `partnerId → settings.partners`
+  first, falling back to an item's own legacy fields only if no `partnerId` is set (a safety net,
+  not the common path — migration stamps `partnerId` onto everything that had a name at boot).
+- `tools/harness.js`: seed data left deliberately without a pre-set `partners` key (that absence
+  is literally what triggers the migration path — see the in-file GOTCHA comment) while two
+  existing seed items (`SeedRx`/`SeedTreatment`, already used for an earlier reload-persistence
+  regression test) double as the migration-promotion test fixture. New coverage: promotion creates
+  real partner records with `partnerId` stamped back on the items; the old demo card's content is
+  gone; the real partner list renders; the Add Partner flow persists a new record; deleting a
+  partner clears `partnerId` without deleting the item. One test-ordering bug caught and fixed
+  during this session (not shipped): an early delete-partner test was destroying the migration
+  fixture a later assertion depended on — reordered so promotion checks run before the delete test
+  that exercises the same partner record.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. Two pre-existing,
+  unrelated flakes noted and confirmed present on the untouched v3.59.0 bundle too (a stale
+  `wt-tile-togo` water-goal check documented since v3.44.0, and a set of date-pill checks whose
+  root cause wasn't investigated further this session — flagged, not fixed, since they predate this
+  work).
+- **Not yet verified on a real device** — the partner picker's UX in the entry forms, the partner
+  list's visual read on My Plan, and whether losing the per-item logo-upload flow (in favor of
+  per-partner) feels right in practice.
+- **Explicitly out of scope this pass** (Phase 2/3, scoped but not built — see
+  `docs/DECISION-LOG.md`): Stats-page content for Treatments/Prescriptions/Supplements (adherence
+  over time, inventory/expiration timeline, per-partner breakdown).
+
 ## [3.59.0] — 2026-08-27
 
 Rob's real-device feedback after v3.58.0, plus a Log It! tile reorder and a new Weight completion

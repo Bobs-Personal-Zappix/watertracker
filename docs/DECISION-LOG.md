@@ -537,7 +537,11 @@ were not touched.* — *amended Aug 27, 2026, v3.59.0: the nav tab's label rever
 `TRACK-01`'s v3.59.0 amendment — "RX" is the umbrella term for the three sections this page shows).
 This page's third section also renamed "Vitamins & Supplements" → "Supplements," for consistency
 with the label used everywhere else in the app; "Treatments" and "Prescriptions" section headers
-unchanged.*
+unchanged.* — *amended Aug 27, 2026, v3.60.0: the `partnerLogoDataUri`/`partnerLink` fields this
+entry introduced are superseded by `TRACK-02`'s `settings.partners` data model — see that entry.
+This page's partner-branded card rendering now resolves through a linked partner record instead of
+reading those fields directly off the item, with the original fields kept as a fallback for
+anything that somehow isn't migrated.*
 
 **UX-29 — Log It! becomes pure fast-entry: compact 3x3 tile grid, "Meals" tile, "Use Presets" tile.**
 Now that Today (`UX-27`) and the RX page (`UX-28`) both show full tracked-metric detail, Rob judged
@@ -735,6 +739,57 @@ individual Prescriptions tracker keeps "Prescriptions" everywhere else (Log It!,
 the entry sheet) — that part of the v3.58.0 rename stands. The RX page's third section also renamed
 "Vitamins & Supplements" → "Supplements" in the same pass, for consistency with the label used
 everywhere else (see `UX-28` amendment below).
+
+**TRACK-02 — Partner configuration: device-local `settings.partners` data model (Phase 1); Stats
+content scoped for a future session (Phase 2/3).**
+Direct continuation of `TRACK-01`'s explicit deferral: "Partner configuration for Treatments/
+Prescriptions and any Stats-page work for these three trackers remain explicitly out of scope,
+deferred to a future session per Rob." Rob asked to start that scoping; resolved shape, confirmed
+via clarifying questions before any code was written:
+1. **Data model scope: lightweight, device-local partner list**, not server-side/multi-tenant/
+   clinic infrastructure. New `settings.partners` array — `{ id, name, type: "treatment"|"rx",
+   logoDataUri, link }` — that Treatment/Prescription items reference by `partnerId`. Explicitly
+   not the bigger build (clinic dashboard, protocol codes, multi-tenancy) the roadmap already flags
+   as gated behind clinic-pilot validation that hasn't happened (`STRAT-OPEN-03`).
+2. **Both existing non-functional placeholders wired up as the real flow** — the hardcoded "Austin
+   Drip Lounge" demo card (unconditional, two buttons with no `onClick` handlers) replaced with a
+   real partner list; the "Add Partner" sheet (explicitly commented "no data model wired") made
+   real. Its original 5 fields were scoped down to the 4 that are actually partner-level data —
+   Name, Type, Logo, Link — dropping "Protocol code" (a distinct, separately-sequenced roadmap item
+   implying server-side clinic distribution) and "Number of sessions"/"Next appointment date"
+   (already per-item concerns handled by each Treatment/RX item's own inventory/due-date fields).
+3. **Migration**: `SCHEMA_VERSION` bumped 3→4. Existing items with a `provider`/`pharmacy` value are
+   promoted into real partner records on boot, gated on `Array.isArray(settings.partners)` (not the
+   version number) so a partial migration can't double-run — the same pattern `TRACK-01` established.
+   Deduped by name+type, case-insensitive, not name+logo — a user who'd only uploaded a logo on one
+   of several same-clinic items should still collapse to one partner record; first-seen logo wins if
+   they differ. Legacy `partnerLogoDataUri`/`partnerLink`/`provider`/`pharmacy` fields are kept
+   present but non-authoritative for one release cycle (`__prePartnerMigrationBackup` snapshot),
+   mirroring `TRACK-01`'s own rollback-safety precedent.
+4. **Entry-form behavior change, called out explicitly rather than shipped quietly**: the free-text
+   provider/pharmacy field on Treatment/RX entry forms is replaced by a partner picker (existing
+   partners of the matching type, or "No partner" — kept as the default, since most items today
+   have neither field set, and self-managed items with no formal partner must not regress). The
+   per-item logo/link upload block is removed from these forms — that data now lives once on the
+   partner record, entered via the Add Partner sheet. Uploading a partner's logo now happens once
+   per partner, not once per item.
+5. **Stats content (Phase 2/3) scoped, not built this pass**: adherence over time (%-of-scheduled,
+   day/week/month, shaped like the existing Water/Protein/Calories bar-chart tab rather than
+   Weight/Sleep's raw-value line — items with no schedule show a count, not a fabricated
+   percentage, same reasoning `UX-32`'s Weight-ring amendment already established), inventory/
+   expiration timeline (recommended as a sorted list/card view, not a chart — the app doesn't
+   snapshot `qtyRemaining` over time, so there's no real time axis to plot), and per-partner
+   breakdown (a filter on top of the other two, once `partnerId` exists — no new visualization
+   primitive needed). Deferred to a future session; this entry preserves the scoped shape so that
+   session doesn't have to re-derive it.
+*Why:* keeps day-to-day logging and My Plan's existing "system of record" role unchanged while
+finally giving the partner-branding fields `UX-28` introduced (name/logo/link duplicated per item,
+no reuse) a real, reusable home — the smallest data-model step that removes the "re-type and
+re-upload the same clinic's logo on every item" friction without building clinic-side infrastructure
+the business hasn't validated yet.
+*Status:* **Locked** · Aug 27, 2026 · v3.60.0 — continues `TRACK-01`'s explicit deferral; amends
+`UX-28` (partner logo/link fields now resolve through a partner record, see that entry's v3.60.0
+amendment)
 
 **UX-34 — Log It! real-device review round 1: date-pill centering/calendar-picker, top-row/grid
 sizing.**
@@ -1049,7 +1104,13 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.59.0: TRACK-01/UX-28 amended — "RX" nav-tab label restored
+*Last updated: August 27, 2026 (v3.60.0: TRACK-02 added — Phase 1 of partner configuration, a new
+device-local `settings.partners` data model (name/type/logo/link) that Treatment/Prescription items
+reference by id, with a one-time migration promoting existing per-item provider/pharmacy+logo/link
+into real partner records; the hardcoded "Austin Drip Lounge" demo card and non-functional "Add
+Partner" placeholder sheet both wired up for real; Stats-page content (Phase 2/3) scoped but not
+built this pass; amends UX-28 (partner logo/link fields now resolve through a partner record);
+earlier: v3.59.0: TRACK-01/UX-28 amended — "RX" nav-tab label restored
 (umbrella term for Treatments/Prescriptions/Supplements; the individual Prescriptions tracker keeps
 its own label elsewhere), RX page's "Vitamins & Supplements" section renamed "Supplements"; UX-06
 amended — "Today" renamed "My Day" app-wide, Log It!/My Day nav positions swapped (explicitly

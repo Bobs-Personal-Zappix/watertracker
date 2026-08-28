@@ -227,8 +227,8 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.59.0",
-        SCHEMA_VERSION = 3,
+        xS = "3.60.0",
+        SCHEMA_VERSION = 4,
         ES = {
             logs: {},
             activeSleepSession: null,
@@ -264,6 +264,8 @@ import {
                 rx: [],
                 __preMigrationSupplementsBackup: null,
                 treatments: [],
+                partners: [],
+                __prePartnerMigrationBackup: null,
                 profile: {
                     fullName: "",
                     email: "",
@@ -456,7 +458,8 @@ import {
             pharmacy: e.pharmacy || null,
             refillsRemaining: null == e.refillsRemaining ? null : e.refillsRemaining,
             partnerLogoDataUri: e.partnerLogoDataUri || null,
-            partnerLink: e.partnerLink || null
+            partnerLink: e.partnerLink || null,
+            partnerId: e.partnerId || null
         }))
     }
 
@@ -472,7 +475,8 @@ import {
             expirationDate: e.expirationDate || null,
             provider: e.provider || null,
             partnerLogoDataUri: e.partnerLogoDataUri || null,
-            partnerLink: e.partnerLink || null
+            partnerLink: e.partnerLink || null,
+            partnerId: e.partnerId || null
         }))
     }
 
@@ -499,19 +503,51 @@ import {
         }, reader.readAsDataURL(file)
     }
 
+    function normalizePartners(e) {
+        return (Array.isArray(e) ? e : []).map(e => ({
+            id: e.id,
+            name: e.name,
+            type: "rx" === e.type ? "rx" : "treatment",
+            logoDataUri: e.logoDataUri || null,
+            link: e.link || null
+        }))
+    }
+
+    function promotePartnersFromLegacyItems(rxItems, treatmentItems) {
+        let partners = [];
+
+        function findOrCreate(name, type, logo, link) {
+            let key = name.trim().toLowerCase(),
+                existing = partners.find(p => p.type === type && p.name.trim().toLowerCase() === key);
+            if (existing) return existing.id;
+            let id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            return partners.push({ id, name: name.trim(), type, logoDataUri: logo || null, link: link || null }), id
+        }
+        let rx = rxItems.map(item => item.pharmacy ? { ...item, partnerId: findOrCreate(item.pharmacy, "rx", item.partnerLogoDataUri, item.partnerLink) } : item),
+            treatments = treatmentItems.map(item => item.provider ? { ...item, partnerId: findOrCreate(item.provider, "treatment", item.partnerLogoDataUri, item.partnerLink) } : item);
+        return { partners, rx, treatments }
+    }
+
     function migrateSettingsShape(e) {
         let alreadySplit = e && Array.isArray(e.rx),
             oldCombined = e && Array.isArray(e.supplements) ? e.supplements : [],
             rxSource = alreadySplit ? e.rx : oldCombined,
             supplementsSource = alreadySplit ? e && e.supplements : [],
-            preMigrationBackup = alreadySplit ? e && e.__preMigrationSupplementsBackup || null : oldCombined.length > 0 ? oldCombined : null;
+            preMigrationBackup = alreadySplit ? e && e.__preMigrationSupplementsBackup || null : oldCombined.length > 0 ? oldCombined : null,
+            normalizedRx = USTracker(rxSource),
+            normalizedTreatments = normalizeTreatments(e && e.treatments),
+            partnersAlreadyMigrated = e && Array.isArray(e.partners),
+            partnerResult = partnersAlreadyMigrated ? { partners: normalizePartners(e.partners), rx: normalizedRx, treatments: normalizedTreatments } : promotePartnersFromLegacyItems(normalizedRx, normalizedTreatments),
+            prePartnerMigrationBackup = partnersAlreadyMigrated ? e && e.__prePartnerMigrationBackup || null : (normalizedRx.some(i => i.partnerLogoDataUri || i.pharmacy) || normalizedTreatments.some(i => i.partnerLogoDataUri || i.provider)) ? { rx: normalizedRx, treatments: normalizedTreatments } : null;
         return {
             ...e,
             presets: FS(e),
-            rx: USTracker(rxSource),
+            rx: partnerResult.rx,
             supplements: USTracker(supplementsSource),
             __preMigrationSupplementsBackup: preMigrationBackup,
-            treatments: normalizeTreatments(e && e.treatments)
+            treatments: partnerResult.treatments,
+            partners: partnerResult.partners,
+            __prePartnerMigrationBackup: prePartnerMigrationBackup
         }
     }
 
@@ -1957,16 +1993,18 @@ import {
         open: e,
         initial: t,
         category: catProp,
+        partners: partnerList = [],
         onClose: n,
         onSave: r
     }) {
         let isVitamin = "vitamin" === catProp,
             isRx = "rx" === catProp,
-            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [pharm, setPharm] = (0, React.useState)(""), [refills, setRefills] = (0, React.useState)(""), [partnerLogo, setPartnerLogo] = (0, React.useState)(null), [partnerLink, setPartnerLink] = (0, React.useState)(""), [logoError, setLogoError] = (0, React.useState)("");
+            [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)("1"), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [pharm, setPharm] = (0, React.useState)(""), [refills, setRefills] = (0, React.useState)(""), [selectedPartnerId, setSelectedPartnerId] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setPharm(t && t.pharmacy ? t.pharmacy : ""), setRefills(t && null != t.refillsRemaining ? String(t.refillsRemaining) : ""), setPartnerLogo(t && t.partnerLogoDataUri ? t.partnerLogoDataUri : null), setPartnerLink(t && t.partnerLink ? t.partnerLink : ""), setLogoError(""))
+                e && (o(t ? t.name : ""), l(t && null != t.intervalDays ? String(t.intervalDays) : "1"), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setPharm(t && t.pharmacy ? t.pharmacy : ""), setRefills(t && null != t.refillsRemaining ? String(t.refillsRemaining) : ""), setSelectedPartnerId(t && t.partnerId ? t.partnerId : ""))
             }, [e, t]), !e) return null;
         let m = a.trim().length > 0,
+            rxPartners = partnerList.filter(p => "rx" === p.type),
             modalTitle = t ? (isVitamin ? "Edit vitamin or supplement" : "rx" === catProp ? "Edit prescription" : "Edit item") : isVitamin ? "Add vitamin or supplement" : "rx" === catProp ? "Add prescription" : "Add supplement or medicine";
         return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
@@ -1991,63 +2029,24 @@ import {
             onChange: e => o(e.target.value)
         })), isRx && React.default.createElement("label", {
             className: "wt-field"
+        }, "Partner", React.default.createElement("select", {
+            value: selectedPartnerId,
+            onChange: e => setSelectedPartnerId(e.target.value)
+        }, React.default.createElement("option", { value: "" }, "No partner (self-managed)"), rxPartners.map(p => React.default.createElement("option", { key: p.id, value: p.id }, p.name)))), isRx && 0 === rxPartners.length && React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: wD,
+                marginTop: -8,
+                marginBottom: 14
+            }
+        }, "Add partners on My Plan's Self-Managed Prescriptions & Supplements section to link this item to one."), isRx && "" === selectedPartnerId && React.default.createElement("label", {
+            className: "wt-field"
         }, "Pharmacy / where filled (optional)", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. CVS on Main St",
             value: pharm,
             onChange: e => setPharm(e.target.value)
-        })), isRx && pharm.trim().length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("label", {
-            className: "wt-field"
-        }, "Partner link (optional)", React.default.createElement("input", {
-            type: "url",
-            placeholder: "https://...",
-            value: partnerLink,
-            onChange: e => setPartnerLink(e.target.value)
-        })), React.default.createElement("div", {
-            style: {
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 14
-            }
-        }, partnerLogo && React.default.createElement("img", {
-            src: partnerLogo,
-            alt: "",
-            style: {
-                width: 40,
-                height: 40,
-                borderRadius: 8,
-                objectFit: "cover"
-            }
-        }), React.default.createElement("label", {
-            className: "wt-btn-secondary",
-            style: {
-                cursor: "pointer"
-            }
-        }, partnerLogo ? "Change Partner Logo" : "Upload Partner Logo (optional)", React.default.createElement("input", {
-            type: "file",
-            accept: "image/*",
-            style: {
-                display: "none"
-            },
-            onChange: e => {
-                let t = e.target.files && e.target.files[0];
-                t && readPartnerLogo(t, e => {
-                    setPartnerLogo(e), setLogoError("")
-                }, setLogoError)
-            }
-        })), partnerLogo && React.default.createElement("button", {
-            className: "wt-btn-text wt-btn-text-danger",
-            type: "button",
-            onClick: () => setPartnerLogo(null)
-        }, "Remove")), logoError && React.default.createElement("p", {
-            style: {
-                fontSize: 11.5,
-                color: bS,
-                marginTop: -8,
-                marginBottom: 14
-            }
-        }, logoError)), !isVitamin && React.default.createElement("label", {
+        })), !isVitamin && React.default.createElement("label", {
             className: "wt-field"
         }, "Take every (days)", React.default.createElement("input", {
             type: "number",
@@ -2112,21 +2111,23 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null, pharm.trim() || null, isRx && refills.length > 0 ? Math.max(0, Math.round(Number(refills) || 0)) : null, isRx ? partnerLogo : null, isRx ? partnerLink.trim() || null : null)
+            onClick: () => r(a.trim(), Math.max(1, Math.round(Number(i) || 1)), u, Number(c) || 0, d || null, isRx && selectedPartnerId ? null : pharm.trim() || null, isRx && refills.length > 0 ? Math.max(0, Math.round(Number(refills) || 0)) : null, isRx ? selectedPartnerId || null : null)
         }, "Save")))
     }
 
     function jO({
         open: e,
         initial: t,
+        partners: partnerList = [],
         onClose: n,
         onSave: r
     }) {
-        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [prov, setProv] = (0, React.useState)(""), [partnerLogo, setPartnerLogo] = (0, React.useState)(null), [partnerLink, setPartnerLink] = (0, React.useState)(""), [logoError, setLogoError] = (0, React.useState)("");
+        let [a, o] = (0, React.useState)(""), [i, l] = (0, React.useState)(""), [u, s] = (0, React.useState)(!1), [c, f] = (0, React.useState)(""), [d, p] = (0, React.useState)(""), [prov, setProv] = (0, React.useState)(""), [selectedPartnerId, setSelectedPartnerId] = (0, React.useState)("");
         if ((0, React.useEffect)(() => {
-                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setProv(t && t.provider ? t.provider : ""), setPartnerLogo(t && t.partnerLogoDataUri ? t.partnerLogoDataUri : null), setPartnerLink(t && t.partnerLink ? t.partnerLink : ""), setLogoError(""))
+                e && (o(t ? t.name : ""), l(t && t.intervalDays ? String(t.intervalDays) : ""), s(!(!t || !t.trackInventory)), f(t && null != t.qtyRemaining ? String(t.qtyRemaining) : ""), p(t && t.expirationDate ? t.expirationDate : ""), setProv(t && t.provider ? t.provider : ""), setSelectedPartnerId(t && t.partnerId ? t.partnerId : ""))
             }, [e, t]), !e) return null;
-        let m = a.trim().length > 0;
+        let m = a.trim().length > 0,
+            treatmentPartners = partnerList.filter(p => "treatment" === p.type);
         return React.default.createElement("div", {
             className: "wt-backdrop wt-center",
             onClick: n
@@ -2150,63 +2151,24 @@ import {
             onChange: e => o(e.target.value)
         })), React.default.createElement("label", {
             className: "wt-field"
+        }, "Partner", React.default.createElement("select", {
+            value: selectedPartnerId,
+            onChange: e => setSelectedPartnerId(e.target.value)
+        }, React.default.createElement("option", { value: "" }, "No partner (self-managed)"), treatmentPartners.map(p => React.default.createElement("option", { key: p.id, value: p.id }, p.name)))), 0 === treatmentPartners.length && React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: wD,
+                marginTop: -8,
+                marginBottom: 14
+            }
+        }, "Add partners on My Plan's Self-Managed Prescriptions & Supplements section to link this item to one."), "" === selectedPartnerId && React.default.createElement("label", {
+            className: "wt-field"
         }, "Ordered from / provider (optional)", React.default.createElement("input", {
             type: "text",
             placeholder: "e.g. Austin Drip Lounge",
             value: prov,
             onChange: e => setProv(e.target.value)
-        })), prov.trim().length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("label", {
-            className: "wt-field"
-        }, "Partner link (optional)", React.default.createElement("input", {
-            type: "url",
-            placeholder: "https://...",
-            value: partnerLink,
-            onChange: e => setPartnerLink(e.target.value)
-        })), React.default.createElement("div", {
-            style: {
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 14
-            }
-        }, partnerLogo && React.default.createElement("img", {
-            src: partnerLogo,
-            alt: "",
-            style: {
-                width: 40,
-                height: 40,
-                borderRadius: 8,
-                objectFit: "cover"
-            }
-        }), React.default.createElement("label", {
-            className: "wt-btn-secondary",
-            style: {
-                cursor: "pointer"
-            }
-        }, partnerLogo ? "Change Partner Logo" : "Upload Partner Logo (optional)", React.default.createElement("input", {
-            type: "file",
-            accept: "image/*",
-            style: {
-                display: "none"
-            },
-            onChange: e => {
-                let t = e.target.files && e.target.files[0];
-                t && readPartnerLogo(t, e => {
-                    setPartnerLogo(e), setLogoError("")
-                }, setLogoError)
-            }
-        })), partnerLogo && React.default.createElement("button", {
-            className: "wt-btn-text wt-btn-text-danger",
-            type: "button",
-            onClick: () => setPartnerLogo(null)
-        }, "Remove")), logoError && React.default.createElement("p", {
-            style: {
-                fontSize: 11.5,
-                color: bS,
-                marginTop: -8,
-                marginBottom: 14
-            }
-        }, logoError)), React.default.createElement("label", {
+        })), React.default.createElement("label", {
             className: "wt-field"
         }, "Repeats every (optional)", React.default.createElement("input", {
             type: "number",
@@ -2261,7 +2223,7 @@ import {
                 marginTop: 6
             },
             disabled: !m,
-            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null, prov.trim() || null, partnerLogo, partnerLink.trim() || null)
+            onClick: () => r(a.trim(), Math.max(0, Math.round(Number(i) || 0)), u, Number(c) || 0, d || null, selectedPartnerId ? null : prov.trim() || null, selectedPartnerId || null)
         }, "Save")))
     }
 
@@ -3335,14 +3297,18 @@ import {
     }) {
         let treatments = e.settings.treatments,
             rx = e.settings.rx,
-            vitamins = e.settings.supplements;
+            vitamins = e.settings.supplements,
+            partners = e.settings.partners;
 
         function renderItem(item, kind) {
             let alert = QS(item),
                 expiry = item.expirationDate ? YS(MS(item.expirationDate)) : null,
-                source = "treatment" === kind ? item.provider : "rx" === kind ? item.pharmacy : null,
+                partner = item.partnerId ? partners.find(p => p.id === item.partnerId) : null,
+                source = partner ? partner.name : "treatment" === kind ? item.provider : "rx" === kind ? item.pharmacy : null,
                 sourceLabel = "treatment" === kind ? "From" : "Filled at",
-                isPartnerCard = !!(source && item.partnerLogoDataUri);
+                logoUri = partner ? partner.logoDataUri : item.partnerLogoDataUri,
+                linkUrl = partner ? partner.link : item.partnerLink,
+                isPartnerCard = !!(source && logoUri);
             return React.default.createElement("div", {
                 key: item.id,
                 className: isPartnerCard ? "wt-regimen-card clinic" : "wt-card",
@@ -3352,7 +3318,7 @@ import {
             }, isPartnerCard ? React.default.createElement("div", {
                 className: "wt-regimen-card-title"
             }, React.default.createElement("img", {
-                src: item.partnerLogoDataUri,
+                src: logoUri,
                 alt: "",
                 style: {
                     width: 32,
@@ -3370,8 +3336,8 @@ import {
                     color: wD,
                     marginBottom: 4
                 }
-            }, item.partnerLink ? React.default.createElement("a", {
-                href: item.partnerLink,
+            }, linkUrl ? React.default.createElement("a", {
+                href: linkUrl,
                 target: "_blank",
                 rel: "noopener noreferrer",
                 style: {
@@ -5293,10 +5259,15 @@ import {
         onAddTreatment: x,
         onEditTreatment: E,
         onDeleteTreatment: k,
-        onEditSupplementNextDue
+        onEditSupplementNextDue,
+        onAddPartner,
+        onEditPartner,
+        onDeletePartner
     }) {
-        let [S, O] = (0, React.useState)(String(e.settings.goalOz || "")), [P, C] = (0, React.useState)(String(e.settings.goalProtein || "")), [j, N] = (0, React.useState)(String(e.settings.goalCalories || "")), [T, A] = (0, React.useState)(String(e.settings.goalSleepHours || "")), [M, _] = (0, React.useState)(!1), [D, z] = (0, React.useState)(null), [I, L] = (0, React.useState)(!1), [R, B] = (0, React.useState)(null), [$, F] = (0, React.useState)(!1), [U, W] = (0, React.useState)(null), [expandedList, setExpandedList] = (0, React.useState)(null), [openTracker, setOpenTracker] = (0, React.useState)(null), [showAddPartner, setShowAddPartner] = (0, React.useState)(!1), [vitOpen, setVitOpen] = (0, React.useState)(!1), [vitInitial, setVitInitial] = (0, React.useState)(null);
+        let [S, O] = (0, React.useState)(String(e.settings.goalOz || "")), [P, C] = (0, React.useState)(String(e.settings.goalProtein || "")), [j, N] = (0, React.useState)(String(e.settings.goalCalories || "")), [T, A] = (0, React.useState)(String(e.settings.goalSleepHours || "")), [M, _] = (0, React.useState)(!1), [D, z] = (0, React.useState)(null), [I, L] = (0, React.useState)(!1), [R, B] = (0, React.useState)(null), [$, F] = (0, React.useState)(!1), [U, W] = (0, React.useState)(null), [expandedList, setExpandedList] = (0, React.useState)(null), [openTracker, setOpenTracker] = (0, React.useState)(null), [showAddPartner, setShowAddPartner] = (0, React.useState)(!1), [editingPartner, setEditingPartner] = (0, React.useState)(null), [vitOpen, setVitOpen] = (0, React.useState)(!1), [vitInitial, setVitInitial] = (0, React.useState)(null), [partnerFormName, setPartnerFormName] = (0, React.useState)(""), [partnerFormType, setPartnerFormType] = (0, React.useState)("treatment"), [partnerFormLogo, setPartnerFormLogo] = (0, React.useState)(null), [partnerFormLink, setPartnerFormLink] = (0, React.useState)(""), [partnerLogoError, setPartnerLogoError] = (0, React.useState)("");
         (0, React.useEffect)(() => {
+            showAddPartner && (setPartnerFormName(editingPartner ? editingPartner.name : ""), setPartnerFormType(editingPartner ? editingPartner.type : "treatment"), setPartnerFormLogo(editingPartner ? editingPartner.logoDataUri : null), setPartnerFormLink(editingPartner ? editingPartner.link || "" : ""), setPartnerLogoError(""))
+        }, [showAddPartner, editingPartner]), (0, React.useEffect)(() => {
             O(String(e.settings.goalOz || ""))
         }, [e.settings.goalOz]), (0, React.useEffect)(() => {
             C(String(e.settings.goalProtein || ""))
@@ -5521,39 +5492,47 @@ import {
             }
         }, "Off trackers stay visible here, dimmed — they're hidden on Log It! and still counted in Reports."), React.default.createElement("div", {
             className: "wt-plan-section-label"
-        }, "My Treatments"), React.default.createElement("div", {
-            className: "wt-regimen-card clinic"
-        }, React.default.createElement("div", {
-            className: "wt-regimen-card-title"
-        }, React.default.createElement("span", null, "Austin Drip Lounge"), React.default.createElement("span", {
-            className: "wt-regimen-live-badge"
-        }, "● Live")), React.default.createElement("div", {
-            className: "wt-regimen-item-list"
-        }, "IV Hydration Protocol", React.default.createElement("br", null), "B12 Injection", React.default.createElement("br", null), "Vitamin D3 (clinic protocol)"), React.default.createElement("div", {
-            className: "wt-regimen-clinic-stats"
-        }, "3 sessions remaining · Next: Sep 3"), React.default.createElement("div", {
-            style: {
-                display: "flex",
-                gap: 10,
-                marginTop: 12
-            }
-        }, React.default.createElement("button", {
-            className: "wt-btn-primary",
-            style: {
-                flex: 1
-            }
-        }, "Log Today"), React.default.createElement("button", {
-            className: "wt-btn-secondary",
-            style: {
-                flex: 1
-            }
-        }, "View Details"))), React.default.createElement("button", {
+        }, "My Treatments"), e.settings.partners.map(partner => {
+            let items = [...e.settings.treatments, ...e.settings.rx].filter(i => i.partnerId === partner.id);
+            return React.default.createElement("div", {
+                key: partner.id,
+                className: "wt-regimen-card clinic"
+            }, React.default.createElement("div", {
+                className: "wt-regimen-card-title"
+            }, React.default.createElement("span", null, partner.name), React.default.createElement("span", {
+                className: "wt-regimen-live-badge"
+            }, "rx" === partner.type ? "Pharmacy" : "Treatment provider")), items.length > 0 ? React.default.createElement("div", {
+                className: "wt-regimen-item-list"
+            }, items.map((item, idx) => React.default.createElement(React.default.Fragment, { key: item.id }, idx > 0 && React.default.createElement("br", null), item.name))) : React.default.createElement("p", {
+                className: "wt-empty-note",
+                style: { margin: "4px 0 0" }
+            }, "No items yet"), React.default.createElement("div", {
+                style: {
+                    display: "flex",
+                    gap: 10,
+                    marginTop: 12
+                }
+            }, React.default.createElement("button", {
+                className: "wt-btn-secondary",
+                style: { flex: 1 },
+                onClick: () => {
+                    setEditingPartner(partner), setShowAddPartner(!0)
+                }
+            }, "Edit"), React.default.createElement("button", {
+                className: "wt-btn-text wt-btn-text-danger",
+                style: { flex: 1 },
+                onClick: () => onDeletePartner(partner.id)
+            }, "Delete"))
+            )
+        }), React.default.createElement("button", {
             type: "button",
             className: "wt-regimen-card wt-regimen-add-partner",
-            onClick: () => setShowAddPartner(!0)
+            onClick: () => {
+                setEditingPartner(null), setShowAddPartner(!0)
+            }
         }, React.default.createElement(Plus, {
             size: 20
-        }), " Add Treatment Provider"), React.default.createElement("div", {
+        }), " Add Partner"), React.default.createElement("div", {
             className: "wt-plan-section-label"
         }, "Self-Managed Prescriptions & Supplements"), React.default.createElement(RegimenSummaryCard, {
             icon: Pill,
@@ -5740,61 +5719,111 @@ import {
             open: vitOpen,
             initial: vitInitial,
             category: "vitamin",
+            partners: e.settings.partners,
             onClose: () => setVitOpen(!1),
-            onSave: (e, t, n, r, a) => {
-                vitInitial ? b(vitInitial.id, e, t, n, r, a, "vitamin", null, null, null, null) : v(e, t, n, r, a, "vitamin", null, null, null, null), setVitOpen(!1)
+            onSave: (e2, t, n, r, a) => {
+                vitInitial ? b(vitInitial.id, e2, t, n, r, a, "vitamin", null, null, null) : v(e2, t, n, r, a, "vitamin", null, null, null), setVitOpen(!1)
             }
         }), React.default.createElement(CO, {
             open: I,
             initial: R,
             category: "rx",
+            partners: e.settings.partners,
             onClose: () => L(!1),
-            onSave: (e, t, n, r, a, ph, rf, logo, link) => {
-                R ? b(R.id, e, t, n, r, a, "rx", ph, rf, logo, link) : v(e, t, n, r, a, "rx", ph, rf, logo, link), L(!1)
+            onSave: (e2, t, n, r, a, ph, rf, partnerId) => {
+                R ? b(R.id, e2, t, n, r, a, "rx", ph, rf, partnerId) : v(e2, t, n, r, a, "rx", ph, rf, partnerId), L(!1)
             }
         }), React.default.createElement(jO, {
             open: $,
             initial: U,
+            partners: e.settings.partners,
             onClose: () => F(!1),
-            onSave: (e, t, n, r, a, prov, logo, link) => {
-                U ? E(U.id, e, t, n, r, a, prov, logo, link) : x(e, t, n, r, a, prov, logo, link), F(!1)
+            onSave: (e2, t, n, r, a, prov, partnerId) => {
+                U ? E(U.id, e2, t, n, r, a, prov, partnerId) : x(e2, t, n, r, a, prov, partnerId), F(!1)
             }
         }), React.default.createElement(TrackerSheet, {
             tracker: openTracker,
             onClose: () => setOpenTracker(null)
         }),
-        // PLACEHOLDER — partner onboarding sheet, fields for design review only, no data model wired
         showAddPartner && React.default.createElement(PlanSheet, {
-            title: "Add Partner",
-            onClose: () => setShowAddPartner(!1)
+            title: editingPartner ? "Edit Partner" : "Add Partner",
+            onClose: () => {
+                setShowAddPartner(!1), setEditingPartner(null)
+            }
         }, React.default.createElement("label", {
             className: "wt-field"
         }, "Partner/Clinic name", React.default.createElement("input", {
-            type: "text"
+            type: "text",
+            placeholder: "e.g. Austin Drip Lounge",
+            value: partnerFormName,
+            onChange: e => setPartnerFormName(e.target.value)
         })), React.default.createElement("label", {
             className: "wt-field"
-        }, "Protocol code", React.default.createElement("input", {
-            type: "text"
-        })), React.default.createElement("label", {
+        }, "Type", React.default.createElement("select", {
+            value: partnerFormType,
+            onChange: e => setPartnerFormType(e.target.value)
+        }, React.default.createElement("option", { value: "treatment" }, "Treatment provider"), React.default.createElement("option", { value: "rx" }, "Pharmacy"))), React.default.createElement("label", {
             className: "wt-field"
-        }, "Provider contact", React.default.createElement("input", {
-            type: "text"
-        })), React.default.createElement("label", {
-            className: "wt-field"
-        }, "Number of sessions", React.default.createElement("input", {
-            type: "number",
-            inputMode: "numeric"
-        })), React.default.createElement("label", {
-            className: "wt-field"
-        }, "Next appointment date", React.default.createElement("input", {
-            type: "date"
-        })), React.default.createElement("button", {
+        }, "Partner link (optional)", React.default.createElement("input", {
+            type: "url",
+            placeholder: "https://...",
+            value: partnerFormLink,
+            onChange: e => setPartnerFormLink(e.target.value)
+        })), React.default.createElement("div", {
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14
+            }
+        }, partnerFormLogo && React.default.createElement("img", {
+            src: partnerFormLogo,
+            alt: "",
+            style: {
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                objectFit: "cover"
+            }
+        }), React.default.createElement("label", {
+            className: "wt-btn-secondary",
+            style: {
+                cursor: "pointer"
+            }
+        }, partnerFormLogo ? "Change Partner Logo" : "Upload Partner Logo (optional)", React.default.createElement("input", {
+            type: "file",
+            accept: "image/*",
+            style: {
+                display: "none"
+            },
+            onChange: e => {
+                let t = e.target.files && e.target.files[0];
+                t && readPartnerLogo(t, e => {
+                    setPartnerFormLogo(e), setPartnerLogoError("")
+                }, setPartnerLogoError)
+            }
+        })), partnerFormLogo && React.default.createElement("button", {
+            className: "wt-btn-text wt-btn-text-danger",
+            type: "button",
+            onClick: () => setPartnerFormLogo(null)
+        }, "Remove")), partnerLogoError && React.default.createElement("p", {
+            style: {
+                fontSize: 11.5,
+                color: bS,
+                marginTop: -8,
+                marginBottom: 14
+            }
+        }, partnerLogoError), React.default.createElement("button", {
             className: "wt-btn-primary",
             style: {
                 width: "100%",
                 marginTop: 8
+            },
+            disabled: 0 === partnerFormName.trim().length,
+            onClick: () => {
+                editingPartner ? onEditPartner(editingPartner.id, partnerFormName.trim(), partnerFormType, partnerFormLogo, partnerFormLink.trim() || null) : onAddPartner(partnerFormName.trim(), partnerFormType, partnerFormLogo, partnerFormLink.trim() || null), setShowAddPartner(!1), setEditingPartner(null)
             }
-        }, "Request Partnership")))
+        }, editingPartner ? "Save changes" : "Add Partner")))
     }
 
     function HO({
@@ -7081,7 +7110,7 @@ import {
             onAddPreset: addPreset,
             onEditPreset: editPreset,
             onDeletePreset: deletePreset,
-            onAddSupplement: function(e, t, r, a, o, c, ph, rf, logo, link) {
+            onAddSupplement: function(e, t, r, a, o, c, ph, rf, partnerId) {
                 let isRxCat = "rx" === c,
                     i = {
                         id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
@@ -7094,8 +7123,9 @@ import {
                         expirationDate: o || null,
                         pharmacy: ph || null,
                         refillsRemaining: null == rf ? null : rf,
-                        partnerLogoDataUri: logo || null,
-                        partnerLink: link || null
+                        partnerLogoDataUri: null,
+                        partnerLink: null,
+                        partnerId: partnerId || null
                     };
                 n(e2 => ({
                     ...e2,
@@ -7106,7 +7136,7 @@ import {
                     }
                 }))
             },
-            onEditSupplement: function(e, t, r, a, o, i, c, ph, rf, logo, link) {
+            onEditSupplement: function(e, t, r, a, o, i, c, ph, rf, partnerId) {
                 let isRxCat = "rx" === c,
                     updater = arr => arr.map(n => n.id === e ? {
                         ...n,
@@ -7117,8 +7147,7 @@ import {
                         expirationDate: i || null,
                         pharmacy: ph || null,
                         refillsRemaining: null == rf ? null : rf,
-                        partnerLogoDataUri: logo || null,
-                        partnerLink: link || null
+                        partnerId: partnerId || null
                     } : n);
                 n(n2 => ({
                     ...n2,
@@ -7139,7 +7168,7 @@ import {
                     }
                 }))
             },
-            onAddTreatment: function(e, t, r, a, o, prov, logo, link) {
+            onAddTreatment: function(e, t, r, a, o, prov, partnerId) {
                 let i = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
                     name: e,
@@ -7150,8 +7179,9 @@ import {
                     qtyRemaining: a || 0,
                     expirationDate: o || null,
                     provider: prov || null,
-                    partnerLogoDataUri: logo || null,
-                    partnerLink: link || null
+                    partnerLogoDataUri: null,
+                    partnerLink: null,
+                    partnerId: partnerId || null
                 };
                 n(e => ({
                     ...e,
@@ -7161,7 +7191,7 @@ import {
                     }
                 }))
             },
-            onEditTreatment: function(e, t, r, a, o, i, prov, logo, link) {
+            onEditTreatment: function(e, t, r, a, o, i, prov, partnerId) {
                 n(n => ({
                     ...n,
                     settings: {
@@ -7174,8 +7204,7 @@ import {
                             qtyRemaining: o || 0,
                             expirationDate: i || null,
                             provider: prov || null,
-                            partnerLogoDataUri: logo || null,
-                            partnerLink: link || null
+                            partnerId: partnerId || null
                         } : n)
                     }
                 }))
@@ -7186,6 +7215,48 @@ import {
                     settings: {
                         ...t.settings,
                         treatments: t.settings.treatments.filter(t => t.id !== e)
+                    }
+                }))
+            },
+            onAddPartner: function(e, t, r, a) {
+                let i = {
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+                    name: e,
+                    type: t,
+                    logoDataUri: r || null,
+                    link: a || null
+                };
+                n(e2 => ({
+                    ...e2,
+                    settings: {
+                        ...e2.settings,
+                        partners: [...e2.settings.partners, i]
+                    }
+                }))
+            },
+            onEditPartner: function(e, t, r, a, o) {
+                n(n => ({
+                    ...n,
+                    settings: {
+                        ...n.settings,
+                        partners: n.settings.partners.map(n => n.id === e ? {
+                            ...n,
+                            name: t,
+                            type: r,
+                            logoDataUri: a || null,
+                            link: o || null
+                        } : n)
+                    }
+                }))
+            },
+            onDeletePartner: function(e) {
+                n(t => ({
+                    ...t,
+                    settings: {
+                        ...t.settings,
+                        partners: t.settings.partners.filter(t => t.id !== e),
+                        rx: t.settings.rx.map(t => t.partnerId === e ? { ...t, partnerId: null } : t),
+                        treatments: t.settings.treatments.map(t => t.partnerId === e ? { ...t, partnerId: null } : t)
                     }
                 }))
             }
