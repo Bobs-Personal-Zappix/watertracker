@@ -20,6 +20,41 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.61.0] — 2026-08-27
+
+Six quick tweaks from Rob's follow-up review of v3.60.0's partner configuration work, plus a real
+bug fix.
+
+- **Bugfix: My Day's Supplements tile was never connected.** `onOpenNewSupplementSheet` was never
+  threaded through `RO` (My Day) → `MO` (the shared tile-grid component) — Log It!'s copy of `MO`
+  had it wired, My Day's didn't, so the tile rendered but tapping it did nothing. Fixed by passing
+  the same handler through both. New harness coverage added (this class of bug — a handler wired on
+  one `MO` call site but not the other — wasn't previously tested).
+- **Log It!'s 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry) now stay locked to the grid's
+  last 3 cells**, regardless of which trackers are toggled off on My Plan. Previously, toggling any
+  tracker off shifted every tile after it up by one grid position — including the fast-entry tiles,
+  which no longer stayed at the bottom the way Rob wanted. Toggled-off trackers now render an
+  invisible placeholder cell (`.wt-tracker-col-compact-off`, sized to match a real tile but hidden
+  and non-interactive) instead of being omitted, so the grid always has exactly 12 cells and the
+  last 3 never move.
+- **Weight's compact-tile ring now hugs the icon image edge-to-edge** — the image was rendering at
+  94% of its box (a holdover from before the ring existed), leaving a visible gap between the image
+  and the border. Bumped to 100%.
+- **Header text changes**: My Day's "My Day's Summary for:" → "TODAY'S INTAKES"; the RX page's
+  "SCRIPTS FOR:" → "RX FOR:".
+- **My Plan section renames**: "My Treatments" → "My Health Providers" (since that section now
+  holds both Treatment and Prescription partners, not just treatments); "Self-Managed Prescriptions
+  & Supplements" → "My Current RX"; "Self-Managed Treatments" → "Treatments". Updated two in-form
+  hint texts (on the Treatment and RX entry forms) that referenced the old section names by name.
+- `tools/harness.js`: updated section-header/sheet-title assertions for the renames; new coverage
+  for the Supplements-tile bugfix and the locked-fast-entry-tiles behavior (toggles Water off,
+  confirms the grid still has 12 cells with Voice Tracker/Presets/Meal Entry unmoved in the last 3).
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline. Two pre-existing,
+  unrelated flakes noted (date-pill checks, a stale water-goal check), not caused by this pass.
+- **Not yet verified on a real device** — the tightened Weight ring's visual fit and the locked
+  fast-entry-tiles' placeholder-gap look are both things jsdom can't confirm.
+
 ## [3.60.0] — 2026-08-27
 
 Phase 1 of the partner-configuration work scoped and greenlit this session: a real, device-local

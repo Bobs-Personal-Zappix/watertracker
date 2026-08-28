@@ -2,7 +2,7 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 27, 2026 · Deployed version: 3.60.0*
+*As of: August 27, 2026 · Deployed version: 3.61.0*
 
 ---
 
@@ -112,7 +112,7 @@ date control and a redesigned tile grid:
   Plan's RX tile only as of v3.45.0 (Vitamins & Supplements are implicitly daily, no schedule to
   edit); Treatments have no next-due-editing UI anywhere in the app right now — see Known outstanding.
 - Inventory/subscription tracking on supplements and treatments (remaining count, expiration, low-supply and near-expiry alerts, auto-decrement on log, auto-restore on delete). Treatments also carry an optional provider/source field; Prescriptions items also carry optional pharmacy and refills-remaining fields (v3.46.0) — all entered on My Plan, surfaced on the RX page (moved there from My Day's "Remaining RX/Treatments" section in v3.49.0).
-- **RX page (v3.49.0)** — titled "SCRIPTS FOR: {date}", the single place to see everything a user
+- **RX page (v3.49.0)** — titled "RX FOR: {date}" (was "SCRIPTS FOR:" through v3.60.0), the single place to see everything a user
   is subscribed to or prescribed; "RX" here is the umbrella term for all three trackers it sections.
   Three sections: Treatments, Prescriptions, Supplements (renamed from "Vitamins & Supplements" in
   v3.59.0 for consistency with the label used everywhere else) — lists every item of that type, not
@@ -123,8 +123,10 @@ date control and a redesigned tile grid:
 - **Partner configuration (v3.60.0)** — `settings.partners` (device-local only, no clinic/server
   infrastructure): each partner is `{ id, name, type: "treatment"|"rx", logoDataUri, link }`,
   managed via a real "Add Partner" sheet on My Plan (replacing a non-functional design placeholder)
-  and a real partner list (replacing a hardcoded, always-visible "Austin Drip Lounge" demo card with
-  dead buttons). Treatment/RX entry forms offer a partner picker (existing partners of the matching
+  and a real partner list under the "My Health Providers" section (renamed from "My Treatments" in
+  v3.61.0, since it now holds both Treatment and Prescription partners — replacing a hardcoded,
+  always-visible "Austin Drip Lounge" demo card with dead buttons). Treatment/RX entry forms offer a
+  partner picker (existing partners of the matching
   type, or "No partner" — the default, preserving today's self-managed behavior) instead of a
   free-text field with its own per-item logo/link upload; logo/link now live once on the partner
   record. Deleting a partner clears `partnerId` on referencing items without deleting them. Existing
@@ -237,6 +239,27 @@ Follow-up polish from Rob's review of v3.40.3, all in `CHANGELOG.md`:
 - Full 5-step verification pipeline re-run and passed against the exact shipped `bundle.js`. **Not
   yet verified on a real device** — jsdom can't confirm badge alignment, button contrast, header
   spacing, or the RX tile's resulting size match.
+
+## What shipped Aug 27, 2026 (v3.61.0)
+
+Six quick tweaks from Rob's follow-up review of v3.60.0, plus a real bugfix. Full detail in
+`CHANGELOG.md`.
+
+- **Bugfix**: My Day's Supplements tile wasn't connected — `onOpenNewSupplementSheet` was never
+  threaded through `RO`→`MO` on that page's call site (Log It!'s copy had it, My Day's didn't).
+- Log It!'s 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry) now stay locked to the grid's
+  last 3 cells regardless of which trackers are toggled off — toggled-off trackers render an
+  invisible placeholder cell instead of being omitted, so the grid always has 12 cells.
+- Weight's compact-tile ring now hugs the icon image edge-to-edge (image bumped 94%→100%).
+- Header text: My Day's "My Day's Summary for:" → "TODAY'S INTAKES"; RX page's "SCRIPTS FOR:" →
+  "RX FOR:".
+- My Plan section renames: "My Treatments" → "My Health Providers"; "Self-Managed Prescriptions &
+  Supplements" → "My Current RX"; "Self-Managed Treatments" → "Treatments".
+- `tools/harness.js`: updated renamed assertions; new coverage for the Supplements-tile bugfix and
+  the locked-fast-entry-tiles behavior.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors), lint unchanged at the 11-error vendor baseline.
+- **Not yet verified on a real device.**
 
 ## What shipped Aug 27, 2026 (v3.60.0)
 
@@ -873,10 +896,11 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 - **"Add in Setup" stale copy** on Treatments/RX & Supplements empty-state CTAs on Log It! — quick copy fix, not yet addressed.
 - **Some lucide glyphs filled may look odd** (v3.38.2): icons with internal negative space (e.g. Battery) render differently when filled vs. stroked. Flag any that look wrong for individual adjustment.
 - **Treatments have no next-due-date editing UI anywhere in the app** (since v3.44.0 removed "To Do
-  Today," the only place it lived). v3.45.0 restored this for RX items on My Plan, but "Self-Managed
-  Treatments" wasn't in scope for that fix — a wrong next-due date on a treatment currently can't be
-  corrected without deleting and re-adding the item. Worth raising with Rob before "My Treatments"
-  gets built out further.
+  Today," the only place it lived). v3.45.0 restored this for RX items on My Plan, but the
+  "Treatments" card (renamed from "Self-Managed Treatments" in v3.61.0) wasn't in scope for that
+  fix — a wrong next-due date on a treatment currently can't be corrected without deleting and
+  re-adding the item. Worth raising with Rob before "My Health Providers" (renamed from "My
+  Treatments" in v3.61.0) gets built out further.
 - ~~**"Add Partner"/"Add Treatment Provider" sheet on My Plan is still a design-review
   placeholder**~~ **RESOLVED v3.60.0** — real, wired-up "Add Partner" sheet (Name/Type/Logo/Link),
   backed by a new `settings.partners` array; the hardcoded "Austin Drip Lounge" demo card replaced

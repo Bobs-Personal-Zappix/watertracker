@@ -1351,10 +1351,11 @@ const STEPS = [
 
   // ── v3.44.0: Self-Managed RX — Vitamins & Supplements / RX split, self-managed Treatments ──
   // preserved as its own tile, RX next-due-date editing added (see decision log UX-22/UX-23) ──
-  () => check("nav to My Plan (for Self-Managed Prescriptions & Supplements checks)", nav("My Plan")),
+  () => check("nav to My Plan (for My Current RX checks)", nav("My Plan")),
   () => {
+    // v3.61.0: "Self-Managed Prescriptions & Supplements" renamed "My Current RX" per Rob.
     const labels = [...window.document.querySelectorAll(".wt-plan-section-label")].map((el) => el.textContent);
-    check("'Self-Managed Prescriptions & Supplements' section header present", labels.includes("Self-Managed Prescriptions & Supplements"), "true");
+    check("'My Current RX' section header present", labels.includes("My Current RX"), "true");
   },
   () => {
     // v3.60.0: the old hardcoded "Austin Drip Lounge" demo card (unconditional, dead buttons) is
@@ -1560,7 +1561,8 @@ const STEPS = [
     check("DetailedRx has no partnerId (no partner selected in this form)", r ? r.partnerId : "MISSING", null);
   },
   () => check("close RX sheet", clickByAria("Close")),
-  () => check("open Self-Managed Treatments sheet", clickByText("Self-Managed Treatments", "button")),
+  // v3.61.0: "Self-Managed Treatments" card/sheet renamed "Treatments" per Rob.
+  () => check("open Treatments sheet", clickByText("Treatments", "button")),
   () => check("open Add-a-treatment form", clickByText("Add a treatment", "button")),
   () => check("fill detailed treatment name", setInput("e.g. B12 Shot, IV Drip, Allergy Shot", "DetailedTreatment")),
   () => check("fill DetailedTreatment provider", setInput("e.g. Austin Drip Lounge", "Wellness Clinic")),
@@ -1572,7 +1574,7 @@ const STEPS = [
     check("DetailedTreatment stored with provider", tr ? tr.provider : null, "Wellness Clinic");
     check("DetailedTreatment stored with trackInventory on", tr ? tr.trackInventory : null, "true");
   },
-  () => check("close Self-Managed Treatments sheet", clickByAria("Close")),
+  () => check("close Treatments sheet", clickByAria("Close")),
   () => check("no runtime errors after detailed-item setup pass", errors.length, 0),
 
   // ── v3.49.0: "Remaining RX/Treatments" retired from Today; new "RX" page ("SCRIPTS FOR:")
@@ -1593,7 +1595,8 @@ const STEPS = [
     check("nav tab's internal route/active-class is unaffected by the label rename (still keys off 'rx')", rxBtn ? rxBtn.getAttribute("aria-current") !== "page" : null, "true");
   },
   () => check("nav to RX page", nav("RX")),
-  () => check("RX page title starts with 'SCRIPTS FOR:'", (headerText() || "").startsWith("SCRIPTS FOR:"), "true"),
+  // v3.61.0: RX page header context label renamed "SCRIPTS FOR:" -> "RX FOR:" per Rob.
+  () => check("RX page title starts with 'RX FOR:'", (headerText() || "").startsWith("RX FOR:"), "true"),
   () => {
     const rxBtn = [...window.document.querySelectorAll(".wt-nav-btn")].find((b) => b.textContent.trim() === "RX");
     check("nav tab shows active state after navigating to it (route key 'rx' still wired correctly)", rxBtn ? rxBtn.className.includes("active") : null, "true");
@@ -1781,6 +1784,19 @@ const STEPS = [
     check("tapping Today's duplicated Water tile opens the same entry sheet Log It!'s Water tile opens", dialOpen, "true");
   },
   () => check("close the sheet opened from Today's duplicated grid", clickByAria("Close")),
+  () => {
+    // v3.61.0 bugfix: the Supplements tile on My Day wasn't connected — onOpenNewSupplementSheet
+    // was never passed down through RO->MO, so tapping it did nothing. Verify it now opens the
+    // same new-supplement entry sheet Log It!'s Supplements tile opens.
+    const supTile = [...window.document.querySelectorAll(".wt-tracker-col")].find((x) => x.textContent.startsWith("Supplements"));
+    check("found My Day's duplicated Supplements tile", !!supTile);
+    if (supTile) fire(supTile);
+  },
+  () => {
+    const sheetOpen = !!window.document.querySelector(".wt-sheet, .wt-backdrop");
+    check("tapping My Day's Supplements tile opens the new-supplement entry sheet (was previously not connected)", sheetOpen, "true");
+  },
+  () => check("close the sheet opened from My Day's Supplements tile", clickByAria("Close")),
   () => check("nav to My Plan (toggle Water off, to verify Today's duplicated grid honors the toggle)", nav("My Plan")),
   () => {
     const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');
@@ -1791,6 +1807,23 @@ const STEPS = [
   () => {
     check("Water tile no longer shown on Today's duplicated grid once toggled off on My Plan", tiles().some((t) => t.startsWith("Water")), false);
   },
+  () => check("nav to Log It! (verify fast-entry tiles stay locked in the bottom row with Water off)", nav("Log It!")),
+  () => {
+    // v3.61.0: Voice Tracker/Presets/Meal Entry must stay pinned as the grid's last 3 cells
+    // regardless of which trackers are toggled off — toggled-off trackers now render an invisible
+    // placeholder cell (.wt-tracker-col-compact-off) instead of being omitted, so the grid's total
+    // cell count stays constant at 12 and the fast-entry tiles never shift position.
+    const allCells = [...window.document.querySelectorAll(".wt-tracker-col-compact, .wt-tracker-col-compact-off")];
+    check("compact grid still has all 12 cells (real + placeholder) with Water toggled off", allCells.length, 12);
+    const lastThree = allCells.slice(-3).map((e) => e.textContent.trim());
+    check("Voice Tracker still third-to-last with Water off", lastThree[0], "Voice Tracker");
+    check("Presets still second-to-last with Water off", lastThree[1], "Presets");
+    check("Meal Entry still last with Water off", lastThree[2], "Meal Entry");
+    const placeholder = window.document.querySelector(".wt-tracker-col-compact-off");
+    check("a placeholder cell exists where Water's tile used to be", !!placeholder, "true");
+    check("no visible 'Water' text among the real compact tiles", [...window.document.querySelectorAll(".wt-tracker-col-compact")].some((t) => t.textContent.trim() === "Water"), false);
+  },
+  () => check("no runtime errors after locked-fast-entry-tiles check", errors.length, 0),
   () => check("nav to My Plan (restore Water toggle)", nav("My Plan")),
   () => {
     const waterToggle = window.document.querySelector('[aria-label="Toggle Water on Log page"]');

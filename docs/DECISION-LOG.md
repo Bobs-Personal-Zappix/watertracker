@@ -196,7 +196,7 @@ Nav order: Log It! · Today · Stats · Setup · Settings. Titles: "TO DATE STAT
 
 **UX-07 — Tile order on Log It!**
 Water, Protein, Calories, Sleep, Weight, Exercise, Treatments, RX & Supplements.
-*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).* — *amended Aug 23, 2026: renamed back to "RX & Supplements" throughout, explicit call by Rob, v3.47.0.* — *amended Aug 27, 2026 (v3.59.0): this entry describes the underlying 8/9-tracker set, which is unchanged; what changed is where the 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry, added to the same grid in v3.57.0) sit relative to it — moved from before this list to after it, per Rob's testing feedback that users prefer the core trackers up top. Full order is now Water/Protein/Calories/Sleep/Weight/Exercise/Treatments/Prescriptions/Supplements, then Voice Tracker/Presets/Meal Entry.*
+*Status:* **Locked** · Aug 17, 2026 — *amended Aug 21, 2026: "RX & Supplements" renamed to "RX & Vitamins" throughout (v3.27.0).* — *amended Aug 23, 2026: renamed back to "RX & Supplements" throughout, explicit call by Rob, v3.47.0.* — *amended Aug 27, 2026 (v3.59.0): this entry describes the underlying 8/9-tracker set, which is unchanged; what changed is where the 3 fast-entry tiles (Voice Tracker/Presets/Meal Entry, added to the same grid in v3.57.0) sit relative to it — moved from before this list to after it, per Rob's testing feedback that users prefer the core trackers up top. Full order is now Water/Protein/Calories/Sleep/Weight/Exercise/Treatments/Prescriptions/Supplements, then Voice Tracker/Presets/Meal Entry.* — *amended Aug 27, 2026 (v3.61.0, see `UX-40`): the 3 fast-entry tiles are now locked to the grid's last 3 cells via placeholder cells for any toggled-off tracker, rather than merely being last by array order (which previously let them shift position whenever a tracker was toggled off).*
 
 **UX-08 — Health Summary and doctor share live at the bottom of Stats.**
 Moved off Settings.
@@ -656,6 +656,9 @@ call. This is a deliberate reversal of this entry's original reasoning ("droppin
 for readings is a more honest fit than fabricating a percentage"), not an oversight — the new ring
 is a binary completion signal, not a fabricated percentage, so it doesn't reintroduce the original
 problem this entry was solving.
+*Amendment (v3.61.0, Aug 27, 2026, see `UX-40`):* the ring's image was rendering at 94% of its box,
+leaving a visible gap between the image and the border — Rob asked for the ring to hug the image
+edge-to-edge; bumped to 100%.
 
 **UX-33 — Quick-add chips and "Add to <tracker>" button relabel across Log It!'s entry sheets.**
 Every accumulating-tracker entry sheet gains 4 quick-add chips above its manual field: Water
@@ -790,6 +793,37 @@ the business hasn't validated yet.
 *Status:* **Locked** · Aug 27, 2026 · v3.60.0 — continues `TRACK-01`'s explicit deferral; amends
 `UX-28` (partner logo/link fields now resolve through a partner record, see that entry's v3.60.0
 amendment)
+
+**UX-40 — Six quick tweaks after Rob's v3.60.0 review, plus a real bugfix: My Day Supplements tile
+connected, Log It!'s fast-entry tiles locked to the bottom row, Weight ring tightened, three header/
+section-name renames.**
+All explicit calls by Rob in one round of feedback:
+1. **Bugfix, not a tweak**: My Day's Supplements tile rendered but did nothing when tapped —
+   `onOpenNewSupplementSheet` was wired into Log It!'s `MO` call site (`RO`'s sibling) but never
+   passed through My Day's own `RO`→`MO` call site, so `onOpenSup2` was `undefined` there. Fixed by
+   threading the same handler through both.
+2. **Log It!'s 3 fast-entry tiles locked to the grid's last 3 cells.** Previously these were simply
+   the last 3 JS array entries in the grid's children list — visually last only relative to however
+   many tracker tiles were currently rendered, so toggling any tracker off on My Plan shifted every
+   subsequent tile (including these 3) up by one grid position. Rob wanted them pinned regardless.
+   Fixed by rendering an invisible placeholder cell (`.wt-tracker-col-compact-off`, sized to match a
+   real tile, `visibility:hidden`, non-interactive) for any toggled-off tracker instead of omitting
+   it — the grid always has exactly 12 cells now, so the last 3 never move. Placeholder uses a
+   distinct class (not shared with `.wt-tracker-col-compact`) specifically so existing tile-count
+   assertions elsewhere keep counting only real, visible tiles.
+3. **Weight's compact-tile ring tightened to the image edge** — `.wt-gauge-imageonly-img` was 94% of
+   its box (visual gap between the border and the image), bumped to 100%.
+4. **Header text**: My Day's "My Day's Summary for:" → "TODAY'S INTAKES"; RX page's "SCRIPTS FOR:"
+   → "RX FOR:".
+5. **My Plan section renames**: "My Treatments" → "My Health Providers" (Rob's reasoning: that
+   section now holds both Treatment and Prescription partners via `TRACK-02`'s partner list, not
+   just treatments, so the old name undersold it); "Self-Managed Prescriptions & Supplements" → "My
+   Current RX"; "Self-Managed Treatments" → "Treatments". Two in-form hint texts (on the Treatment
+   and RX entry forms, added in `TRACK-02`) that referenced the old section names by name were
+   updated to match.
+*Status:* **Locked** · Aug 27, 2026 · v3.61.0 — amends `TRACK-02` (section renames, hint-text
+wording), `UX-07` (fast-entry tile position now locked rather than merely last-by-array-order),
+`UX-32` (Weight ring sizing)
 
 **UX-34 — Log It! real-device review round 1: date-pill centering/calendar-picker, top-row/grid
 sizing.**
@@ -1104,7 +1138,11 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.60.0: TRACK-02 added — Phase 1 of partner configuration, a new
+*Last updated: August 27, 2026 (v3.61.0: UX-40 added — bugfix (My Day's Supplements tile now
+connected), Log It!'s 3 fast-entry tiles locked to the grid's last 3 cells via placeholder cells for
+toggled-off trackers, Weight ring tightened to the image edge, header text renames ("TODAY'S
+INTAKES", "RX FOR:"), My Plan section renames ("My Health Providers", "My Current RX",
+"Treatments"); amends TRACK-02/UX-07/UX-32; earlier: v3.60.0: TRACK-02 added — Phase 1 of partner configuration, a new
 device-local `settings.partners` data model (name/type/logo/link) that Treatment/Prescription items
 reference by id, with a one-time migration promoting existing per-item provider/pharmacy+logo/link
 into real partner records; the hardcoded "Austin Drip Lounge" demo card and non-functional "Add
