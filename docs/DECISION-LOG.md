@@ -319,6 +319,33 @@ in every prior session's harness runs, not only this one.
 the live worker or on a real device** — harness coverage uses a mocked `fetch`, not the actual
 deployed `/api/interpret` route.
 
+*Amended Aug 28, 2026 (v3.62.1) — real-device fix, first bug report against this feature.* Rob
+tested v3.62.0 on a real device: interpretation itself worked correctly against the live worker
+(banana and grilled cheese both interpreted right), confirming the earlier "not yet verified against
+the live worker" caveat above is now resolved. But two visibility bugs made the confirm flow
+unusable: the sheet's textarea rendered white text on a white background while typing, and the
+close "×" button was white on white.
+
+Root causes, both simple CSS mistakes, not logic bugs: `.wt-voice-text` never declared its own
+`background`/`color` — the assumption when it was written was that it would inherit dark styling
+from an existing `textarea` rule in the stylesheet, but that rule is actually scoped to
+`.wt-field textarea`, and this textarea isn't wrapped in a `.wt-field` ancestor, so it fell back to
+the browser's native white background with `UX-17`'s global `color:inherit` reset making the text
+itself light-colored on top of it. Its border also referenced `var(--line)`, a legacy token scoped
+to `.wt-root` that doesn't reach this portaled sheet (`UX-11a`) — likely invisible for the same
+class of reason. Separately, the close button used `className:"wt-sheet-close"`, a class with no
+CSS rule anywhere in the stylesheet at all; every other sheet in the app uses `wt-icon-btn`, which
+is already correctly styled and dark-theme-safe.
+
+Fixed by giving `.wt-voice-text` explicit `background:var(--bg); color:var(--ink-inverse)` and a
+`var(--hairline-bright)` border (both installed globally per `UX-12`/`UX-16`, so they reach
+portaled content), and switching the close button to `wt-icon-btn`. Full 5-step verification
+pipeline re-run and passed against the exact shipped `bundle.js` (607 checks, 0 runtime errors,
+11-error vendor lint baseline unchanged).
+*Status:* **Locked** · Aug 28, 2026 · v3.62.1. **Not yet re-confirmed by Rob on the same device** —
+this is a jsdom-verified fix for a bug jsdom cannot itself detect (no layout engine, no real color
+rendering), so device confirmation is the only way to actually close this out.
+
 ---
 
 ## Architecture
@@ -1319,13 +1346,17 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 28, 2026 (v3.62.0: PROD-16 added — Smart Entry Phase A app side (confirm
+*Last updated: August 28, 2026 (v3.62.1: PROD-16 amended — Rob's first real-device test confirmed
+Smart Entry's interpretation works against the live worker (banana, grilled cheese both correct),
+but found two visibility bugs (white-on-white textarea, white-on-white close button), both simple
+CSS mistakes fixed same-day; still needs Rob's re-confirmation on-device; earlier, v3.62.0: PROD-16
+added — Smart Entry Phase A app side (confirm
 card, sheet internals, write path), routing through named write functions extracted from each
 tracker's own sheet rather than a parallel path, provenance fields (source/sourceText) added via
 the migration path, the entries/candidates schema gap resolved by omitting treatment/rx/supplement
 from the trackers payload, analytics migration proposed not run; found and fixed a pre-existing
 harness gap (window.WATER_TRACKER_CONFIG never set, silently disabling every fetch-based feature
-in tests); not yet verified against the live worker or on a real device; earlier, worker-only, no
+in tests); earlier, worker-only, no
 app version bump: PROD-15 amended — five prompt/
 hardening rounds on the Smart Entry worker route, all found and fixed via live curl testing:
 over-conservative estimation (confidence rubric + tightened unmatched boundary), missing

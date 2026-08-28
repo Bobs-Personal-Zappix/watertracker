@@ -20,6 +20,30 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.62.1] — 2026-08-28
+
+Real-device fix, found by Rob on his first live test of Smart Entry (banana and grilled cheese both
+interpreted correctly — the interpretation itself works): two visibility bugs in `SmartEntrySheet`.
+
+- **Textarea text was invisible (white/clear on white).** `.wt-voice-text` never set its own
+  `background`/`color` — I'd assumed it inherited from an existing dark-themed `textarea` rule, but
+  that rule is actually scoped to `.wt-field textarea`, and this textarea isn't wrapped in
+  `.wt-field`. It fell back to the browser's native white background with the light theme color
+  inherited onto the text (`UX-17`'s global reset), making it unreadable while typing. Fixed with
+  explicit `background:var(--bg); color:var(--ink-inverse)` on the rule itself. Also swapped its
+  border from `var(--line)` (a legacy token scoped to `.wt-root`, which doesn't reach this portaled
+  sheet — see `UX-11a`) to `var(--hairline-bright)` (installed globally, per `UX-12`/`UX-16`), which
+  was likely invisible too for the same reason.
+- **Close "×" button was white on white.** Used `className:"wt-sheet-close"`, a class with no CSS
+  rule anywhere in the stylesheet — every other sheet in the app uses `wt-icon-btn` instead, which
+  is properly styled. Switched to match.
+- Full 5-step verification pipeline run and passed against the exact shipped `bundle.js` — harness
+  clean (0 runtime errors, 607 checks pass), lint unchanged at the 11-error vendor baseline.
+- **Not yet re-verified on a real device** — Rob reported both bugs from his own real-device test;
+  this fix has only gone through the jsdom pipeline so far, which has no layout engine and can't
+  render actual color contrast. Needs Rob to re-check on the same device before considering it
+  closed.
+
 ## [3.62.0] — 2026-08-28
 
 Smart Entry Phase A, app side: confirm card, sheet internals, write path (`docs/CC-BRIEF-smart-entry-app-v3.62.0.md` sections A1–A6; text input only — voice is a separate future v3.63.0 pass, not attempted this session). The worker route (`PROD-15`) was already live; this ships the UI and write path that actually use it. See `docs/DECISION-LOG.md` `PROD-16`.

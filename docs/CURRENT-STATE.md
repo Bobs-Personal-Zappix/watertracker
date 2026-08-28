@@ -2,8 +2,9 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.62.0 (Smart Entry Phase A app side — see below; not
-yet verified against the live worker or on a real device)*
+*As of: August 28, 2026 · Deployed version: 3.62.1 (Smart Entry Phase A app side — see below; text
+sheet's white-on-white textarea/close-button bugs fixed after Rob's first real-device test, not yet
+re-verified against the live worker or by Rob on-device)*
 
 ---
 
@@ -856,18 +857,25 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   walkthrough (the cap check runs before any Anthropic call, so a blocked request costs nothing),
   not by an actual live request; seeding a disposable test `device_id`'s D1 counter to 25 would
   confirm it without spending 25 real calls, if Rob wants that confirmed too.
-- **Smart Entry Phase A, app side (v3.62.0), is BUILT but NOT yet verified against the live worker
-  or on a real device** — see `docs/DECISION-LOG.md` `PROD-16`. `SmartEntrySheet` + `ConfirmCard`
+- **Smart Entry Phase A, app side (v3.62.0/3.62.1), interpretation confirmed working by Rob on a
+  real device** (banana and grilled cheese both interpreted correctly), **two visibility bugs found
+  and fixed in v3.62.1, not yet re-confirmed by Rob** — see `docs/DECISION-LOG.md` `PROD-16` and its
+  Aug 28 (v3.62.1) amendment. The confirm-sheet's textarea was rendering white text on a white
+  native background (the class never set its own background/color, and wasn't wrapped in the
+  `.wt-field` ancestor the app's other dark-themed textareas rely on), and the close "×" button used
+  a CSS class with no stylesheet rule at all instead of the `wt-icon-btn` class every other sheet in
+  the app uses. `SmartEntrySheet` + `ConfirmCard`
   replace the Voice Tracker tile's non-functional preview shell; the write path routes through
   named functions (`writeWeightEntry`/`writeSleepEntry`/`writeExerciseEntry`/`writeRegimenEntry`)
   shared with each tracker's own manual-entry sheet, so inventory decrement and reload/edit-routing
   behavior are identical to a manual entry, not just similar. Provenance fields
   (`source`/`sourceText`) added to every log entry. The 5-step verification pipeline passed (607
-  harness checks, 0 runtime errors) — **but the harness tests use a mocked `fetch` response, not
-  the actual deployed `/api/interpret` route**, so an end-to-end run against
-  `water-tracker-push.bob-barrows.workers.dev` from a real browser (or at minimum a manual
-  device-console check) is the next thing needed before calling this verified, plus the usual
-  real-device pass for the sheet's visual/touch-target feel. Analytics event logging (A5) and the
+  harness checks, 0 runtime errors) — the harness itself only exercises Smart Entry against a mocked
+  `fetch` response, but Rob's real-device test confirmed the actual live
+  `water-tracker-push.bob-barrows.workers.dev` route works end to end (banana, grilled cheese both
+  interpreted correctly). Still needed: Rob re-confirming the two v3.62.1 visibility fixes on the
+  same device, and the usual real-device pass for the confirm card's visual/touch-target feel.
+  Analytics event logging (A5) and the
   voice layer (v3.63.0) are explicitly deferred, not built this session.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
