@@ -1326,6 +1326,16 @@ First successful `wrangler deploy` from the local clone, Aug 20, 2026. `worker/`
 *Why:* prior to this session, the committed `worker.js` and `wrangler.toml` were sanitized templates; the Worker had never been deployed from this clone.
 *Status:* **Locked** · Aug 20, 2026
 
+**OPS-10 — `wrangler d1 execute --file` fails auth under wrangler 3.114; use `--command`.**
+`--file` hits `Authentication error [code: 10000]` on the `/import` endpoint; `--command` with the
+same SQL inline succeeds against the same production database with the same credentials. Noted in
+`CLAUDE.md`'s D1 section directly, since that's where the next session will actually need it.
+*Why:* recorded so a future migration attempt doesn't waste time re-diagnosing an auth error that
+isn't actually about credentials. The wrangler-4-upgrade note in `OPS-09` (Aug 20) apparently never
+happened — still on 3.114 as of this entry; worth checking whether upgrading resolves this rather
+than treating `--command` as the permanent workaround.
+*Status:* **Locked** · Aug 28, 2026
+
 ---
 
 ## Open — needs a decision
@@ -1411,7 +1421,9 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 28, 2026 (v3.63.0: PROD-17 amended — Rob's preliminary real-device test of the
+*Last updated: August 28, 2026 (no app version change: OPS-10 added — `wrangler d1 execute --file`
+fails auth [code: 10000] on `/import` under wrangler 3.114, use `--command` instead, noted directly
+in CLAUDE.md's D1 section; earlier same day, v3.63.0: PROD-17 amended — Rob's preliminary real-device test of the
 voice layer "went well," core loop works on the actual device this was built to spec against, but
 explicitly preliminary — fuller pass (correction rounds, error paths, timing feel over repeated use)
 still outstanding; earlier same day: PROD-17 added — Smart Entry voice layer, built onto

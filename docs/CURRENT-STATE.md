@@ -846,6 +846,11 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **`wrangler d1 execute --file` fails auth (`Authentication error [code: 10000]`) on `/import`
+  under wrangler 3.114** — use `--command` with the SQL inline instead (works fine, same
+  credentials, same database). Noted in `CLAUDE.md`'s D1 section and `docs/DECISION-LOG.md`
+  `OPS-10`. The wrangler-4 upgrade `OPS-09` (Aug 20) flagged never happened — still on 3.114; worth
+  checking whether upgrading resolves this before treating `--command` as permanent.
 - **Smart Entry Phase A, worker side, is DEPLOYED and LIVE** (Aug 27–28, 2026 — see
   `docs/DECISION-LOG.md` `PROD-15` and its Aug 28 amendment). `worker/migrations/schema-002-smart-entry.sql`
   has been run against production D1 (`smart_entry_usage` table exists) and `wrangler deploy` has
