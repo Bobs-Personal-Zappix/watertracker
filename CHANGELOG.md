@@ -20,6 +20,28 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.3] — 2026-08-28
+
+Voice quality follow-up to v3.63.2, from Rob's Android testing. See `docs/DECISION-LOG.md`
+`PROD-17`'s third Aug 28 amendment.
+
+- Rob confirmed v3.63.2's script/rate fixes were "much better" but asked for a more human-sounding
+  voice. Two paths were presented: a real neural/cloud TTS voice (better quality, but a new Worker
+  endpoint + secret + per-request cost + added latency — real new scope) vs. picking the best
+  voice already on the device (free, no new infrastructure, but capped by what browser TTS
+  engines sound like). Rob chose the on-device path.
+- `X(R,A)`'s voice preference in `site/app/bundle.js` now checks first for any en-US voice whose
+  name contains "enhanced," "premium," or "natural" — the labels iOS uses for its higher-quality
+  Siri voice variants — before falling through to the existing Google US English / named-voice /
+  local / any-en-US tiers. No effect on Android if no such labeled voice exists there; falls
+  through to the same tiers as before.
+- Full verification pipeline re-run against the exact shipped `bundle.js`: ESLint no-undef sweep
+  unchanged (11 pre-existing vendor errors, none new), jsdom harness full pass (618 checks) with
+  0 runtime errors, end-state audit confirmed the new tier and version bump present.
+- **Not yet verified on a real device** — jsdom can't enumerate real device voices or play audio.
+  If this still isn't enough on Rob's Android device, the next step is the cloud-TTS path he
+  explicitly declined this round, not further on-device tuning.
+
 ## [3.63.2] — 2026-08-28
 
 Smart Entry voice layer follow-up, from Rob's real-device testing of v3.63.1 on **Android**. See

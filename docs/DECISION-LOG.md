@@ -479,6 +479,32 @@ pipeline.
 *Status:* **Locked** · Aug 28, 2026 · v3.63.2 — harness/lint verified; script and voice-picker
 fix both still need Rob's real-device (Android) confirmation.
 
+*Amended Aug 28, 2026 — script confirmed working, voice quality raised as separate ask
+(v3.63.3).* Rob confirmed on Android that v3.63.2's rewritten script and slower rate are "much
+better," but asked for a more human-sounding voice. Presented as an explicit tradeoff before
+building: a real neural/cloud TTS voice (ElevenLabs/OpenAI/Google Cloud Neural2) would sound
+genuinely human but is a real scope increase — a new Worker endpoint, a new secret, per-request
+cost, and added latency on top of an already-longer loop, needing its own build/verify pass, not
+a quick fix. Rob chose the free path instead: pick the best voice already available on-device
+rather than add a paid backend. `X(R,A)`'s voice-matching regex (`site/app/bundle.js`) gained a
+tier ahead of the existing "Google US English"/named-voice list: any en-US voice whose name
+contains "enhanced," "premium," or "natural" — the labels iOS uses for its higher-quality Siri
+voice variants when installed — is now preferred first. Falls through unchanged to the existing
+tiers (Google US English, then the named list, then any local en-US voice, then any en-US voice)
+when no such labeled voice exists, which is the expected case on Android (no OS branching, same
+as `PROD-17`'s Aug 28 `Pv()` amendment already established). **Ceiling acknowledged explicitly**:
+even the best available on-device browser TTS voice is not going to sound as natural as a cloud
+neural voice — this raises the quality within that ceiling, it doesn't remove it.
+**Verification:** full pipeline re-run against the exact shipped `bundle.js` — ESLint no-undef
+sweep unchanged (11 pre-existing vendor errors, none new), jsdom harness full pass (618 checks, 0
+runtime errors), end-state audit confirmed the new preference tier and version bump both present.
+jsdom cannot enumerate real device voices or play audio, so whether this actually lands on a
+better-sounding voice on Rob's Android device is **real-device-only**, unverified here.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.3 — harness/lint verified; voice-quality change still
+needs Rob's real-device (Android) confirmation. If the on-device ceiling still isn't enough after
+this, the next step is the cloud-TTS path Rob explicitly declined this round, not further tuning
+of the on-device picker.
+
 ---
 
 ## Architecture

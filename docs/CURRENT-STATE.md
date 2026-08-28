@@ -2,8 +2,8 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.2 (Smart Entry voice layer — see below; Rob's
-preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2 are TTS
+*As of: August 28, 2026 · Deployed version: 3.63.3 (Smart Entry voice layer — see below; Rob's
+preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2/3.63.3 are TTS
 rate/script/voice fixes from continued Android testing, not yet real-device confirmed)*
 
 ---
@@ -159,8 +159,14 @@ date control and a redesigned tile grid:
   opening prompt, a fuller confirm/correction line, a spoken "All set!" on confirm — this
   supersedes the original B2 "no opening prompt / under 2s" timing decision, see
   `docs/DECISION-LOG.md`) and fixed a `getVoices()` timing bug (the voice list often loads
-  async and was being read too early) that likely explains the disliked voice. **Not yet
-  real-device verified** — needs Rob's confirmation on Android. The Voice Tracker tile (Log It! only) opens either a voice overlay
+  async and was being read too early) that likely explains the disliked voice. Rob then confirmed
+  the v3.63.2 script/rate were "much better" but asked for a more human-sounding voice; presented
+  with the tradeoff (on-device best-available voice, free, vs. cloud neural TTS, better quality
+  but new backend/cost/latency scope), Rob chose the on-device path — v3.63.3 adds a preference
+  tier for iOS's "enhanced"/"premium"/"natural"-labeled voices ahead of the existing list, with
+  the acknowledged ceiling that this still isn't a truly natural voice, just the best available
+  without adding a paid backend. **v3.63.3 not yet real-device verified** — needs Rob's
+  confirmation on Android. The Voice Tracker tile (Log It! only) opens either a voice overlay
   (`VoiceEntryOverlay`, when `SpeechRecognition` is available) or the text sheet (`SmartEntrySheet`,
   the fallback and text path — describe what you had, `POST /api/interpret` interprets it). Either
   way, a mandatory confirm card (editable/removable rows, low-confidence cue, candidate picker with
@@ -903,9 +909,14 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   were never set; now `rate=0.82` plus a preferred-voice lookup). Rob's Android follow-up confirmed
   the slower rate helped but wanted a clearer script and a different-sounding voice; **v3.63.2**
   rewrote the script to Rob's exact wording and fixed a `speechSynthesis.getVoices()` timing bug
-  (the voice list loads async, was being read before it populated). Both v3.63.1 and v3.63.2 are
-  harness/lint verified but **not yet real-device confirmed**.
-  **v3.63.2's loop** (supersedes the original B2 timing doctrine, explicitly at Rob's direction —
+  (the voice list loads async, was being read before it populated). Rob confirmed the script/rate
+  were "much better" but wanted a more human-sounding voice; offered the on-device-vs-cloud-TTS
+  tradeoff, chose on-device — **v3.63.3** adds a preference tier for iOS's
+  "enhanced"/"premium"/"natural"-labeled voices ahead of the existing list (ceiling acknowledged:
+  still browser TTS, not a true neural voice; next step if insufficient is the cloud-TTS path Rob
+  declined this round). v3.63.1 through v3.63.3 are all harness/lint verified but **not yet
+  real-device confirmed**.
+  **The loop (as of v3.63.2/3.63.3)** (supersedes the original B2 timing doctrine, explicitly at Rob's direction —
   see the DECISION-LOG amendment): overlay opens → she speaks *"Tell me what you had and want to
   add."* → mic starts → interim transcript streams live → confirm card renders with values visible
   → she speaks *"Is this correct? If so, please say yes and I'll add it. Or tell me what you want
