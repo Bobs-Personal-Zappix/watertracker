@@ -138,6 +138,61 @@ Every Smart Entry is an LLM API call (and, when voice ships, a speech-to-text ca
 *Why:* recorded so the shift in unit economics is a conscious decision, not a surprise on the first API bill.
 *Status:* **Locked** · Aug 21, 2026
 
+**PROD-15 — Smart Entry Phase 1, worker side: model, daily cap, beverage-counting rule, and what
+actually shipped this session.**
+Session ran from `docs/CC-BRIEF-smart-entry-v3.40.0-v3.41.0.md`, explicitly scoped by Rob to
+**worker-only** — `src/app.js`/`site/app/bundle.js` untouched, no app version bump. Decisions,
+confirmed directly by Rob before any code was written:
+1. **Model: `claude-haiku-4-5-20251001`** — the brief's own recommendation. A constrained
+   text-to-numbers task; a frontier model buys nothing extra and costs several times more. Feeds
+   `STRAT-OPEN-02` (pricing) directly.
+2. **Daily cap: 25 calls/device/day**, enforced server-side in a new D1 table
+   `smart_entry_usage` (`device_id`, `day`, `calls`, `cache_hits`) — the brief's proposed number.
+   Cache hits never count against the cap. Keyed by `device_id`, not `user_id`, matching this
+   app's device-local model (`ARCH-OPEN-04`) — Smart Entry must work for signed-out/local-only
+   users, same as everything else. The cap is tracked against the **server's actual calendar day**,
+   not the request's `date` field (which is which day an entry gets *logged* to, e.g. a backfill —
+   a different concept from when the API call happened; using the logged-to date for the cap would
+   let backfill-dated requests dodge the limit).
+3. **Non-water beverages (coffee, soda, diet coke, tea, juice, etc.) DO count toward the water
+   tracker.** Encoded explicitly in the system prompt (`buildInterpretSystemPrompt` in
+   `worker/src/worker.js`), and the prompt requires the `source` phrase name the actual beverage
+   (e.g. "diet coke") whenever it produces a water entry — the rule must be visible on the confirm
+   card, never discovered after the fact, per the brief's `UX-18`-cited requirement (see numbering
+   note below).
+
+**What shipped this session:** `POST /api/interpret` in `worker/src/worker.js` — request validation,
+SHA-256 KV cache (`interp:v1:<hash>`, key includes normalized text + the enabled-tracker set so the
+same phrase can't leak an entry for a tracker that's off, 30-day TTL), the daily-cap check, the
+system-prompt builder, the Anthropic call (with markdown-fence stripping as a defensive unwrap in
+case the model doesn't follow the strict-JSON instruction), and server-side re-validation of the
+model's output (`normalizeInterpretResult` drops any entry for a tracker that isn't actually
+enabled, or that's missing a `source` — defense in depth, not just prompt compliance). Migration
+`worker/migrations/schema-002-smart-entry.sql` proposed, **not run** — Rob runs D1 migrations
+against production, per standing policy. `ANTHROPIC_API_KEY` was already set as a Worker secret
+before this session (confirmed by Rob, not touched or echoed here).
+
+**Deliberately not done this session** (explicitly out of scope per Rob's own scoping): the
+front-end (`SmartEntrySheet`, `ConfirmCard`, header Sparkles wiring — brief sections A4/A6/A7), the
+write-path provenance fields (`source`/`sourceText` on log entries — A5), and analytics (A8) — the
+existing `user_activity` table is a bare `(user_id, activity_date)` retention ping with no room for
+the per-event metrics A8 asks for (sessions started, entries proposed/confirmed/edited, cache hit
+rate, cap hits); that needs its own small schema addition when analytics work actually starts,
+not assumed into `user_activity`'s current shape.
+
+**Numbering/doc-drift note, for whoever picks this up next:** the brief cites `UX-18` as governing
+the "spoken summaries under ~2s" / "source visible" rules — this repo's actual `UX-18` is about
+tracker-sheet category colors, unrelated. The brief also stated `CLAUDE.md`'s version was stale at
+"3.33.0 → 3.39.0"; the actual deployed version is 3.61.0 (many intervening sessions), so that
+version-line "fix" from the brief was *not* applied — `CLAUDE.md` already correctly reflects the
+real current version and wasn't touched. `PROD-14` (Web Speech API decision, `PROD-14`) and
+`UX-14a` (two entry points) are cited by the brief as already-decided but don't exist in this log
+yet — both are Phase B (voice) concerns, not blocking for this worker-only Phase A session, but
+whoever starts Phase B should confirm or create them rather than assume they're locked.
+*Status:* **Locked** · Aug 27, 2026 — worker-side only; the front-end half of Phase A (confirm
+card, sheet, header wiring, write-path provenance) and Phase B (voice) remain unbuilt and are
+tracked as open work, not re-litigated by this entry.
+
 ---
 
 ## Architecture
@@ -1138,7 +1193,11 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (v3.61.0: UX-40 added — bugfix (My Day's Supplements tile now
+*Last updated: August 27, 2026 (worker-only, no app version bump: PROD-15 added — Smart Entry Phase
+A worker-side implementation (POST /api/interpret, KV cache, D1 smart_entry_usage migration
+proposed not run), model/cap/beverage-counting decisions confirmed by Rob, front-end and analytics
+explicitly deferred; flags a numbering/doc-drift mismatch between the smart-entry brief and this
+log (UX-18 collision, PROD-14/UX-14a not yet created); earlier: v3.61.0: UX-40 added — bugfix (My Day's Supplements tile now
 connected), Log It!'s 3 fast-entry tiles locked to the grid's last 3 cells via placeholder cells for
 toggled-off trackers, Weight ring tightened to the image edge, header text renames ("TODAY'S
 INTAKES", "RX FOR:"), My Plan section renames ("My Health Providers", "My Current RX",

@@ -832,6 +832,15 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **Smart Entry Phase A, worker side, needs Rob to finish deploying it** (Aug 27, 2026 — see
+  `docs/DECISION-LOG.md` `PROD-15`). Code is committed but not live: (1) run
+  `worker/migrations/schema-002-smart-entry.sql` against production D1 (`smart_entry_usage`
+  table), (2) `wrangler deploy` from `worker/` (separate step, doesn't ride along with a `git
+  push`), (3) exercise the route end-to-end (declined / over-cap / low-confidence-candidate paths
+  — ask for curl commands). `ANTHROPIC_API_KEY` was already set as a Worker secret before this
+  session. The front-end half (`SmartEntrySheet`, `ConfirmCard`, header Sparkles wiring, write-path
+  provenance fields) is a separate future session — `src/app.js`/`site/app/bundle.js` were
+  deliberately untouched this pass, so nothing here is visible in the app yet.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to
@@ -925,7 +934,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient. v3.41.0 through v3.48.0 were all further Rob-directed detours in the same vein (Today/Stats/My Plan layout and content changes); the queued sequence above still hasn't been started.
+**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient. v3.41.0 through v3.61.0 were all further Rob-directed detours in the same vein (Today/My Day/Stats/My Plan layout and content changes, plus the RX/Supplements/partner-configuration data-model work) — the queued sequence above still hasn't formally started, **except** that Smart Entry Phase 1's worker side landed Aug 27, 2026 as its own scoped session (see `docs/DECISION-LOG.md` `PROD-15`): `POST /api/interpret` in `worker/src/worker.js`, KV cache, D1 migration proposed (not run). The app-side half (confirm card, sheet, header wiring — the part that would actually bump the app version) is still unbuilt; when it ships it needs a fresh version number, not the brief's stale "v3.40.0" (the app is now at v3.61.0, many releases past that).
 
 See `docs/ROADMAP-v3.md` (HydroPro-Master-Roadmap) for the full version-by-version plan.
 

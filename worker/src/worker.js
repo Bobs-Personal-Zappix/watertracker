@@ -85,6 +85,162 @@ function json(data, status = 200) {
   });
 }
 __name(json, "json");
+
+// ── Smart Entry (PROD-10/11/12) ──────────────────────────────────────────────
+var SMART_ENTRY_MODEL = "claude-haiku-4-5-20251001";
+var SMART_ENTRY_DAILY_CAP = 25;
+var SMART_ENTRY_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(sha256Hex, "sha256Hex");
+
+function normalizeInterpretText(text) {
+  return String(text || "").toLowerCase().trim().replace(/\s+/g, " ");
+}
+__name(normalizeInterpretText, "normalizeInterpretText");
+
+function enabledTrackerNames(trackers) {
+  return Object.entries(trackers || {})
+    .filter(([, t]) => t && t.on)
+    .map(([name]) => name)
+    .sort();
+}
+__name(enabledTrackerNames, "enabledTrackerNames");
+
+async function interpretCacheKey(text, trackers) {
+  const hash = await sha256Hex(`${normalizeInterpretText(text)}|${enabledTrackerNames(trackers).join(",")}`);
+  return `interp:v1:${hash}`;
+}
+__name(interpretCacheKey, "interpretCacheKey");
+
+function buildInterpretSystemPrompt(trackers, userItems) {
+  const enabled = Object.entries(trackers || {}).filter(([, t]) => t && t.on);
+  const trackerLines = enabled.length
+    ? enabled.map(([name, t]) => `- ${name} (unit: ${t.unit || "n/a"})`).join("\n")
+    : "(none enabled — do not propose any entries)";
+  const itemLines = (arr) => Array.isArray(arr) && arr.length
+    ? arr.map((i) => `- "${i.name}" (id: ${i.id})`).join("\n")
+    : "(none configured)";
+  const items = userItems || {};
+  return `You convert a user's plain-language description of what they consumed or did into structured entries for the HydroPro Tracker app. You estimate and capture data — you are never a health advisor, and you never comment on whether anything is healthy, appropriate, or advisable.
+
+OUTPUT FORMAT — critical, follow exactly:
+Respond with STRICT JSON ONLY. No prose before or after it, no markdown code fences.
+{
+  "entries": [{"tracker": string, "value": number, "unit": string, "source": string, "confidence": "high"|"medium"|"low"}],
+  "unmatched": [string],
+  "candidates": [{"tracker": string, "heard": string, "options": [{"id": string, "name": string}]}],
+  "declined": string | null
+}
+
+THREE INTERPRETATION CLASSES — apply the right one per phrase:
+1. Consumable / time-based trackers (water, protein, calories, sleep, exercise): interpret and estimate a reasonable value. Every entry you produce MUST carry a "source" field — the exact phrase from the user's text that produced it. Never output a value with no source phrase behind it.
+2. Treatments, RX (prescriptions), and Supplements: match ONLY against the user's own configured items listed below — never against general drug or treatment knowledge you may otherwise have. If the match is anything below high confidence, put it under "candidates" (never "entries") with "heard" set to what the user said and "options" set to the plausible matching item(s). Never guess at an inventory-affecting item — when unsure, it belongs in "candidates," not a forced pick in "entries."
+3. Measured readings (weight): capture the number exactly as the user stated it. Do not interpret, round, or estimate. If the user says "I weigh 181," the value is 181, verbatim.
+
+ENABLED TRACKERS — only propose "entries" for these; ignore anything the user mentions that isn't in this list:
+${trackerLines}
+
+USER'S CONFIGURED TREATMENTS:
+${itemLines(items.treatments)}
+
+USER'S CONFIGURED PRESCRIPTIONS (RX):
+${itemLines(items.rx)}
+
+USER'S CONFIGURED SUPPLEMENTS:
+${itemLines(items.supplements)}
+
+ESTIMATION RULE, must stay visible to the user via "source":
+Non-water beverages (coffee, soda, diet coke, tea, juice, etc.) DO count toward the water tracker. When a non-water beverage contributes a water entry, its "source" phrase must name the beverage (e.g. "diet coke") so the user can see on screen exactly what produced the ounces — never a bare number they can't trace back to what they said.
+
+REFUSE — set "declined" to a short plain-language reason, and return empty arrays for "entries"/"unmatched"/"candidates", for:
+- Health advice, or any opinion on whether something is healthy or advisable
+- Dosing guidance for any medication or supplement
+- Interpretation of what the user's logged data means for their health
+- Anything that is not describing something to log (small talk, unrelated questions, etc.)
+
+If some part of the text doesn't match any enabled tracker or configured item but the request is otherwise in scope, list the unrecognized phrase(s) in "unmatched" — do not decline just because part of the text didn't match.`;
+}
+__name(buildInterpretSystemPrompt, "buildInterpretSystemPrompt");
+
+function extractJsonText(text) {
+  const trimmed = String(text || "").trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return fenced ? fenced[1] : trimmed;
+}
+__name(extractJsonText, "extractJsonText");
+
+async function callAnthropicInterpret(env, systemPrompt, userText) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: SMART_ENTRY_MODEL,
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userText }]
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Anthropic API error ${res.status}: ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const textBlock = (data.content || []).find((b) => b.type === "text");
+  if (!textBlock || !textBlock.text) throw new Error("No text content in Anthropic response");
+  return JSON.parse(extractJsonText(textBlock.text));
+}
+__name(callAnthropicInterpret, "callAnthropicInterpret");
+
+function normalizeInterpretResult(raw, trackers) {
+  const enabledSet = new Set(enabledTrackerNames(trackers));
+  const entries = Array.isArray(raw && raw.entries)
+    ? raw.entries.filter((e) => e && typeof e.tracker === "string" && enabledSet.has(e.tracker) &&
+        typeof e.value === "number" && Number.isFinite(e.value) &&
+        typeof e.source === "string" && e.source.trim().length > 0)
+    : [];
+  const candidates = Array.isArray(raw && raw.candidates) ? raw.candidates : [];
+  const unmatched = Array.isArray(raw && raw.unmatched) ? raw.unmatched : [];
+  const declined = typeof (raw && raw.declined) === "string" ? raw.declined : null;
+  return { entries, unmatched, candidates, declined };
+}
+__name(normalizeInterpretResult, "normalizeInterpretResult");
+
+async function getSmartEntryUsage(env, deviceId, day) {
+  if (!env.DB) return { calls: 0, cache_hits: 0 };
+  try {
+    const row = await env.DB.prepare(
+      "SELECT calls, cache_hits FROM smart_entry_usage WHERE device_id = ? AND day = ?"
+    ).bind(deviceId, day).first();
+    return row || { calls: 0, cache_hits: 0 };
+  } catch (e) {
+    console.error("smart_entry_usage read failed:", e.message);
+    return { calls: 0, cache_hits: 0 };
+  }
+}
+__name(getSmartEntryUsage, "getSmartEntryUsage");
+
+async function bumpSmartEntryUsage(env, deviceId, day, field) {
+  if (!env.DB) return;
+  try {
+    await env.DB.prepare(
+      `INSERT INTO smart_entry_usage (device_id, day, calls, cache_hits) VALUES (?, ?, ?, ?)
+       ON CONFLICT(device_id, day) DO UPDATE SET ${field} = ${field} + 1`
+    ).bind(deviceId, day, field === "calls" ? 1 : 0, field === "cache_hits" ? 1 : 0).run();
+  } catch (e) {
+    console.error("smart_entry_usage write failed:", e.message);
+  }
+}
+__name(bumpSmartEntryUsage, "bumpSmartEntryUsage");
+
 function slotMinutes(startTime, endTime, intervalHours) {
   const [sh, sm] = startTime.split(":").map(Number);
   const [eh, em] = endTime.split(":").map(Number);
@@ -375,6 +531,62 @@ var worker_default = {
       } catch (e) {
       }
       return json({ ok: true, id });
+    }
+    if (url.pathname === "/api/interpret" && request.method === "POST") {
+      let payload;
+      try {
+        payload = await request.json();
+      } catch (e) {
+        return json({ error: "Invalid JSON body." }, 400);
+      }
+      const { text, deviceId, trackers, userItems } = payload;
+      if (!text || typeof text !== "string" || !text.trim()) {
+        return json({ error: "Missing text." }, 400);
+      }
+      if (!deviceId || typeof deviceId !== "string") {
+        return json({ error: "Missing deviceId." }, 400);
+      }
+      if (!userItems || typeof userItems !== "object") {
+        return json({ error: "Missing userItems." }, 400);
+      }
+      if (!env.ANTHROPIC_API_KEY) {
+        console.error("ANTHROPIC_API_KEY not configured - Smart Entry unavailable.");
+        return json({ entries: [], unmatched: [], candidates: [], declined: "temporarily_unavailable" });
+      }
+
+      // Cap is tracked against the server's actual calendar day, not the request's `date` field
+      // (which is which day the entry gets LOGGED to, e.g. a backfill — a separate concept from
+      // when the API call itself happened; using it for the cap would let backfill-dated requests
+      // dodge the daily limit entirely).
+      const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+      const cacheKey = await interpretCacheKey(text, trackers);
+
+      // Cache check first — a cache hit never touches the daily cap.
+      const cached = await env.WATER_KV.get(cacheKey);
+      if (cached) {
+        await bumpSmartEntryUsage(env, deviceId, today, "cache_hits");
+        return json(JSON.parse(cached));
+      }
+
+      const usage = await getSmartEntryUsage(env, deviceId, today);
+      if (usage.calls >= SMART_ENTRY_DAILY_CAP) {
+        return json({ entries: [], unmatched: [], candidates: [], declined: "daily_limit" });
+      }
+
+      let result;
+      try {
+        const systemPrompt = buildInterpretSystemPrompt(trackers, userItems);
+        const raw = await callAnthropicInterpret(env, systemPrompt, text);
+        result = normalizeInterpretResult(raw, trackers);
+      } catch (e) {
+        console.error("Smart Entry interpret failed:", e.message);
+        return json({ entries: [], unmatched: [], candidates: [], declined: "temporarily_unavailable" });
+      }
+
+      await env.WATER_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: SMART_ENTRY_CACHE_TTL_SECONDS });
+      await bumpSmartEntryUsage(env, deviceId, today, "calls");
+
+      return json(result);
     }
     if (url.pathname === '/api/progress' && request.method === 'POST') {
       let payload;
