@@ -20,6 +20,43 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## Worker: Smart Entry Phase A hardening, deployed — 2026-08-28 (no app version bump)
+
+Worker-only session, `src/app.js`/`site/app/bundle.js` untouched — continues the Aug 27, 2026
+worker-side Smart Entry build (see `docs/DECISION-LOG.md` `PROD-15`) with five prompt/hardening
+fixes, all diagnosed and verified through live curl testing against the deployed route rather than
+by theorizing:
+
+- **Over-conservative estimation fixed.** The model was declining to estimate calorie/protein
+  values for plainly-named foods ("grilled cheese," even "a banana") while water estimation worked
+  fine for the same input. Added an explicit confidence rubric (high/medium/low, tied to how
+  standard the portion is) and tightened the unmatched boundary so "grilled cheese" gets estimated
+  but "I had lunch" still correctly lands in `unmatched`.
+- **Multi-tracker entries per food.** The model was emitting one entry per food instead of one
+  entry per applicable enabled tracker per food (grilled cheese with both calories and protein on
+  was only producing a calories entry). Prompt now requires one entry per tracker, sharing the same
+  `source` phrase.
+- **Prompt-version-aware cache invalidation.** New `SMART_ENTRY_PROMPT_VERSION` constant (now `3`)
+  is folded into the KV cache key, so any future prompt fix invalidates every previously-cached
+  interpretation in one move instead of silently freezing testers on stale results for up to 30
+  days.
+- **`bypassCache` gated behind a Worker secret.** Was a plain client-suppliable flag on a public
+  endpoint — any caller could have forced a paid model call and skipped the cache. Now only honored
+  when a request header matches a new (optional, not yet provisioned) `SMART_ENTRY_DEBUG_SECRET`
+  Worker secret; fails closed by default.
+- **Candidates schema fix.** `"tracker"` was returning the matched item's name instead of the
+  tracker type (`"rx"`/`"treatment"`/`"supplement"`); `"heard"` was returning the user's full
+  sentence instead of just the fragment needing disambiguation. Both fixed, matching the schema
+  Phase B's confirm card will branch on.
+- Walked the daily-cap enforcement branch in code (`usage.calls >= SMART_ENTRY_DAILY_CAP`, checked
+  before any Anthropic call is made — a blocked request costs nothing) rather than spending 25 real
+  model calls to trigger it live; the over-cap path itself is therefore still unverified against a
+  real request.
+- **Deployed and live.** Rob ran `worker/migrations/schema-002-smart-entry.sql` against production
+  D1 and `wrangler deploy`'d the Worker. `POST /api/interpret` is live at
+  `water-tracker-push.bob-barrows.workers.dev`; estimation, declined, and candidates paths verified
+  against the live route.
+
 ## [3.61.0] — 2026-08-27
 
 Six quick tweaks from Rob's follow-up review of v3.60.0's partner configuration work, plus a real

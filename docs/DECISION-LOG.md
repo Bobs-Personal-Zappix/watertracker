@@ -193,6 +193,69 @@ whoever starts Phase B should confirm or create them rather than assume they're 
 card, sheet, header wiring, write-path provenance) and Phase B (voice) remain unbuilt and are
 tracked as open work, not re-litigated by this entry.
 
+*Amended Aug 28, 2026 — five prompt/hardening rounds from live curl testing against the deployed
+worker, all in `worker/src/worker.js`, still worker-only (no app version bump):*
+1. **Estimation was over-conservative.** Empirical testing (not theorizing — actual curl calls
+   against the live route) showed the model was declining to estimate calorie/protein values for
+   plainly-named foods ("grilled cheese," even "a banana") while water estimation worked fine for
+   the same request, ruling out phrasing sensitivity and confirming blanket prompt conservatism.
+   Fixed with an explicit confidence rubric (high = single named item, standard portion; medium =
+   composed dish, variable recipe; low = heavily portion-dependent) and a tightened unmatched
+   boundary ("approximate a typical serving of a NAMED food," not "anything food-shaped" — "I had
+   lunch" stays unmatched, "grilled cheese" does not).
+2. **Multi-tracker entries.** The model was emitting one entry per food rather than one entry per
+   applicable enabled tracker per food (e.g. grilled cheese with both calories and protein enabled
+   produced a calories entry only). Prompt now explicitly requires one entry per tracker, sharing
+   the same `source` phrase.
+3. **Cache versioning.** `SMART_ENTRY_PROMPT_VERSION` (currently `3`) is folded into the KV cache
+   key (`interp:v${SMART_ENTRY_PROMPT_VERSION}:<hash>`) so a prompt fix invalidates every
+   previously-cached interpretation in one move — old `interp:v<N>:` keys are simply never read
+   again and expire on their own 30-day TTL. Without this, a prompt fix would be invisible to any
+   tester who'd already triggered that exact phrase.
+4. **`bypassCache` gated behind a Worker secret.** Rob caught that a client-suppliable `bypassCache`
+   flag on a public, unauthenticated endpoint would let any caller force a paid model call and skip
+   the cache, multiplying real spend. Fixed: `bypassCache` is only honored when a request header
+   (`x-smart-entry-debug`) matches a new Worker secret, `SMART_ENTRY_DEBUG_SECRET`. Fails closed by
+   default — if the secret is never provisioned, the flag can never take effect regardless of what
+   the request body asks for. Not yet provisioned as of this writing; provisioning it is optional
+   and only needed if Rob wants to use the bypass for single-phrase testing.
+5. **Candidates schema fix.** Two fields were wrong relative to the brief's schema and Phase B's
+   planned confirm-card branching: `"tracker"` was returning the matched item's name (e.g.
+   `"Metformin"`) instead of the tracker type (`"rx"`); `"heard"` was returning the user's full
+   sentence instead of just the fragment needing disambiguation (e.g. `"metfor"`). Both fixed with
+   an explicit worked example in the prompt.
+6. **The daily cap is advisory, not a hard ceiling — recorded so this isn't mistaken for a real
+   backstop.** `getSmartEntryUsage` swallows D1 read errors and returns `{calls:0}` on failure, so
+   if D1 is ever unreachable the cap check always passes — it fails OPEN, not closed. Separately,
+   `bumpSmartEntryUsage`'s write is also wrapped in try/catch with only a `console.error` — a write
+   failure after a successful model call doesn't fail the request, but it also doesn't increment
+   `calls`, so repeated silent write failures could let a device exceed 25 real calls with the
+   counter never catching up. Both are the existing "fire-and-forget with console.error" convention
+   already used elsewhere in this file, applied here without originally flagging that this
+   particular path is the enforcement mechanism itself, not a cosmetic one. **The real spend
+   backstop is an Anthropic-console usage/spend limit on the API key, not this D1 counter** — the D1
+   cap is a per-device UX/fairness limit (stop one device from hammering the endpoint), while the
+   Anthropic-side limit is what actually caps total exposure if the D1 path fails open. **Confirmed
+   by Rob: an Anthropic-console spend limit is already configured on the API key** — total exposure
+   is bounded there regardless of the D1 cap's fail-open behavior.
+
+All five prompt/hardening fixes were verified by live curl testing against the deployed route before being folded in here (the
+same discipline as the original PROD-15 work) — the D1 cap-enforcement branch specifically was
+walked through in code rather than spending real calls to trigger it, since it short-circuits
+*before* calling Anthropic (`usage.calls >= SMART_ENTRY_DAILY_CAP` is checked ahead of
+`callAnthropicInterpret`), so a blocked request costs nothing to verify by seeding the D1 counter
+directly for a disposable test `device_id`.
+
+**DEPLOYED, Aug 28, 2026.** Rob ran `worker/migrations/schema-002-smart-entry.sql` against
+production D1 and `wrangler deploy`'d `worker/src/worker.js`. `POST /api/interpret` is now live at
+`water-tracker-push.bob-barrows.workers.dev`. Rob has verified the estimation, declined, and
+low-confidence-candidates paths against the live route. The over-cap (`declined:"daily_limit"`)
+path is still unverified live — confirmed only by code walkthrough, not an actual request that
+crossed the boundary — since triggering it naturally costs 25 real model calls; a disposable-device
+D1 seed would confirm it at zero marginal cost if wanted.
+*Status:* **Locked** · Aug 28, 2026 — worker-side deployed and live; the front-end half of Phase A
+(confirm card, sheet, header wiring, write-path provenance) and Phase B (voice) remain unbuilt.
+
 ---
 
 ## Architecture
@@ -1193,7 +1256,15 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 27, 2026 (worker-only, no app version bump: PROD-15 added — Smart Entry Phase
+*Last updated: August 28, 2026 (worker-only, no app version bump: PROD-15 amended — five prompt/
+hardening rounds on the Smart Entry worker route, all found and fixed via live curl testing:
+over-conservative estimation (confidence rubric + tightened unmatched boundary), missing
+multi-tracker entries per food, prompt-version-aware cache invalidation, `bypassCache` gated behind
+a new `SMART_ENTRY_DEBUG_SECRET` Worker-secret header check after Rob flagged it as a cost/abuse
+gap, and a candidates-schema fix (tracker type vs. item name, heard fragment vs. full sentence);
+**deployed and live** — Rob ran the D1 migration and `wrangler deploy`, verified estimation/
+declined/candidates paths live, over-cap path still confirmed only by code walkthrough not a live
+request; earlier: August 27, 2026: PROD-15 added — Smart Entry Phase
 A worker-side implementation (POST /api/interpret, KV cache, D1 smart_entry_usage migration
 proposed not run), model/cap/beverage-counting decisions confirmed by Rob, front-end and analytics
 explicitly deferred; flags a numbering/doc-drift mismatch between the smart-entry brief and this

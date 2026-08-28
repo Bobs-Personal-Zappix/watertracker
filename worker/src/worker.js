@@ -90,6 +90,12 @@ __name(json, "json");
 var SMART_ENTRY_MODEL = "claude-haiku-4-5-20251001";
 var SMART_ENTRY_DAILY_CAP = 25;
 var SMART_ENTRY_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+// Bump this every time buildInterpretSystemPrompt's text changes — it's folded into the cache
+// key below, so a bump invalidates every previously-cached interpretation in one move (old
+// interp:v<N>: keys are simply never read again and expire naturally via their own TTL). Without
+// this, a prompt fix is invisible to anyone who already triggered that phrase — they'd stay
+// frozen on the old interpretation for up to 30 days.
+var SMART_ENTRY_PROMPT_VERSION = 3;
 
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
@@ -113,7 +119,7 @@ __name(enabledTrackerNames, "enabledTrackerNames");
 
 async function interpretCacheKey(text, trackers) {
   const hash = await sha256Hex(`${normalizeInterpretText(text)}|${enabledTrackerNames(trackers).join(",")}`);
-  return `interp:v1:${hash}`;
+  return `interp:v${SMART_ENTRY_PROMPT_VERSION}:${hash}`;
 }
 __name(interpretCacheKey, "interpretCacheKey");
 
@@ -133,13 +139,27 @@ Respond with STRICT JSON ONLY. No prose before or after it, no markdown code fen
 {
   "entries": [{"tracker": string, "value": number, "unit": string, "source": string, "confidence": "high"|"medium"|"low"}],
   "unmatched": [string],
-  "candidates": [{"tracker": string, "heard": string, "options": [{"id": string, "name": string}]}],
+  "candidates": [{"tracker": "treatment"|"rx"|"supplement", "heard": string (short fragment only, not the full sentence), "options": [{"id": string, "name": string}]}],
   "declined": string | null
 }
 
 THREE INTERPRETATION CLASSES — apply the right one per phrase:
-1. Consumable / time-based trackers (water, protein, calories, sleep, exercise): interpret and estimate a reasonable value. Every entry you produce MUST carry a "source" field — the exact phrase from the user's text that produced it. Never output a value with no source phrase behind it.
-2. Treatments, RX (prescriptions), and Supplements: match ONLY against the user's own configured items listed below — never against general drug or treatment knowledge you may otherwise have. If the match is anything below high confidence, put it under "candidates" (never "entries") with "heard" set to what the user said and "options" set to the plausible matching item(s). Never guess at an inventory-affecting item — when unsure, it belongs in "candidates," not a forced pick in "entries."
+1. Consumable / time-based trackers (water, protein, calories, sleep, exercise): interpret and estimate a reasonable value for any NAMED food, drink, or activity. A single food or drink can and should produce MULTIPLE entries — one per applicable enabled tracker, never just one entry per item. For example, a grilled cheese sandwich (with calories and protein both enabled) should produce a "calories" entry AND a separate "protein" entry, each with "source" set to the same phrase ("grilled cheese sandwich"). Every entry you produce MUST carry a "source" field — the exact phrase from the user's text that produced it. Never output a value with no source phrase behind it.
+
+   ESTIMATES ARE APPROXIMATE, NOT PRECISE — a typical-serving-size guess is exactly what's wanted, not a certified figure. The user reviews and can edit every value on a confirm screen before anything is saved, so an approximate estimate is always more useful than no entry.
+
+   CONFIDENCE RUBRIC — set "confidence" using this scale:
+   - "high": a single named item with a standard, well-known portion (e.g. "a banana", "a can of soda", "a diet coke").
+   - "medium": a composed dish with a variable recipe (e.g. "a grilled cheese sandwich", "a burrito", "a salad").
+   - "low": a named food or drink whose portion is heavily variable or unstated beyond the name itself (e.g. "some chips", "a bowl of pasta", "a beer" with no size given).
+
+   UNMATCHED BOUNDARY — the rule is "approximate a typical serving of a NAMED food, drink, or activity," not "approximate anything food-shaped." "Grilled cheese", "a banana", and "some chips" all name a specific item — estimate them (at the confidence level above) even without a brand, recipe, or exact portion. "I had lunch," "I ate something," and "I worked out" name nothing specific — there is no estimable content, so these belong in "unmatched," never a guessed value. Test: can you point to the word(s) naming what was actually consumed or done? If yes, estimate it. If no, it's unmatched.
+2. Treatments, RX (prescriptions), and Supplements: match ONLY against the user's own configured items listed below — never against general drug or treatment knowledge you may otherwise have. If the match is anything below high confidence, put it under "candidates" (never "entries"). Never guess at an inventory-affecting item — when unsure, it belongs in "candidates," not a forced pick in "entries."
+
+   CANDIDATE FIELDS — both are commonly gotten wrong, follow exactly:
+   - "tracker" is the tracker TYPE — exactly one of "treatment", "rx", or "supplement" — NEVER the matched item's name. A Metformin match has "tracker": "rx", not "tracker": "Metformin".
+   - "heard" is ONLY the specific word or phrase fragment that needs disambiguating — NEVER the full sentence the user said. The confirm card renders it as literally the sentence 'You said "<heard>" — did you mean:', so it must read naturally in that sentence.
+   - Worked example: user says "took my metfor this morning" and "Metformin" is a configured rx item → {"tracker": "rx", "heard": "metfor", "options": [{"id": "r1", "name": "Metformin"}]}. NOT {"tracker": "Metformin", "heard": "took my metfor this morning", ...}.
 3. Measured readings (weight): capture the number exactly as the user stated it. Do not interpret, round, or estimate. If the user says "I weigh 181," the value is 181, verbatim.
 
 ENABLED TRACKERS — only propose "entries" for these; ignore anything the user mentions that isn't in this list:
@@ -539,7 +559,14 @@ var worker_default = {
       } catch (e) {
         return json({ error: "Invalid JSON body." }, 400);
       }
-      const { text, deviceId, trackers, userItems } = payload;
+      const { text, deviceId, trackers, userItems, bypassCache: bypassCacheRequested } = payload;
+      // Gated: bypassCache is a diagnostic escape hatch, not a public feature — an unauthenticated
+      // caller could otherwise force every request to hit the paid model instead of the free
+      // cache, multiplying real spend. Fails closed by default: if SMART_ENTRY_DEBUG_SECRET isn't
+      // set as a Worker secret, the header check below can never pass and bypassCache is always
+      // ignored, regardless of what the request body asks for.
+      const bypassCache = !!(bypassCacheRequested && env.SMART_ENTRY_DEBUG_SECRET &&
+        request.headers.get("x-smart-entry-debug") === env.SMART_ENTRY_DEBUG_SECRET);
       if (!text || typeof text !== "string" || !text.trim()) {
         return json({ error: "Missing text." }, 400);
       }
@@ -561,8 +588,12 @@ var worker_default = {
       const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
       const cacheKey = await interpretCacheKey(text, trackers);
 
-      // Cache check first — a cache hit never touches the daily cap.
-      const cached = await env.WATER_KV.get(cacheKey);
+      // Cache check first — a cache hit never touches the daily cap. `bypassCache: true` in the
+      // request body skips this read (testing-only escape hatch, e.g. to re-check one phrase
+      // against the current prompt without waiting on a version bump or the 30-day TTL) — the
+      // fresh result below still overwrites the stale KV entry, so it also fixes that one phrase
+      // for every future caller, not just this request.
+      const cached = bypassCache ? null : await env.WATER_KV.get(cacheKey);
       if (cached) {
         await bumpSmartEntryUsage(env, deviceId, today, "cache_hits");
         return json(JSON.parse(cached));
