@@ -432,6 +432,53 @@ real-device-only, same limitation as the rest of B7.
 *Status:* **Locked** · Aug 28, 2026 · v3.63.1 — harness/lint verified; TTS rate/voice change
 still needs Rob's real-device confirmation that it actually sounds clearer.
 
+*Amended Aug 28, 2026 — B2's "drop the opening prompt" / "under 2 seconds, no enumeration"
+timing doctrine explicitly superseded (v3.63.2).* Rob tested v3.63.1 on **Android** (not iOS —
+B1's spike device), confirmed the slower rate was an improvement, but reported two problems: he
+didn't understand what the terse confirm line ("Got 1. Say yes.") meant, and he didn't like the
+voice B2/PROD-17's picker was landing on. Rob then specified the exact script he wants, which
+directly reverses two of B2's original tradeoffs:
+
+- **B2 said "drop the opening prompt."** v3.63.2 adds one back: on overlay open, before
+  recognition starts, she now says *"Tell me what you had and want to add."*
+- **B2 said the spoken summary must not enumerate values and must stay under 2 seconds** ("Got
+  three — say yes?"). v3.63.2 replaces that with a longer, explicit script: *"Is this correct? If
+  so, please say yes and I'll add it. Or tell me what you want changed and I'll update it."* Still
+  doesn't enumerate the actual values (card on screen still carries those, per `PROD-16`), but is
+  no longer a sub-2-second line.
+- **New, not a B2 reversal**: a spoken *"All set!"* now plays before the overlay closes on
+  confirm — B4's loop diagram never specified confirmation copy, so this is new ground, not a
+  changed decision.
+
+Net effect: total loop time grows past B2's original ~10–12s target (now roughly opening prompt +
+listen + interpret + confirm script + correction/"All set" on top of the original budget) — this
+is accepted as the tradeoff for the script actually being understandable, not an oversight.
+
+**Voice picker bug found, not just preference**: investigating "I don't like the voice" surfaced
+that `speechSynthesis.getVoices()` commonly returns an **empty list** on the very first call after
+page load — well-documented as a Chrome/Android quirk, the list populates asynchronously and only
+reliably appears once the `onvoiceschanged` event fires. v3.63.1's picker called `getVoices()`
+synchronously with no wait, so on the opening prompt (the very first utterance of a fresh page
+load, now the highest-risk moment for exactly this timing gap) it likely found nothing and fell
+through to Android's raw default engine voice rather than the intended clearer pick — plausibly
+what Rob was actually hearing, not a wrong preference order. Fixed with a `Pv()` priming helper:
+if `getVoices()` is already populated, proceed immediately; otherwise wait for `onvoiceschanged`
+(with a 300ms fallback timer so a browser that never fires the event doesn't hang the prompt)
+before speaking. Same Web Speech API code path on Android Chrome and iOS Safari — no
+platform-specific branching needed, this was a timing bug, not a platform difference.
+
+**Verification:** full 3-step pipeline re-run against the exact shipped `bundle.js` — ESLint
+no-undef sweep unchanged (same 11 pre-existing vendor errors, none new), jsdom harness full pass
+including the voice-confirm path (0 runtime errors, 618 checks), end-state audit confirmed all six
+edits present (opening-prompt effect, confirm-script text, "All set!" call, `Pv` priming helper,
+`speechSynthesis.cancel()` added to the overlay's stop/cleanup function so an interrupted prompt
+doesn't keep talking after close, version bump). jsdom cannot play audio or exercise the
+`voiceschanged` timing path itself — both the new script's actual clarity and whether the voice
+picker fix resolves what Rob heard on Android remain **real-device-only**, unverified by this
+pipeline.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.2 — harness/lint verified; script and voice-picker
+fix both still need Rob's real-device (Android) confirmation.
+
 ---
 
 ## Architecture

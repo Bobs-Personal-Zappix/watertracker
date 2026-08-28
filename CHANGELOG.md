@@ -20,6 +20,37 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.2] — 2026-08-28
+
+Smart Entry voice layer follow-up, from Rob's real-device testing of v3.63.1 on **Android**. See
+`docs/DECISION-LOG.md` `PROD-17`'s second Aug 28 amendment — this explicitly supersedes B2's
+"drop the opening prompt" / "under 2 seconds" timing doctrine, at Rob's direction.
+
+- **Script rewrite, per Rob's exact wording.** Opening the Voice Tracker now speaks a prompt
+  before listening starts: *"Tell me what you had and want to add."* (previously no opening
+  prompt, per the original B2 decision). The terse "Got 1. Say yes." confirm line — which Rob
+  said he didn't understand — is now: *"Is this correct? If so, please say yes and I'll add it.
+  Or tell me what you want changed and I'll update it."* On confirm, she now says *"All set!"*
+  before the overlay closes (new — B4 never specified confirm copy).
+- **Voice-picker timing bug fixed.** Rob also didn't like the voice itself. Investigating found
+  `speechSynthesis.getVoices()` commonly returns empty on the very first call after page load
+  (async population, especially on Chrome/Android) — v3.63.1's picker called it synchronously
+  with no wait, so the opening prompt (now the very first utterance on a fresh load) likely fell
+  through to the raw default engine voice instead of the intended clearer pick. Fixed with a
+  voice-priming helper that waits for `onvoiceschanged` (300ms fallback) before speaking if the
+  list isn't populated yet. Same code path on Android Chrome and iOS Safari — this was a timing
+  bug, not a platform difference, so no OS branching was needed.
+- Also hardened: the overlay's stop/cleanup function now calls `speechSynthesis.cancel()` so
+  closing mid-prompt doesn't leave her talking after the screen is gone.
+- **Timing tradeoff, stated plainly**: total loop time now runs longer than the original
+  ~10–12s target — accepted in exchange for the script actually being understandable.
+- Full verification pipeline re-run against the exact shipped `bundle.js`: ESLint no-undef sweep
+  unchanged (11 pre-existing vendor errors, none new), jsdom harness full pass (618 checks) with
+  0 runtime errors, end-state audit confirmed all six edits present.
+- **Not yet verified on a real device** — jsdom can't play audio or exercise the `voiceschanged`
+  timing path. Both the new script and whether the voice-picker fix actually improves what Rob
+  heard on Android need his real-device pass.
+
 ## [3.63.1] — 2026-08-28
 
 Smart Entry voice layer follow-up, from Rob's continued real-device testing of v3.63.0. See
