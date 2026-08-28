@@ -127,6 +127,10 @@ const SEED = makeSeed({
 });
 if (SEED) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
 
+// Real deploys load config.js separately (site/app/config.js sets this); the harness only evals
+// the bundle itself, so without this rS()/apiBase reads as empty and every fetch-based feature
+// (push, backup, Smart Entry, ...) short-circuits before ever reaching window.fetch below.
+window.WATER_TRACKER_CONFIG = { apiBase: "https://mock.test" };
 window.fetch = () => { const p = Promise.reject(new Error("network disabled")); p.catch(() => {}); return p; };
 
 // GOTCHA 4: attach .catch() at creation.
@@ -187,6 +191,33 @@ function setInput(placeholder, value) {
   Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, value);
   el.dispatchEvent(new window.Event("input", { bubbles: true }));
   return true;
+}
+function setTextarea(placeholder, value) {
+  const el = window.document.querySelector(`textarea[placeholder="${placeholder}"]`);
+  if (!el) return false;
+  Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set.call(el, value);
+  el.dispatchEvent(new window.Event("input", { bubbles: true }));
+  return true;
+}
+// Smart Entry (PROD-15/A1-A4) — /api/interpret is a real network call the harness otherwise
+// disables entirely (window.fetch always rejects, see GOTCHA above the seed). Since app code
+// calls the global `fetch` (not a captured reference), reassigning window.fetch right before
+// triggering a Smart Entry submit is enough to serve a canned response for exactly that call —
+// it's read live at call time. Restore the always-reject default afterward so it doesn't leak
+// into unrelated steps.
+function mockInterpretFetch(json, status = 200) {
+  window.fetch = () => Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(json),
+  });
+}
+function disableFetch() {
+  window.fetch = () => { const p = Promise.reject(new Error("network disabled")); p.catch(() => {}); return p; };
+}
+function findCompactTile(label) {
+  return [...window.document.querySelectorAll(".wt-tracker-col-compact")]
+    .find((e) => e.textContent.trim().startsWith(label));
 }
 function setInputByAria(label, value) {
   const el = window.document.querySelector(`[aria-label="${label}"]`);
@@ -1859,6 +1890,108 @@ const STEPS = [
   },
   () => check("close the past-days sheet", clickByAria("Close")),
   () => check("no runtime errors after v3.48.0 Stats-page pass", errors.length, 0),
+
+  // ── Smart Entry v3.62.0 (A1-A4): confirm card, sheet internals, write path ──
+  () => check("nav to Log It! (Smart Entry checks)", nav("Log It!")),
+  () => {
+    const tile = findCompactTile("Voice Tracker");
+    check("found Voice Tracker tile", !!tile);
+    if (tile) fire(tile);
+  },
+  () => {
+    check("Smart Entry sheet opens in idle (text-input) state", !!window.document.querySelector(".wt-voice-text"));
+    const interpretBtn = [...window.document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Interpret");
+    check("Interpret button present and disabled with empty text", interpretBtn ? String(interpretBtn.disabled) : null, "true");
+  },
+  () => {
+    mockInterpretFetch({
+      entries: [
+        { tracker: "water", value: 12, unit: "oz", source: "diet coke", confidence: "medium" },
+        { tracker: "calories", value: 400, unit: "kcal", source: "grilled cheese sandwich", confidence: "medium" },
+        { tracker: "protein", value: 15, unit: "g", source: "grilled cheese sandwich", confidence: "low" },
+      ],
+      unmatched: [], candidates: [], declined: null,
+    });
+    check("type Smart Entry text", setTextarea("e.g. grilled cheese and a diet coke", "grilled cheese and a diet coke"));
+    check("tap Interpret", clickByText("Interpret"));
+  },
+  () => {
+    const rows = [...window.document.querySelectorAll(".wt-smart-entry-row")];
+    check("confirm card renders 3 entry rows", rows.length, 3);
+    check("low-confidence row shows the review cue", !!window.document.querySelector(".wt-smart-entry-lowconf"));
+    check("source phrase shown under a row", [...window.document.querySelectorAll(".wt-smart-entry-source")].some((s) => s.textContent === "grilled cheese sandwich"));
+  },
+  () => check("tap Confirm and log", clickByText("Confirm and log")),
+  () => {
+    const entry = logsToday().find((e) => e.source === "smart" && e.oz === 12);
+    check("Smart Entry write landed as one combined water/protein/calories entry", !!entry);
+    check("combined entry carries all three values (oz/grams/calories)", entry ? `${entry.oz}/${entry.grams}/${entry.calories}` : null, "12/15/400");
+    check("combined entry's sourceText is the original text", entry ? entry.sourceText : null, "grilled cheese and a diet coke");
+    check("Smart Entry sheet closed itself after confirm", !window.document.querySelector(".wt-voice-text"));
+  },
+  () => check("no runtime errors after Smart Entry entries-path check", errors.length, 0),
+
+  () => {
+    const tile = findCompactTile("Voice Tracker");
+    if (tile) fire(tile);
+  },
+  () => {
+    mockInterpretFetch({ entries: [], unmatched: [], candidates: [], declined: "out_of_scope" });
+    setTextarea("e.g. grilled cheese and a diet coke", "is this healthy?");
+    check("tap Interpret (declined path)", clickByText("Interpret"));
+  },
+  () => {
+    check("declined message shown", !!window.document.querySelector(".wt-sheet-sub"));
+    check("no Confirm button on the declined path", ![...window.document.querySelectorAll("button")].some((b) => b.textContent.trim() === "Confirm and log"));
+  },
+  () => check("close the declined-path sheet", clickByText("Got it")),
+  () => check("no runtime errors after Smart Entry declined-path check", errors.length, 0),
+
+  () => {
+    const tile = findCompactTile("Voice Tracker");
+    if (tile) fire(tile);
+  },
+  () => {
+    mockInterpretFetch({
+      entries: [], unmatched: [],
+      candidates: [{ tracker: "rx", heard: "metfor", options: [{ id: "s3", name: "SeedRx" }] }],
+      declined: null,
+    });
+    setTextarea("e.g. grilled cheese and a diet coke", "took my metfor this morning");
+    check("tap Interpret (candidates path)", clickByText("Interpret"));
+  },
+  () => {
+    check("candidate prompt rendered", !!window.document.querySelector(".wt-smart-entry-candidate-heard"));
+    check("nothing pre-selected on the candidate (PROD-10 safeguard)", !window.document.querySelector(".wt-smart-entry-candidate-option-picked"));
+    check("tap the SeedRx candidate option to pick it", clickByText("SeedRx"));
+  },
+  () => {
+    check("picked candidate option is visually marked", !!window.document.querySelector(".wt-smart-entry-candidate-option-picked"));
+    check("tap Confirm and log (candidates path)", clickByText("Confirm and log"));
+  },
+  () => {
+    const entry = logsToday().find((e) => e.type === "rx" && e.source === "smart");
+    check("Smart Entry-resolved rx candidate wrote a real rx log entry", !!entry);
+    check("rx entry's sourceText carries the original phrase", entry ? entry.sourceText : null, "took my metfor this morning");
+    const item = rxItem("SeedRx");
+    check("picking the candidate decremented/updated the rx item exactly as a manual pick would (lastTakenDate set)", item ? item.lastTakenDate : null, TODAY);
+  },
+  () => check("no runtime errors after Smart Entry candidates-path check", errors.length, 0),
+
+  () => {
+    const tile = findCompactTile("Voice Tracker");
+    if (tile) fire(tile);
+  },
+  () => {
+    disableFetch();
+    setTextarea("e.g. grilled cheese and a diet coke", "an apple");
+    check("tap Interpret with network disabled (error-fallback path)", clickByText("Interpret"));
+  },
+  () => {
+    check("network failure falls back to a declined/manual-entry message, not a crash", !!window.document.querySelector(".wt-sheet-sub"));
+  },
+  () => check("close the network-failure sheet", clickByText("Got it")),
+  () => check("no runtime errors after Smart Entry network-failure check", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

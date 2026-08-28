@@ -1,3 +1,5 @@
+> **SUPERSEDED by docs/CC-BRIEF-smart-entry-app-v3.62.0.md.** Worker sections shipped (PROD-15). App-side sections are stale — written against v3.39.0.
+
 # CC-BRIEF — Smart Entry (v3.40.0) + Voice Tracker (v3.41.0)
 
 **Written:** Aug 27, 2026 · **Status:** ready to run · **Author:** Claude (strategy project) → Claude Code

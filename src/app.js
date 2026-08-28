@@ -201,6 +201,41 @@ import {
             return null
         }
     }
+
+    // Smart Entry (PROD-15/A1) — trackers sent as {unit, on} so the worker's system prompt can
+    // tell the model both what's enabled and what unit vocabulary to answer in. Treatments/RX/
+    // Supplements are deliberately NEVER included here — the shipped /api/interpret response schema
+    // has no field to identify WHICH configured item an "entries" row would refer to, so any match
+    // against those three trackers can only ever be safely represented as a "candidates" pick
+    // (PROD-10's inventory safeguard). Omitting them from `trackers` makes the server's own
+    // enabledSet filter guarantee this — normalizeInterpretResult drops any "entries" row whose
+    // tracker isn't in this list, regardless of what the model returns.
+    function smartEntryTrackersPayload(settings) {
+        return {
+            water: { unit: "oz", on: !1 !== settings.showWater },
+            protein: { unit: "g", on: !1 !== settings.showProtein },
+            calories: { unit: "kcal", on: !1 !== settings.showCalories },
+            sleep: { unit: "hours", on: !1 !== settings.showSleep },
+            exercise: { unit: "minutes", on: !1 !== settings.showExercise },
+            weight: { unit: "lbs", on: !1 !== settings.showWeight }
+        }
+    }
+
+    function smartEntryUserItemsPayload(settings) {
+        let pick = arr => (Array.isArray(arr) ? arr : []).map(i => ({
+            id: i.id,
+            name: i.name
+        }));
+        return {
+            treatments: pick(settings.treatments),
+            rx: pick(settings.rx),
+            supplements: pick(settings.supplements)
+        }
+    }
+
+    function smartEntryRegimenSettingsKey(kind) {
+        return "rx" === kind ? "rx" : "supplement" === kind ? "supplements" : "treatments"
+    }
     async function wtActivityPing() {
         let e = wtDeviceId(),
             n = rS();
@@ -227,7 +262,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.61.0",
+        xS = "3.62.0",
         SCHEMA_VERSION = 4,
         ES = {
             logs: {},
@@ -409,7 +444,9 @@ import {
             label: e.label,
             oz: "protein" === e.type || "calories" === e.type ? 0 : Number(e.oz) || 0,
             grams: "protein" === e.type && Number(e.grams) || 0,
-            calories: "calories" === e.type && Number(e.calories) || 0
+            calories: "calories" === e.type && Number(e.calories) || 0,
+            source: e.source || "manual",
+            sourceText: e.sourceText || null
         }
     }
 
@@ -684,7 +721,7 @@ import {
             o = document.createElement("a");
         o.href = a, o.download = e, document.body.appendChild(o), o.click(), document.body.removeChild(o), URL.revokeObjectURL(a)
     }
-    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --supplements:#a3e635; --supplements-chip:#28330e;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-brand { display:flex; align-items:center; gap:10px; min-width:0; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-header > .wt-date:only-child { margin-left:auto; margin-right:auto; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s6); margin:8px 0 6px; }\n.wt-trackers-grid + .wt-trackers-grid { margin-top:18px; }\n.wt-trackers-grid + .wt-action-btns { margin-top:18px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:10px var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }\n.wt-log-row { display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:7px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; margin-top:2px; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; padding-top:2px; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-desc-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }\n.wt-log-actions { display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-feature-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); }\n.wt-feature-tile.gold { background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-feature-tile.blue { background:var(--bg); border:2px solid var(--water); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); cursor:pointer; }\n.wt-feature-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; }\n.wt-feature-tile-icon svg { width:20px; height:20px; }\n.gold .wt-feature-tile-icon { background:#564216; color:#FFC428; }\n.blue .wt-feature-tile-icon { background:var(--water-chip); color:var(--water); }\n.wt-feature-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-feature-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-feature-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-feature-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }\n.gold .wt-feature-tile-badge { background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.gold .wt-feature-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.gold .wt-feature-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.blue .wt-feature-tile-badge { background:var(--water); color:#fff; }\n.wt-feature-tile-badge svg { width:22px; height:22px; }\n.wt-trackers-grid-compact { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:0 0 12px; }\n.wt-tracker-col-compact { display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 2px; border-radius:var(--radius); background:transparent; box-sizing:border-box; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .1s ease, background .1s ease; }\n.wt-tracker-col-compact:active { transform:scale(0.955); background:var(--surface-dark); }\n.wt-tracker-col-compact-off { min-height:134px; visibility:hidden; pointer-events:none; }\n.wt-tracker-col-compact .wt-gauge-imageonly { width:102px; height:102px; }\n.wt-tracker-col-compact .wt-gauge-ring { width:102px; height:102px; }\n.wt-tile-plain-img { width:102px; height:102px; object-fit:contain; }\n.wt-tile-compact-label { font-size:16.5px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-datepill-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin:2px 0 10px; }\n.wt-datepill { position:relative; display:inline-flex; align-items:center; gap:8px; min-height:var(--touch); padding:6px 16px; border-radius:999px; border:1.5px solid var(--hairline-bright); background:var(--surface-dark); box-sizing:border-box; }\n.wt-datepill-past { border-color:#7a5c1e; background:#221c0e; }\n.wt-datepill-icon { color:var(--ink-inverse); flex-shrink:0; pointer-events:none; }\n.wt-datepill-input { position:absolute; inset:0; width:100%; height:100%; opacity:0; border:0; padding:0; margin:0; cursor:pointer; -webkit-appearance:none; }\n.wt-datepill-date { font-size:15px; font-weight:600; color:var(--ink-inverse); white-space:nowrap; pointer-events:none; }\n.wt-datepill-badge { font-size:10px; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink); pointer-events:none; }\n.wt-datepill-past .wt-datepill-badge { background:#4a3a10; color:#e8c268; }\n.wt-datepill-subtitle { font-size:11px; color:#e8c268; text-align:center; }\n.wt-savingto-bar { font-size:11.5px; font-weight:600; color:#e8c268; background:#221c0e; border:1px solid #7a5c1e; border-radius:10px; padding:6px 10px; text-align:center; margin:-6px 0 14px; }\n.wt-gauge-imageonly { display:flex; align-items:center; justify-content:center; }\n.wt-gauge-imageonly-img { width:100%; height:100%; object-fit:contain; }\n.wt-gauge-imageonly-badge { position:absolute; right:2%; bottom:2%; }\n.wt-gauge-imageonly { border-radius:22px; border:3px solid #2a303a; box-sizing:border-box; transition:border-color .2s ease, box-shadow .2s ease; }\n.wt-gauge-imageonly-lit { border-color:var(--weight); box-shadow:0 0 7px var(--weight); }\n.wt-voice-text { width:100%; box-sizing:border-box; border-radius:12px; border:1.5px solid var(--line); padding:10px 12px; font:inherit; font-size:14px; resize:vertical; margin-bottom:14px; }\n.wt-meals-ring { width:64px; height:64px; border-radius:50%; background:var(--protein-chip); border:4px solid var(--protein); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
+    var iO = "\n@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');\n\n:root {\n  /* v3.34.0 design tokens (UX-12), installed globally rather than on .wt-root so they also\n     reach the app's portaled sheets/modals (UX-11), which live outside .wt-root's subtree and\n     previously had no value at all for the .wt-root-scoped variables below.\n     Merge note: --ink, --muted, and --success here differ from the --ink/--muted/--success\n     declared on .wt-root further down. That's not an oversight — CSS custom-property\n     inheritance resolves from the nearest ancestor that sets the property, so .wt-root's own\n     values keep winning for everything already inside .wt-root; nothing existing changes\n     appearance. These :root values take effect only outside .wt-root. */\n  --bg:#0B0F14; --surface-dark:#151A21; --surface:#FFFFFF; --surface-2:#F1F4F8; --hairline:#232A33; --hairline-bright:#5A7390;\n  --ink:#0B0F14; --ink-inverse:#FFF6DB; --muted:#8A97A6; --muted-dark:#9FB0C4;\n  --accent:#4C9AFF; --accent-chip:#16273D;\n  --water:#2F80ED; --water-chip:#16273D;\n  --protein:#27AE60; --protein-chip:#14301F;\n  --calories:#E8823A; --calories-chip:#34220F;\n  --sleep:#7B61FF; --sleep-chip:#211C3A;\n  --weight:#16A394; --weight-chip:#0F2B28;\n  --exercise:#E85D9E; --exercise-chip:#331424;\n  --treatment:#16A394; --treatment-chip:#0F2B28;\n  --meds:#F2A93B; --meds-chip:#33270E;\n  --supplements:#a3e635; --supplements-chip:#28330e;\n  --alert:#FF6B5E; --alert-chip:#2E1614;\n  --success:#27AE60;\n  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;\n  --radius:16px; --touch:48px; --nav-h:64px;\n  --z-nav:30; --z-scrim:40; --z-sheet:50;\n}\n\n:where(button, input, select, textarea) { color:inherit; font:inherit; }\n.wt-root, .wt-root * { box-sizing: border-box; }\n.wt-root {\n  --ink:#0B2038; --deep:#1B4F72; --teal:#2E86C1; --teal-light:#8AC4E8;\n  --mist:#DCEAF5; --citrus:#E3A83B; --success:#2F8F5B; --light-green:#8DDD9B; --orange:#F0923B; --paper:#F2F5F8; --page-bg:var(--bg); --line:#D5E1EC;\n  --danger:#C1523E; --muted:#5C7085;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\n  background:var(--page-bg); color:var(--ink-inverse); min-height:100vh; position:relative;\n  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));\n}\n.wt-root :focus-visible { outline:2px solid var(--teal); outline-offset:2px; }\n@media (prefers-reduced-motion: reduce) {\n  .wt-root * { animation:none !important; transition:none !important; }\n}\n\n.wt-topbanner { position:sticky; top:0; z-index:250; background:var(--page-bg); padding:16px 16px 10px; overflow:hidden; }\n.wt-topbanner-inner { display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }\n.wt-topbanner-brand { display:flex; align-items:center; gap:10px; min-width:0; }\n.wt-topbanner-badge { width:70px; height:70px; flex-shrink:0; }\n.wt-topbanner-badge img { width:100%; height:100%; object-fit:contain; }\n.wt-topbanner-text { display:flex; flex-direction:column; align-items:flex-start; line-height:1.18; }\n.wt-topbanner-title { font-family:'Space Grotesk',sans-serif; font-size:23px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-topbanner-profile { width:40px; height:40px; flex-shrink:0; border-radius:50%; background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; overflow:hidden; }\n.wt-topbanner-wave { position:absolute; bottom:-1px; left:0; width:100%; height:20px; display:block; }\n.wt-topbanner-wave path { fill:var(--page-bg); }\n\n.wt-frame { max-width:420px; margin:0 auto; padding:10px 18px 4px; }\n\n.wt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }\n.wt-header > .wt-date:only-child { margin-left:auto; margin-right:auto; }\n.wt-date { font-size:16px; color:var(--ink-inverse); }\n.wt-date-label { font-weight:700; color:var(--ink-inverse); text-transform:uppercase; }\n\n.wt-trackers-row { display:flex; gap:6px; margin:8px 0 6px; align-items:stretch; }\n.wt-trackers-grid { display:flex; flex-direction:column; gap:var(--s6); margin:8px 0 6px; }\n.wt-trackers-grid + .wt-trackers-grid { margin-top:18px; }\n.wt-trackers-grid + .wt-action-btns { margin-top:18px; }\n.wt-tracker-col { display:flex; flex-direction:row; align-items:center; gap:var(--s3); width:100%; background:var(--bg); color:var(--ink-inverse); border-radius:var(--radius); padding:10px var(--s4); box-sizing:border-box; }\n.wt-tile-left { flex:1; min-width:0; }\n.wt-tile-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }\n.wt-tile-chip { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }\n.wt-tile-title { font-weight:700; font-size:16px; color:var(--ink-inverse); }\n.wt-tile-goal { font-size:14px; color:var(--ink-inverse); }\n.wt-tile-togo { font-size:15px; font-weight:700; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-logged { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n.wt-tile-mid { flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 2px; }\n.wt-tile-mid-value { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1; color:var(--ink-inverse); text-align:center; white-space:nowrap; }\n.wt-tile-mid-label { font-size:13px; font-weight:600; color:var(--muted-dark); text-align:center; margin-top:2px; white-space:nowrap; }\n.wt-tile-right { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-col-clickable { cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; -webkit-tap-highlight-color:transparent; }\n.wt-tracker-col-clickable:active { transform:scale(0.97); box-shadow:0 1px 4px rgba(0,0,0,.08); }\n.wt-full-width-btn { width:100%; margin-top:10px; background:var(--indigo); }\n.wt-full-width-btn-pill { background:var(--success); }\n.wt-full-width-btn-treatment { background:var(--orange); }\n.wt-tracker-label { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em; margin-bottom:3px; display:flex; align-items:center; gap:4px; white-space:nowrap; }\n.wt-tracker-goal { font-size:11.5px; color:var(--muted); margin-bottom:3px; font-weight:600; }\n.wt-divider { border-top:1px solid var(--hairline-bright); margin:20px 0 4px; }\n.wt-tracker-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; text-align:center; line-height:1; margin-top:3px; }\n.wt-tracker-in-label { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; margin-bottom:4px; }\n.wt-tracker-number .unit { font-size:10px; font-weight:500; color:var(--muted); margin-left:1px; }\n.wt-tracker-sub { text-align:center; font-size:13px; font-weight:700; color:var(--ink); margin-top:1px; margin-bottom:4px; line-height:1.2; min-height:28px; display:flex; align-items:center; justify-content:center; }\n.wt-tracker-btn { padding:9px 4px; font-size:13.5px; font-weight:700; width:100%; gap:4px; background:var(--deep); }\n.wt-tracker-btn-sleep { background:var(--indigo); }\n.wt-btn-text { display:block; width:100%; background:none; border:none; padding:10px 4px; font-size:13.5px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:center; }\n.wt-btn-text-danger { color:var(--danger); }\n.wt-inline-link { display:inline; background:none; border:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; text-decoration:underline; cursor:pointer; }\n.wt-tracker-presets { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; }\n.wt-chip-sm { padding:5px 9px; font-size:11px; }\n\n.wt-gauge-wrap { position:relative; margin:0 auto; }\n.wt-gauge-svg { display:block; }\n.wt-gauge-ring { width:103px; height:103px; }\n.wt-gauge-ring circle[stroke-dasharray] { transition:stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }\n.wt-sleep-preview { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--deep); background:var(--mist); border-radius:10px; padding:10px; margin-bottom:16px; }\n.wt-overflow { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:fit-content; text-align:center; font-family:'Space Grotesk',sans-serif; font-size:9px; font-weight:700; color:var(--ink); background:var(--citrus); border-radius:999px; padding:3px 7px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.18); }\n\n.wt-today-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; text-align:center; line-height:1; margin-top:6px; }\n.wt-today-number .unit { font-size:16px; font-weight:500; color:var(--muted); margin-left:3px; }\n.wt-today-sub { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; margin-bottom:16px; }\n\n.wt-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--accent); color:#FFFFFF; border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-primary:disabled { opacity:.4; cursor:not-allowed; }\n.wt-btn-secondary { display:flex; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:12px; padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-ghost { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }\n.wt-btn-danger { color:var(--danger); }\n\n.wt-preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 4px; }\n.wt-preset-btn { display:flex; align-items:center; justify-content:center; min-height:52px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:12px 10px; font-size:13.5px; font-weight:600; color:var(--ink-inverse); cursor:pointer; font-family:inherit; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.wt-preset-add-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; background:var(--bg); border:1.5px dashed var(--hairline-bright); border-radius:12px; padding:14px 10px; margin:10px 0 4px; font-size:14.5px; font-weight:700; color:var(--accent); cursor:pointer; font-family:inherit; }\n.wt-chip { display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit; }\n.wt-chip-oz { color:var(--teal); font-weight:700; }\n.wt-chip-ghost { color:var(--muted); border-style:dashed; }\n\n.wt-section-label { font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--ink-inverse); text-transform:uppercase; margin:22px 0 8px; }\n.wt-section-label-lg { font-size:16px; }\n.wt-section-label-strong { font-size:14px; font-weight:700; color:var(--ink-inverse); letter-spacing:.01em; }\n.wt-empty-note { font-size:13.5px; color:var(--muted-dark); background:var(--bg); border:1px dashed var(--hairline-bright); border-radius:12px; padding:14px; text-align:center; }\n\n.wt-log-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }\n.wt-log-row { display:flex; align-items:flex-start; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:10px; padding:7px 10px; font-size:13.5px; }\n.wt-today-log-scroll { min-height:50vh; max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }\n.wt-treatment-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1.5px solid var(--hairline-bright); border-radius:12px; padding:11px 12px; margin-bottom:8px; }\n.wt-treatment-overdue { border-color:var(--danger); background:var(--alert-chip); }\n.wt-treatment-today { border-color:var(--orange); background:var(--meds-chip); }\n.wt-treatment-info { flex:1; min-width:0; display:flex; flex-direction:column; }\n.wt-treatment-name { font-weight:700; font-size:14px; color:var(--ink-inverse); }\n.wt-treatment-due-label { font-size:12px; font-weight:600; color:var(--muted-dark); }\n.wt-treatment-overdue .wt-treatment-due-label { color:var(--danger); }\n.wt-treatment-today .wt-treatment-due-label { color:var(--orange); }\n.wt-treatment-date-input { border:1px solid var(--hairline-bright); border-radius:8px; padding:6px 8px; font-size:12.5px; font-family:inherit; width:132px; flex-shrink:0; background:var(--bg); color:var(--ink-inverse); }\n\n.wt-doctor-share-overlay { position:fixed; inset:0; background:var(--paper); color:var(--ink); z-index:260; overflow-y:auto; }\n.wt-doctor-share-toolbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:2; }\n.wt-doctor-share-toolbar h3 { margin:0; font-size:16px; }\n.wt-doctor-share-controls { padding:14px 18px; background:#fff; border-bottom:1px solid var(--line); }\n.wt-doctor-share-range-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px; }\n.wt-doctor-share-content { max-width:640px; margin:0 auto; padding:24px 20px 60px; }\n.wt-doctor-share-header { text-align:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid var(--ink); }\n.wt-doctor-share-header h1 { font-size:19px; margin:0 0 4px; }\n.wt-doctor-share-name { font-weight:700; font-size:15px; margin:0 0 2px; }\n.wt-doctor-share-dates { font-size:13px; color:var(--muted); margin:0; }\n.wt-doctor-share-section { margin-bottom:22px; }\n.wt-doctor-share-section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.03em; color:var(--deep); border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 10px; }\n.wt-doctor-share-empty { font-size:13px; color:var(--muted); font-style:italic; }\n.wt-doctor-share-table { width:100%; border-collapse:collapse; font-size:13px; }\n.wt-doctor-share-table th { text-align:left; font-weight:700; color:var(--muted); font-size:11.5px; text-transform:uppercase; padding:4px 8px; border-bottom:1.5px solid var(--line); }\n.wt-doctor-share-table td { padding:6px 8px; border-bottom:1px solid var(--mist); }\n.wt-doctor-share-disclaimer { font-size:11px; color:var(--muted); margin-top:30px; padding-top:14px; border-top:1px solid var(--line); line-height:1.5; }\n.wt-share-link-box { font-size:12px; word-break:break-all; background:var(--mist); border:1.5px dashed var(--deep); border-radius:8px; padding:10px; color:var(--ink); user-select:all; }\n\n@media print {\n  .wt-no-print { display:none !important; }\n  /* Hide every other direct child of the app's root wrapper - display:none removes\n     them from layout entirely, unlike visibility:hidden (which was the original,\n     broken approach: hidden elements still occupy space, so everything above the\n     doctor-share overlay in the DOM pushed it thousands of pixels off-screen). */\n  .wt-root > *:not(.wt-doctor-share-overlay) { display:none !important; }\n  .wt-doctor-share-overlay { position:static !important; overflow:visible !important; }\n  .wt-doctor-share-content { max-width:none; padding:0; margin:0; }\n}\n.wt-log-icon { color:var(--muted-dark); flex-shrink:0; margin-top:2px; }\n.wt-log-time { color:var(--ink-inverse); font-weight:700; width:64px; flex-shrink:0; padding-top:2px; }\n.wt-log-label { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-log-desc-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }\n.wt-log-actions { display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0; }\n.wt-log-oz { color:var(--teal); font-weight:700; margin-right:4px; }\n.wt-log-metrics { display:flex; align-items:center; font-size:13px; margin-right:4px; white-space:nowrap; }\n.wt-icon-btn { background:none; border:none; color:var(--muted); padding:4px; display:flex; align-items:center; justify-content:center; min-width:var(--touch); min-height:var(--touch); cursor:pointer; }\n.wt-icon-btn:hover { color:var(--danger); }\n\n.wt-backdrop { position:fixed; inset:0; background:rgba(14,42,46,.94); display:flex; align-items:flex-end; justify-content:center; z-index:150; padding-bottom:env(safe-area-inset-bottom, 0px); touch-action:none; }\n.wt-backdrop.wt-center { align-items:center; padding:20px; }\n.wt-sheet { width:100%; max-width:100%; box-sizing:border-box; max-height:75vh; overflow-y:auto; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:20px 20px 0 0; padding:18px 18px 88px; z-index:160; overscroll-behavior:contain; }\n.wt-modal { width:100%; max-width:360px; background:var(--surface-dark); color:var(--ink-inverse); border:1px solid var(--hairline-bright); border-radius:16px; padding:18px; overscroll-behavior:contain; }\n.wt-modal-tall { max-height:80vh; overflow-y:auto; }\n.wt-help-section { margin-bottom:18px; }\n.wt-help-section:last-child { margin-bottom:0; }\n.wt-help-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 6px; color:var(--ink-inverse); }\n.wt-help-list { margin:0; padding-left:18px; font-size:13px; color:var(--muted-dark); line-height:1.5; }\n.wt-help-list li { margin-bottom:4px; }\n.wt-sheet-header, .wt-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-sheet-header h3, .wt-modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0; }\n\n\n\n.wt-field { display:block; font-size:12.5px; color:var(--muted-dark); font-weight:600; margin-bottom:14px; }\n.wt-field input, .wt-field select, .wt-field textarea { display:block; width:100%; margin-top:6px; padding:11px 12px; border:1px solid var(--hairline-bright); border-radius:10px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); box-sizing:border-box; min-height:var(--touch); }\n.wt-settings-tab .wt-field input, .wt-settings-tab .wt-field select, .wt-settings-tab .wt-field textarea { font-size:16px; }\n.wt-field-row { display:flex; gap:10px; }\n.wt-dial-trigger { width:100%; padding:11px 8px; border-radius:10px; border:1px solid var(--hairline-bright); background:var(--bg); font-size:17px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--ink-inverse); text-align:center; cursor:pointer; }\n.wt-dial { width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; cursor:grab; }\n.wt-dial-number { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; fill:var(--ink-inverse); user-select:none; }\n.wt-dial-tick { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; fill:var(--muted-dark); user-select:none; }\n.wt-field-row .wt-field { flex:1; }\n.wt-feedback-q { margin-bottom: 16px; }\n.wt-feedback-label { font-size:13px; font-weight:700; color:var(--ink-inverse); margin:0 0 8px; }\n.wt-chip-row { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-chip { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; }\n.wt-chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }\n.wt-qty-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--hairline-bright); }\n.wt-qty-row:last-child { border-bottom:none; }\n.wt-qty-name { flex:1; font-size:13.5px; font-weight:600; color:var(--ink-inverse); }\n.wt-recovery-code { font-family:'Space Grotesk',monospace; font-size:22px; font-weight:700; letter-spacing:.08em; text-align:center; color:var(--ink); background:var(--mist); border:1.5px dashed var(--deep); border-radius:10px; padding:12px 8px; user-select:all; }\n.wt-qty-input { width:120px; padding:8px 10px; border:1px solid var(--hairline-bright); border-radius:8px; font-size:13.5px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); }\n.wt-sheet-tall { max-height:85vh; overflow-y:auto; }\n\n.wt-toast { position:fixed; left:50%; bottom:88px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; font-size:13.5px; display:flex; align-items:center; gap:12px; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.18); max-width:90%; }\n.wt-toast button { background:none; border:none; color:var(--teal-light); font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }\n\n.wt-banner { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--citrus); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:60; box-shadow:0 6px 18px rgba(0,0,0,.15); }\n\n.wt-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(420px,100%); background:var(--surface-dark); border-top:1px solid var(--hairline-bright); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px)); z-index:var(--z-nav); }\n.wt-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-inverse); font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; font-family:inherit; border-radius:10px; min-height:var(--touch); }\n.wt-nav-btn.active { color:var(--accent); background:var(--accent-chip); border-radius:12px; }\n.wt-nav-btn-soon { position:relative; opacity:0.55; cursor:default; }\n.wt-soon-badge { position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(-6deg); background:var(--citrus); color:var(--ink); font-size:6.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:1.5px 5px; border-radius:5px; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,.25); }\n\n.wt-segment { display:flex; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:11px; padding:3px; margin-bottom:14px; }\n.wt-segment button { flex:1; background:none; border:none; padding:8px 0; font-size:13.5px; font-weight:600; color:var(--muted-dark); border-radius:8px; cursor:pointer; font-family:inherit; }\n.wt-segment button.active { background:var(--accent); color:#FFFFFF; }\n\n.wt-range-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }\n.wt-range-nav button { background:var(--bg); border:1px solid var(--hairline-bright); border-radius:8px; padding:6px; display:flex; cursor:pointer; color:var(--accent); }\n.wt-range-nav button:disabled { opacity:.35; cursor:not-allowed; }\n.wt-range-label { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--ink-inverse); }\n\n.wt-stat-row { display:flex; gap:8px; margin-bottom:16px; }\n.wt-stat { flex:1; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px; text-align:center; }\n.wt-stat-value { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }\n.wt-stat-label { font-size:10.5px; color:var(--muted-dark); margin-top:2px; }\n\n.wt-card { background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px; margin-bottom:16px; }\n.wt-card-title { display:flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; margin-bottom:4px; }\n.wt-card-note { font-size:12.5px; color:var(--muted-dark); margin-bottom:12px; line-height:1.5; }\n.wt-toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }\n.wt-switch { width:42px; height:24px; border-radius:999px; background:var(--line); position:relative; border:none; cursor:pointer; flex-shrink:0; }\n.wt-switch.on { background:var(--teal); }\n.wt-switch span { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }\n.wt-switch.on span { transform:translateX(18px); }\n.wt-tracker-goal-input { width:60px; padding:7px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit; text-align:right; margin:0 8px; background:#fff; color:var(--ink); }\n\n.wt-plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; width:100%; box-sizing:border-box; }\n.wt-plan-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; background:var(--bg); border:1.5px solid var(--line); border-radius:14px; padding:16px 14px; min-height:112px; min-width:0; box-sizing:border-box; box-shadow:0 4px 14px rgba(11,32,56,.08); cursor:pointer; text-align:left; font-family:inherit; transition:transform .12s ease, box-shadow .12s ease; }\n.wt-plan-card:active { transform:scale(0.97); }\n.wt-plan-card:not(.off) { border-color:var(--teal-light); box-shadow:0 6px 18px rgba(46,134,193,.18); }\n.wt-plan-card.off { box-shadow:none; }\n.wt-plan-card-dim { display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; }\n.wt-plan-card-dim.off { opacity:.6; }\n.wt-plan-card-toggle-area { position:absolute; top:16px; right:14px; display:flex; flex-direction:column; align-items:center; }\n.wt-plan-card-icon { width:28px; height:28px; border-radius:8px; background:var(--mist); color:var(--teal); display:flex; align-items:center; justify-content:center; }\n.wt-plan-card.off .wt-plan-card-icon { background:var(--surface-dark); color:var(--muted-dark); }\n.wt-plan-card-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--ink-inverse); }\n.wt-plan-card.off .wt-plan-card-title { color:var(--muted-dark); }\n.wt-plan-card-goal { font-size:15px; font-weight:600; color:var(--ink-inverse); }\n.wt-plan-card-status { font-size:12px; font-weight:700; color:var(--success); margin-top:auto; padding-top:6px; }\n.wt-plan-card-status.off { color:var(--muted-dark); }\n.wt-plan-bottom-sheet { padding-bottom:24px; }\n.wt-plan-goal-input { display:block; width:100%; font-size:28px; font-weight:700; text-align:center; min-height:64px; padding:8px 12px; border:1px solid var(--hairline-bright); border-radius:12px; font-family:inherit; background:var(--bg); color:var(--ink-inverse); margin-top:12px; }\n.wt-plan-goal-unit { font-size:16px; color:var(--muted-dark); text-align:center; margin-top:6px; }\n.wt-plan-save-btn { min-height:56px; font-size:17px; font-weight:700; }\n.wt-regimen-card { display:block; width:100%; text-align:left; background:var(--surface-dark); border:1px solid var(--hairline-bright); border-radius:14px; padding:16px 14px; margin-bottom:12px; font-family:inherit; cursor:pointer; box-shadow:0 3px 10px rgba(11,32,56,.06); }\n.wt-regimen-card.clinic { border-left:4px solid var(--teal); cursor:default; }\n.wt-regimen-card-title { display:flex; align-items:center; justify-content:space-between; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--ink-inverse); }\n.wt-regimen-card-count { font-size:13px; color:var(--muted-dark); font-weight:600; }\n.wt-regimen-card-preview { font-size:14px; color:var(--muted-dark); margin-top:6px; }\n.wt-regimen-item-list { font-size:14px; color:var(--ink-inverse); line-height:1.7; margin-top:8px; }\n.wt-regimen-clinic-stats { font-size:13px; font-weight:700; color:var(--teal); margin-top:10px; }\n.wt-regimen-live-badge { font-size:11px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.03em; }\n.wt-regimen-add-partner { display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; background:none; border:1.5px dashed var(--teal); box-shadow:none; color:var(--teal); font-weight:700; font-size:15px; }\n.wt-plan-section-label { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--ink-inverse); padding-left:12px; margin:24px 0 10px; }\n\n.wt-action-btns { display:block; margin-top:16px; padding:0 0 16px; }\n.wt-action-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; border:none; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); transition:transform .1s ease, box-shadow .1s ease; }\n.wt-action-btn:active { transform:scale(0.97); box-shadow:0 2px 6px rgba(0,0,0,.12); }\n.wt-action-btn.presets { background:transparent; border:2px solid var(--water); color:var(--ink-inverse); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }\n.wt-action-btn.manual { background:transparent; border:2px solid var(--protein); color:var(--ink-inverse); box-shadow:none; margin-top:10px; }\n\n.wt-feature-tile { position:relative; display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; border-radius:20px; padding:12px 16px; margin-bottom:var(--s3); }\n.wt-feature-tile.gold { background:linear-gradient(#0B0F14,#0B0F14) padding-box, linear-gradient(135deg,#FFE696,#CE8C08) border-box; border:3px solid transparent; box-shadow:0 0 22px rgba(255,196,40,.35); cursor:default; }\n.wt-feature-tile.blue { background:var(--bg); border:2px solid var(--water); box-shadow:0 0 14px rgba(47,128,237,.35), inset 0 1px 0 rgba(255,255,255,.15); cursor:pointer; }\n.wt-feature-tile-icon { flex-shrink:0; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; }\n.wt-feature-tile-icon svg { width:20px; height:20px; }\n.gold .wt-feature-tile-icon { background:#564216; color:#FFC428; }\n.blue .wt-feature-tile-icon { background:var(--water-chip); color:var(--water); }\n.wt-feature-tile-text { flex:1; min-width:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; margin-left:-4px; }\n.wt-feature-tile-title { font-weight:700; font-size:18px; color:#FFF6DB; line-height:1.15; }\n.wt-feature-tile-sub { font-weight:500; font-size:10px; color:#FFF6DB; line-height:1.3; margin-top:3px; }\n.wt-feature-tile-badge { position:relative; flex-shrink:0; width:52px; height:52px; margin-right:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }\n.gold .wt-feature-tile-badge { background-image:url('assets/voice-tracker-badge.png'); background-size:cover; background-position:center; color:#561A96; box-shadow:0 0 0 3px transparent, 0 0 16px rgba(255,196,40,.35); }\n.gold .wt-feature-tile-badge::before { content:''; position:absolute; inset:-3px; border-radius:50%; padding:3px; background:linear-gradient(135deg,#FFE696,#CE8C08); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }\n.gold .wt-feature-tile-badge::after { content:''; position:absolute; top:1px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:#fff; }\n.blue .wt-feature-tile-badge { background:var(--water); color:#fff; }\n.wt-feature-tile-badge svg { width:22px; height:22px; }\n.wt-trackers-grid-compact { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:0 0 12px; }\n.wt-tracker-col-compact { display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 2px; border-radius:var(--radius); background:transparent; box-sizing:border-box; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .1s ease, background .1s ease; }\n.wt-tracker-col-compact:active { transform:scale(0.955); background:var(--surface-dark); }\n.wt-tracker-col-compact-off { min-height:134px; visibility:hidden; pointer-events:none; }\n.wt-tracker-col-compact .wt-gauge-imageonly { width:102px; height:102px; }\n.wt-tracker-col-compact .wt-gauge-ring { width:102px; height:102px; }\n.wt-tile-plain-img { width:102px; height:102px; object-fit:contain; }\n.wt-tile-compact-label { font-size:16.5px; font-weight:600; color:var(--ink-inverse); text-align:center; }\n.wt-datepill-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; margin:2px 0 10px; }\n.wt-datepill { position:relative; display:inline-flex; align-items:center; gap:8px; min-height:var(--touch); padding:6px 16px; border-radius:999px; border:1.5px solid var(--hairline-bright); background:var(--surface-dark); box-sizing:border-box; }\n.wt-datepill-past { border-color:#7a5c1e; background:#221c0e; }\n.wt-datepill-icon { color:var(--ink-inverse); flex-shrink:0; pointer-events:none; }\n.wt-datepill-input { position:absolute; inset:0; width:100%; height:100%; opacity:0; border:0; padding:0; margin:0; cursor:pointer; -webkit-appearance:none; }\n.wt-datepill-date { font-size:15px; font-weight:600; color:var(--ink-inverse); white-space:nowrap; pointer-events:none; }\n.wt-datepill-badge { font-size:10px; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink); pointer-events:none; }\n.wt-datepill-past .wt-datepill-badge { background:#4a3a10; color:#e8c268; }\n.wt-datepill-subtitle { font-size:11px; color:#e8c268; text-align:center; }\n.wt-savingto-bar { font-size:11.5px; font-weight:600; color:#e8c268; background:#221c0e; border:1px solid #7a5c1e; border-radius:10px; padding:6px 10px; text-align:center; margin:-6px 0 14px; }\n.wt-gauge-imageonly { display:flex; align-items:center; justify-content:center; }\n.wt-gauge-imageonly-img { width:100%; height:100%; object-fit:contain; }\n.wt-gauge-imageonly-badge { position:absolute; right:2%; bottom:2%; }\n.wt-gauge-imageonly { border-radius:22px; border:3px solid #2a303a; box-sizing:border-box; transition:border-color .2s ease, box-shadow .2s ease; }\n.wt-gauge-imageonly-lit { border-color:var(--weight); box-shadow:0 0 7px var(--weight); }\n.wt-voice-text { width:100%; box-sizing:border-box; border-radius:12px; border:1.5px solid var(--line); padding:10px 12px; font:inherit; font-size:14px; resize:vertical; margin-bottom:14px; }\n.wt-smart-entry-confirm { display:flex; flex-direction:column; gap:14px; }\n.wt-smart-entry-rows { display:flex; flex-direction:column; gap:10px; }\n.wt-smart-entry-row { border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 12px; }\n.wt-smart-entry-row-main { display:flex; align-items:center; gap:8px; }\n.wt-smart-entry-row-label { font-weight:600; flex:1 1 auto; }\n.wt-smart-entry-lowconf { font-size:11px; font-weight:700; color:var(--alert); border:1px solid var(--alert); border-radius:6px; padding:2px 6px; }\n.wt-smart-entry-value { width:84px; min-height:48px; font-size:18px; font-weight:700; border-radius:8px; border:1px solid var(--hairline-bright); background:transparent; color:inherit; padding:4px 8px; text-align:right; }\n.wt-smart-entry-unit { font-size:13px; color:var(--muted-dark); }\n.wt-smart-entry-remove { min-width:36px; min-height:36px; border-radius:50%; border:1px solid var(--hairline-bright); background:transparent; color:inherit; font-size:18px; line-height:1; }\n.wt-smart-entry-source { margin-top:6px; font-size:13px; color:var(--muted-dark); }\n.wt-smart-entry-candidates { display:flex; flex-direction:column; gap:10px; }\n.wt-smart-entry-candidate { border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 12px; }\n.wt-smart-entry-candidate-heard { margin:0 0 8px; font-size:14px; }\n.wt-smart-entry-candidate-options { display:flex; flex-wrap:wrap; gap:8px; }\n.wt-smart-entry-candidate-option { min-height:44px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--hairline-bright); background:transparent; color:inherit; font:inherit; }\n.wt-smart-entry-candidate-option-picked { border-color:var(--water); background:var(--water-chip); }\n.wt-smart-entry-unmatched { font-size:13px; color:var(--muted-dark); }\n.wt-smart-entry-unmatched p { margin:4px 0; }\n.wt-meals-ring { width:64px; height:64px; border-radius:50%; background:var(--protein-chip); border:4px solid var(--protein); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }\n\n.wt-preset-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--hairline-bright); border-radius:12px; padding:10px 11px; margin-bottom:8px; }\n.wt-preset-name { flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wt-preset-oz { color:var(--teal); font-weight:700; font-size:13.5px; margin-right:2px; }\n\n.wt-loading { padding:60px 20px; text-align:center; color:var(--muted-dark); font-family:inherit; }\n\n.wt-tracked-row { display:flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--hairline-bright); border-left:3px solid; border-radius:10px; padding:10px 12px; margin-bottom:8px; }\n.wt-tracked-row:last-child { margin-bottom:0; }\n.wt-tracked-row-chip { width:30px; height:30px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }\n.wt-tracked-row-text { display:flex; flex-direction:column; min-width:0; }\n.wt-tracked-row-label { font-size:15px; font-weight:700; color:var(--ink-inverse); }\n.wt-tracked-row-detail { font-size:14px; color:var(--ink-inverse); margin-top:2px; }\n\n.wt-profile-photo-wrap { width:88px; height:88px; border-radius:50%; overflow:hidden; flex-shrink:0; }\n.wt-profile-photo { width:100%; height:100%; object-fit:cover; display:block; }\n.wt-profile-photo-placeholder { background:var(--surface-dark); border:1.5px solid var(--hairline-bright); display:flex; align-items:center; justify-content:center; }\n.wt-topbanner-profile-photo { width:100%; height:100%; max-width:100%; max-height:100%; object-fit:cover; object-position:center; border-radius:50%; display:block; }\n";
 
     function lO({
         pct: e,
@@ -2598,17 +2635,193 @@ import {
         })))
     }
 
-    function VoiceEntrySheet({
-        open,
-        onClose
+    // Confirm card (A2) — the mandatory human-review step (PROD-11) between an interpretation and
+    // anything actually being logged. Shared unchanged by the future voice layer (v3.63.0), so it
+    // takes a plain, input-agnostic props contract rather than anything text-sheet-specific.
+    function ConfirmCard({
+        entries,
+        unmatched,
+        candidateGroups,
+        onEntryValueChange,
+        onEntryRemove,
+        onCandidatePick,
+        onConfirm,
+        confirmDisabled
     }) {
-        let [text, setText] = (0, React.useState)("");
-        return open ? React.default.createElement("div", {
+        let trackerLabels = {
+                water: "Water",
+                protein: "Protein",
+                calories: "Calories",
+                sleep: "Sleep",
+                exercise: "Exercise",
+                weight: "Weight"
+            },
+            entryRows = entries.map(e => React.default.createElement("div", {
+                key: e.id,
+                className: "wt-smart-entry-row"
+            }, React.default.createElement("div", {
+                className: "wt-smart-entry-row-main"
+            }, React.default.createElement("span", {
+                className: "wt-smart-entry-row-label"
+            }, trackerLabels[e.tracker] || e.tracker), "low" === e.confidence && React.default.createElement("span", {
+                className: "wt-smart-entry-lowconf",
+                title: "Low confidence — double-check this value"
+            }, "Review"), React.default.createElement("input", {
+                type: "number",
+                inputMode: "decimal",
+                className: "wt-smart-entry-value",
+                value: e.value,
+                onChange: t => onEntryValueChange(e.id, t.target.value)
+            }), React.default.createElement("span", {
+                className: "wt-smart-entry-unit"
+            }, e.unit), React.default.createElement("button", {
+                className: "wt-smart-entry-remove",
+                "aria-label": `Remove ${trackerLabels[e.tracker]||e.tracker}`,
+                onClick: () => onEntryRemove(e.id)
+            }, "\xd7")), React.default.createElement("div", {
+                className: "wt-smart-entry-source"
+            }, e.source))),
+            candidateBlocks = candidateGroups.map(c => React.default.createElement("div", {
+                key: c.key,
+                className: "wt-smart-entry-candidate"
+            }, React.default.createElement("p", {
+                className: "wt-smart-entry-candidate-heard"
+            }, `You said "${c.heard}" — did you mean:`), React.default.createElement("div", {
+                className: "wt-smart-entry-candidate-options"
+            }, c.options.map(o => React.default.createElement("button", {
+                key: o.id,
+                className: "wt-smart-entry-candidate-option" + (c.picked === o.name ? " wt-smart-entry-candidate-option-picked" : ""),
+                onClick: () => onCandidatePick(c.key, c.picked === o.name ? null : o.name)
+            }, o.name))))),
+            unmatchedBlock = unmatched.length > 0 ? React.default.createElement("div", {
+                className: "wt-smart-entry-unmatched"
+            }, unmatched.map((u, i) => React.default.createElement("p", {
+                key: i
+            }, "I didn't catch: ", React.default.createElement("em", null, u)))) : null;
+        return React.default.createElement("div", {
+            className: "wt-smart-entry-confirm"
+        }, React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "Review before logging — edit or remove anything, then confirm."), entryRows.length > 0 ? React.default.createElement("div", {
+            className: "wt-smart-entry-rows"
+        }, entryRows) : null, candidateBlocks.length > 0 ? React.default.createElement("div", {
+            className: "wt-smart-entry-candidates"
+        }, candidateBlocks) : null, unmatchedBlock, React.default.createElement("button", {
+            className: "wt-btn-primary",
+            disabled: confirmDisabled,
+            "aria-disabled": String(!!confirmDisabled),
+            onClick: onConfirm
+        }, "Confirm and log"))
+    }
+
+    // Voice Tracker tile's sheet (A3). Tile/artwork/open-close behavior untouched (do not restyle
+    // the tile) — this replaces only the preview shell's internals with the real text-entry →
+    // /api/interpret → ConfirmCard flow. Text input only this version; voice is v3.63.0 (A6).
+    function SmartEntrySheet({
+        open,
+        onClose,
+        data,
+        targetDateKey,
+        targetDateLabel,
+        onConfirm
+    }) {
+        let [text, setText] = (0, React.useState)(""),
+            [status, setStatus] = (0, React.useState)("idle"),
+            [declined, setDeclined] = (0, React.useState)(null),
+            [workingEntries, setWorkingEntries] = (0, React.useState)([]),
+            [unmatched, setUnmatched] = (0, React.useState)([]),
+            [candidateGroups, setCandidateGroups] = (0, React.useState)([]);
+        if ((0, React.useEffect)(() => {
+                open || (setText(""), setStatus("idle"), setDeclined(null), setWorkingEntries([]), setUnmatched([]), setCandidateGroups([]))
+            }, [open]), !open) return null;
+
+        async function submit() {
+            let trimmed = text.trim();
+            if (!trimmed) return;
+            setStatus("loading"), setDeclined(null);
+            try {
+                let base = rS();
+                if (!base) throw new Error("Smart Entry isn't configured yet.");
+                let res = await fetch(`${base}/api/interpret`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: trimmed,
+                        deviceId: wtDeviceId(),
+                        date: targetDateKey,
+                        trackers: smartEntryTrackersPayload(data.settings),
+                        userItems: smartEntryUserItemsPayload(data.settings)
+                    })
+                });
+                if (!res.ok) throw new Error(`Smart Entry request failed (${res.status})`);
+                let json = await res.json();
+                if (json.declined) return setDeclined(json.declined), void setStatus("result");
+                setWorkingEntries((json.entries || []).map((e, i) => ({
+                    ...e,
+                    id: `se-${i}`
+                }))), setUnmatched(json.unmatched || []), setCandidateGroups((json.candidates || []).map((c, i) => ({
+                    ...c,
+                    key: `cand-${i}`,
+                    picked: null
+                }))), setStatus("result")
+            } catch (e) {
+                setDeclined("temporarily_unavailable"), setStatus("result")
+            }
+        }
+
+        function confirmAndLog() {
+            let payload = {
+                water: 0,
+                protein: 0,
+                calories: 0,
+                comboSources: [],
+                sleepHours: null,
+                sleepSource: null,
+                exerciseMinutes: null,
+                exerciseSource: null,
+                weightValue: null,
+                weightSource: null,
+                regimen: [],
+                sourceText: text.trim()
+            };
+            workingEntries.forEach(e => {
+                let v = Number(e.value);
+                Number.isFinite(v) && ("water" === e.tracker ? (payload.water += v, payload.comboSources.push(e.source)) : "protein" === e.tracker ? (payload.protein += v, payload.comboSources.push(e.source)) : "calories" === e.tracker ? (payload.calories += v, payload.comboSources.push(e.source)) : "sleep" === e.tracker ? (payload.sleepHours = (payload.sleepHours || 0) + v, payload.sleepSource = e.source) : "exercise" === e.tracker ? (payload.exerciseMinutes = (payload.exerciseMinutes || 0) + v, payload.exerciseSource = e.source) : "weight" === e.tracker && (payload.weightValue = v, payload.weightSource = e.source))
+            }), candidateGroups.forEach(c => {
+                c.picked && payload.regimen.push({
+                    kind: c.tracker,
+                    name: c.picked,
+                    source: c.heard
+                })
+            });
+            let loggedCount = workingEntries.length + candidateGroups.filter(c => c.picked).length;
+            0 !== loggedCount && (onConfirm(payload, loggedCount), onClose())
+        }
+        let confirmDisabled = 0 === workingEntries.length && 0 === candidateGroups.filter(c => c.picked).length;
+        return createPortal(React.default.createElement("div", {
             className: "wt-backdrop",
+            style: {
+                zIndex: 190
+            },
             onClick: onClose
         }, React.default.createElement("div", {
             className: "wt-sheet",
             style: {
+                position: "fixed",
+                zIndex: 191,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                width: "100%",
+                margin: 0,
+                boxSizing: "border-box",
+                maxHeight: "85vh",
+                overflowY: "auto",
+                background: "#151A21",
+                color: "#FFF6DB",
+                borderTop: "1px solid #5A7390",
                 borderColor: "var(--water)"
             },
             onClick: e => e.stopPropagation()
@@ -2618,19 +2831,54 @@ import {
             className: "wt-sheet-close",
             onClick: onClose,
             "aria-label": "Close"
-        }, "\xd7")), React.default.createElement("p", {
+        }, "\xd7")), targetDateLabel && React.default.createElement(SavingToBar, {
+            label: targetDateLabel
+        }), "loading" === status && React.default.createElement("p", {
             className: "wt-sheet-sub"
-        }, "Voice and AI-assisted entry are coming soon. Type what you logged below for now, or use Meal Entry, Presets, or a tile to log it directly."), React.default.createElement("textarea", {
+        }, "Thinking…"), "idle" === status && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "Describe what you had or did, in plain language."), React.default.createElement("textarea", {
             className: "wt-voice-text",
+            style: {
+                fontSize: 16,
+                minHeight: 48
+            },
             value: text,
             onChange: e => setText(e.target.value),
-            placeholder: "e.g. 16oz water, 30g protein shake…",
+            placeholder: "e.g. grilled cheese and a diet coke",
             rows: 3
         }), React.default.createElement("button", {
             className: "wt-btn-primary",
-            disabled: !0,
-            "aria-disabled": "true"
-        }, "Parsing not available yet"))) : null
+            style: {
+                minHeight: 48
+            },
+            disabled: !text.trim(),
+            "aria-disabled": String(!text.trim()),
+            onClick: submit
+        }, "Interpret")), "result" === status && declined && React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+            className: "wt-sheet-sub"
+        }, "daily_limit" === declined ? "You've reached today's Smart Entry limit. Log this one directly with a tile instead." : "temporarily_unavailable" === declined ? "Smart Entry isn't available right now. Log this one directly with a tile instead." : "That's outside what Smart Entry can help with. Log this one directly with a tile instead."), React.default.createElement("button", {
+            className: "wt-btn-primary",
+            style: {
+                minHeight: 48
+            },
+            onClick: onClose
+        }, "Got it")), "result" === status && !declined && React.default.createElement(ConfirmCard, {
+            entries: workingEntries,
+            unmatched,
+            candidateGroups,
+            onEntryValueChange: (id, value) => setWorkingEntries(list => list.map(e => e.id === id ? {
+                ...e,
+                value
+            } : e)),
+            onEntryRemove: id => setWorkingEntries(list => list.filter(e => e.id !== id)),
+            onCandidatePick: (key, name) => setCandidateGroups(list => list.map(c => c.key === key ? {
+                ...c,
+                picked: name
+            } : c)),
+            onConfirm: confirmAndLog,
+            confirmDisabled
+        }))), document.body)
     }
 
     function computeTrackerStats(e, t) {
@@ -2739,6 +2987,9 @@ import {
         onOpenExerciseSheet: l,
         onOpenPresetSheet,
         onOpenManualSheet,
+        onOpenSmartEntry,
+        onSmartEntryConfirm,
+        targetDateLabel,
         hideVoiceTile = !1,
         hideActionButtons = !1,
         compact = !1
@@ -2771,9 +3022,15 @@ import {
                 gridClass = "wt-trackers-grid-compact";
             return React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
                 className: gridClass
-            }, compactSlot(x, "Water", compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 }))), compactSlot(E, "Protein", compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 }))), compactSlot(k, "Calories", compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 }))), compactSlot(S, "Sleep", compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 }))), compactSlot(O, "Weight", compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 }))), compactSlot(j, "Exercise", compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 }))), compactSlot(C, "Treatments", compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 }))), compactSlot(P, "Prescriptions", compactTile("Prescriptions", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 }))), compactSlot(supShow, "Supplements", compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), compactTile("Voice Tracker", "voice", () => setVoiceSheetOpen(!0), plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3"))), React.default.createElement(VoiceEntrySheet, {
+            }, compactSlot(x, "Water", compactTile("Water", "water", () => n("oz"), React.default.createElement(dO, { consumedOz: s, goalOz: p, compact: !0 }))), compactSlot(E, "Protein", compactTile("Protein", "protein", () => n("grams"), React.default.createElement(pO, { consumedGrams: c, goalGrams: m, compact: !0 }))), compactSlot(k, "Calories", compactTile("Calories", "calories", () => n("calories"), React.default.createElement(mO, { consumedCal: f, goalCal: h, compact: !0 }))), compactSlot(S, "Sleep", compactTile("Sleep", "sleep", r, React.default.createElement(hO, { hours: d, goalHours: g, compact: !0 }))), compactSlot(O, "Weight", compactTile("Weight", "weight", a, React.default.createElement(uO, { todayValue: B ? T.value : 0, goal: $, recordedToday: B, compact: !0 }))), compactSlot(j, "Exercise", compactTile("Exercise", "exercise", l, React.default.createElement(fO, { minutes: R, goalMinutes: F, compact: !0 }))), compactSlot(C, "Treatments", compactTile("Treatments", "treatment", i, React.default.createElement(cO, { pct: Y, compact: !0 }))), compactSlot(P, "Prescriptions", compactTile("Prescriptions", "meds", o, React.default.createElement(sO, { pct: q, compact: !0 }))), compactSlot(supShow, "Supplements", compactTile("Supplements", "supplements", onOpenSup2, React.default.createElement(newSupO, { pct: supPct, compact: !0 }))), compactTile("Voice Tracker", "voice", () => {
+                onOpenSmartEntry && onOpenSmartEntry(), setVoiceSheetOpen(!0)
+            }, plainImg("voice-tracker-v3")), compactTile("Presets", "presets", onOpenPresetSheet, plainImg("presets-v3")), compactTile("Meal Entry", "meal", onOpenManualSheet, plainImg("meal-entry-v3"))), React.default.createElement(SmartEntrySheet, {
                 open: voiceSheetOpen,
-                onClose: () => setVoiceSheetOpen(!1)
+                onClose: () => setVoiceSheetOpen(!1),
+                data: e,
+                targetDateKey: t,
+                targetDateLabel,
+                onConfirm: onSmartEntryConfirm
             }))
         }
         return React.default.createElement("div", null, React.default.createElement("div", {
@@ -6363,7 +6620,7 @@ import {
             clearInterval(ue.current), ue.current = setInterval(fe, 60 * e * 1e3)
         }
 
-        function pe(e, r, a) {
+        function pe(e, r, a, sourceMeta) {
             let o = HS(entryTargetDate),
                 i = "number" == typeof a ? a : function() {
                     let e = new Date;
@@ -6376,7 +6633,9 @@ import {
                     label: r,
                     oz: e.oz || 0,
                     grams: e.grams || 0,
-                    calories: e.calories || 0
+                    calories: e.calories || 0,
+                    source: sourceMeta && sourceMeta.source || "manual",
+                    sourceText: sourceMeta && sourceMeta.sourceText || null
                 },
                 u = t.logs[o] || [],
                 s = [];
@@ -6413,6 +6672,168 @@ import {
             }
             let c = [];
             l.oz > 0 && c.push(`${l.oz}oz`), l.grams > 0 && c.push(`${l.grams}g`), l.calories > 0 && c.push(`${l.calories}cal`), ce(`Logged ${c.join(" · ")} · ${r}`, () => me(o, l.id))
+        }
+
+        function sourceFields(sourceMeta) {
+            return {
+                source: sourceMeta && sourceMeta.source || "manual",
+                sourceText: sourceMeta && sourceMeta.sourceText || null
+            }
+        }
+
+        function newEntryId() {
+            return `${Date.now()}-${Math.random().toString(36).slice(2,7)}`
+        }
+
+        function nowMinutesIfMissing(timeMinutes) {
+            return "number" == typeof timeMinutes ? timeMinutes : (() => {
+                let e = new Date;
+                return 60 * e.getHours() + e.getMinutes()
+            })()
+        }
+
+        // Shared write path for weight — used by the Weight sheet's onClose (new-entry branch)
+        // and by Smart Entry's confirm handler (PROD-15/A4: no parallel write path).
+        function writeWeightEntry(value, timeMinutes, sourceMeta) {
+            let i = nowMinutesIfMissing(timeMinutes),
+                dateKey = HS(entryTargetDate),
+                entry = {
+                    id: newEntryId(),
+                    type: "weight",
+                    label: "Weight",
+                    time: tO(i),
+                    timeMinutes: i,
+                    value,
+                    ...sourceFields(sourceMeta)
+                };
+            return n(e => ({
+                ...e,
+                logs: {
+                    ...e.logs,
+                    [dateKey]: [...e.logs[dateKey] || [], entry]
+                }
+            })), entry
+        }
+
+        // Shared write path for a completed sleep entry (manual "enter hours" submit and the
+        // finish-sleeping-session path both call this).
+        function writeSleepEntry(lightsOutMinutes, wokeUpMinutes, sourceMeta) {
+            let hours = LS(lightsOutMinutes, wokeUpMinutes),
+                dateKey = HS(entryTargetDate),
+                entry = {
+                    id: newEntryId(),
+                    type: "sleep",
+                    label: "Sleep",
+                    time: tO(wokeUpMinutes),
+                    timeMinutes: wokeUpMinutes,
+                    lightsOutMinutes,
+                    wokeUpMinutes,
+                    hours,
+                    ...sourceFields(sourceMeta)
+                };
+            return n(e => ({
+                ...e,
+                logs: {
+                    ...e.logs,
+                    [dateKey]: [...e.logs[dateKey] || [], entry]
+                }
+            })), entry
+        }
+
+        function writeExerciseEntry(exerciseType, minutes, description, timeMinutes, sourceMeta) {
+            let i = nowMinutesIfMissing(timeMinutes),
+                dateKey = HS(entryTargetDate),
+                entry = {
+                    id: newEntryId(),
+                    type: "exercise",
+                    label: exerciseType,
+                    exerciseType,
+                    minutes,
+                    description: description || "",
+                    time: tO(i),
+                    timeMinutes: i,
+                    ...sourceFields(sourceMeta)
+                };
+            return n(e => ({
+                ...e,
+                logs: {
+                    ...e.logs,
+                    [dateKey]: [...e.logs[dateKey] || [], entry]
+                }
+            })), entry
+        }
+
+        // Shared write path for Treatments/Prescriptions/Supplements new-entry logging —
+        // identical shape across all three, differing only by settings key and the entry's
+        // `type`/`items` conventions (treatment items are plain name strings; rx/supplement items
+        // are {name,qty} objects, matching each tracker's existing pick-sheet output). Decrements
+        // inventory via the same KS() helper manual entry already uses (PROD-07/PROD-08).
+        function writeRegimenEntry(kind, settingsKey, items, itemNames, timeMinutes, sourceMeta) {
+            let i = nowMinutesIfMissing(timeMinutes),
+                dateKey = HS(entryTargetDate),
+                label = "treatment" === kind ? `Took: ${itemNames.join(", ")}` : `Took: ${items.map(e=>e.qty?`${e.name} (${e.qty})`:e.name).join(", ")}`,
+                entry = {
+                    id: newEntryId(),
+                    type: kind,
+                    label,
+                    items,
+                    time: tO(i),
+                    timeMinutes: i,
+                    ...sourceFields(sourceMeta)
+                };
+            return n(n => {
+                let updated = n.settings[settingsKey].map(item => itemNames.includes(item.name) ? {
+                    ...item,
+                    lastTakenDate: dateKey,
+                    nextDueOverride: null
+                } : item);
+                return {
+                    ...n,
+                    logs: {
+                        ...n.logs,
+                        [dateKey]: [...n.logs[dateKey] || [], entry]
+                    },
+                    settings: {
+                        ...n.settings,
+                        [settingsKey]: KS(updated, [], items)
+                    }
+                }
+            }), entry
+        }
+
+        // Smart Entry confirm handler (A4) — the ONE place a confirmed Smart Entry result becomes
+        // real log entries. Every write below calls the exact same shared functions manual entry
+        // uses (pe/writeSleepEntry/writeExerciseEntry/writeWeightEntry/writeRegimenEntry) — no
+        // parallel write path, so inventory decrement and reload behavior are guaranteed identical
+        // to a manually-logged entry of the same type.
+        function applySmartEntryConfirm(payload, loggedCount) {
+            let sourceMeta = {
+                source: "smart",
+                sourceText: payload.sourceText
+            };
+            if (payload.water > 0 || payload.protein > 0 || payload.calories > 0) {
+                let label = payload.comboSources.length > 0 ? [...new Set(payload.comboSources)].join(", ") : "Smart Entry";
+                pe({
+                    oz: payload.water,
+                    grams: payload.protein,
+                    calories: payload.calories
+                }, label, void 0, sourceMeta)
+            }
+            if (null !== payload.sleepHours && payload.sleepHours > 0) {
+                let wokeUp = function() {
+                    let e = new Date;
+                    return 60 * e.getHours() + e.getMinutes()
+                }(), lightsOut = (wokeUp - Math.round(60 * payload.sleepHours) + 1440) % 1440;
+                writeSleepEntry(lightsOut, wokeUp, sourceMeta)
+            }
+            null !== payload.exerciseMinutes && payload.exerciseMinutes > 0 && writeExerciseEntry(payload.exerciseSource || "Exercise", payload.exerciseMinutes, "", void 0, sourceMeta), null !== payload.weightValue && payload.weightValue > 0 && writeWeightEntry(payload.weightValue, void 0, sourceMeta), payload.regimen.forEach(r => {
+                let settingsKey = smartEntryRegimenSettingsKey(r.kind),
+                    items = "treatment" === r.kind ? [r.name] : [{
+                        name: r.name,
+                        qty: "1"
+                    }];
+                writeRegimenEntry(r.kind, settingsKey, items, [r.name], void 0, sourceMeta)
+            }), ce(`Logged ${loggedCount} item${1===loggedCount?"":"s"} via Smart Entry`)
         }
 
         function me(e, t) {
@@ -6920,7 +7341,12 @@ import {
             },
             onOpenManualSheet: () => {
                 setEntryTargetDate(logDate), u(null), c(null), setManualSheetOpen(!0)
-            }
+            },
+            onOpenSmartEntry: () => {
+                setEntryTargetDate(logDate)
+            },
+            onSmartEntryConfirm: applySmartEntryConfirm,
+            targetDateLabel: entryTargetDateLabel
         }), "today" === r && React.default.createElement(RO, {
             data: t,
             todayKey: Ee,
@@ -7846,22 +8272,8 @@ import {
                         }
                     })), ce("Weight updated."), E(null), void g(!1)
                 }
-                let t = HS(entryTargetDate),
-                    r = {
-                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-                        type: "weight",
-                        label: "Weight",
-                        time: tO(e),
-                        timeMinutes: e,
-                        value: y
-                    };
-                n(e => ({
-                    ...e,
-                    logs: {
-                        ...e.logs,
-                        [t]: [...e.logs[t] || [], r]
-                    }
-                })), g(!1), ce(`Logged ${y}lbs`, () => me(t, r.id))
+                let r = writeWeightEntry(y, e);
+                g(!1), ce(`Logged ${y}lbs`, () => me(HS(entryTargetDate), r.id))
             },
             allowDecimal: !0,
             time: b,
@@ -7911,26 +8323,8 @@ import {
                         }
                     })), ce("Entry updated."), P(null), void S(!1)
                 }
-                let l = HS(entryTargetDate),
-                    u = {
-                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-                        type: "supplement",
-                        label: a,
-                        items: e,
-                        time: tO(r),
-                        timeMinutes: r
-                    };
-                n(t => ({
-                    ...t,
-                    logs: {
-                        ...t.logs,
-                        [l]: [...t.logs[l] || [], u]
-                    },
-                    settings: {
-                        ...t.settings,
-                        supplements: KS(i(t, l), [], e)
-                    }
-                })), S(!1), ce(`Logged ${e.length} item${e.length>1?"s":""}`, () => me(l, u.id))
+                let u = writeRegimenEntry("supplement", "supplements", e, o, r);
+                S(!1), ce(`Logged ${e.length} item${e.length>1?"s":""}`, () => me(HS(entryTargetDate), u.id))
             },
             onGoToSettings: () => {
                 S(!1), a("setup")
@@ -7980,26 +8374,8 @@ import {
                         }
                     })), ce("Entry updated."), setRxSheetInitial(null), void setRxSheetOpen(!1)
                 }
-                let l = HS(entryTargetDate),
-                    u = {
-                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-                        type: "rx",
-                        label: a,
-                        items: e,
-                        time: tO(r),
-                        timeMinutes: r
-                    };
-                n(t => ({
-                    ...t,
-                    logs: {
-                        ...t.logs,
-                        [l]: [...t.logs[l] || [], u]
-                    },
-                    settings: {
-                        ...t.settings,
-                        rx: KS(i(t, l), [], e)
-                    }
-                })), setRxSheetOpen(!1), ce(`Logged ${e.length} item${e.length>1?"s":""}`, () => me(l, u.id))
+                let u = writeRegimenEntry("rx", "rx", e, o, r);
+                setRxSheetOpen(!1), ce(`Logged ${e.length} item${e.length>1?"s":""}`, () => me(HS(entryTargetDate), u.id))
             },
             onGoToSettings: () => {
                 setRxSheetOpen(!1), a("setup")
@@ -8062,9 +8438,10 @@ import {
             onSubmit: function(e, t, r, a) {
                 let o = nO(a),
                     i = !!A,
-                    l = HS(entryTargetDate),
-                    u = {
-                        id: i ? A.id : `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+                    l = HS(entryTargetDate);
+                if (i) {
+                    let u = {
+                        id: A.id,
                         type: "exercise",
                         label: e,
                         exerciseType: e,
@@ -8073,13 +8450,16 @@ import {
                         time: tO(o),
                         timeMinutes: o
                     };
-                n(e => ({
-                    ...e,
-                    logs: {
-                        ...e.logs,
-                        [l]: i ? (e.logs[l] || []).map(e => e.id === A.id ? u : e) : [...e.logs[l] || [], u]
-                    }
-                })), T(!1), M(null), i ? ce("Entry updated.") : ce(`Logged ${t} min of ${e}`, () => me(l, u.id))
+                    return n(e => ({
+                        ...e,
+                        logs: {
+                            ...e.logs,
+                            [l]: (e.logs[l] || []).map(e => e.id === A.id ? u : e)
+                        }
+                    })), T(!1), M(null), void ce("Entry updated.")
+                }
+                let u = writeExerciseEntry(e, t, r, o);
+                T(!1), M(null), ce(`Logged ${t} min of ${e}`, () => me(l, u.id))
             }
         }), React.default.createElement(_O, {
             open: _,
@@ -8111,23 +8491,8 @@ import {
                     }
                 })), ce("Sleep entry updated."), $(null);
                 else {
-                    let o = {
-                        id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-                        type: "sleep",
-                        label: "Sleep",
-                        time: tO(t),
-                        timeMinutes: t,
-                        lightsOutMinutes: e,
-                        wokeUpMinutes: t,
-                        hours: r
-                    };
-                    n(e => ({
-                        ...e,
-                        logs: {
-                            ...e.logs,
-                            [a]: [...e.logs[a] || [], o]
-                        }
-                    })), ce(`Logged ${r}hrs of sleep`, () => me(a, o.id))
+                    let o = writeSleepEntry(e, t);
+                    ce(`Logged ${r}hrs of sleep`, () => me(a, o.id))
                 }
                 R(!1)
             },

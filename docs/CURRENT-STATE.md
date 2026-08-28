@@ -2,8 +2,8 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.61.0 (app unchanged this session — the Smart Entry
-worker-side changes below are deployed to the Worker, not the app bundle)*
+*As of: August 28, 2026 · Deployed version: 3.62.0 (Smart Entry Phase A app side — see below; not
+yet verified against the live worker or on a real device)*
 
 ---
 
@@ -148,6 +148,13 @@ date control and a redesigned tile grid:
 - In-app tutorial (lives in Settings)
 - Profile page (Full Name, Email, Phone, photo upload) — reached only via the header profile icon,
   local-only storage (`settings.profile`), not tied to account sign-in
+- **Smart Entry, text-only (v3.62.0), NOT YET VERIFIED against the live worker or on a real
+  device** — the Voice Tracker tile (Log It! only) opens `SmartEntrySheet`: describe what you had
+  in plain language, `POST /api/interpret` interprets it, a mandatory confirm card (editable/
+  removable rows, low-confidence cue, candidate picker with nothing pre-selected) is the only path
+  to actually logging anything. Writes go through the same functions manual entry uses per
+  tracker, tagged `source:"smart"` plus the original `sourceText`. Voice input and usage analytics
+  are separate, unbuilt future work. See `docs/DECISION-LOG.md` `PROD-16`.
 
 ---
 
@@ -848,10 +855,20 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   exercised live: the over-cap (`declined:"daily_limit"`) path** — verified only by code
   walkthrough (the cap check runs before any Anthropic call, so a blocked request costs nothing),
   not by an actual live request; seeding a disposable test `device_id`'s D1 counter to 25 would
-  confirm it without spending 25 real calls, if Rob wants that confirmed too. The front-end half
-  (`SmartEntrySheet`, `ConfirmCard`, header Sparkles wiring, write-path provenance fields) is a
-  separate future session — `src/app.js`/`site/app/bundle.js` were deliberately untouched this
-  pass, so nothing here is visible in the app UI yet, even though the API behind it is live.
+  confirm it without spending 25 real calls, if Rob wants that confirmed too.
+- **Smart Entry Phase A, app side (v3.62.0), is BUILT but NOT yet verified against the live worker
+  or on a real device** — see `docs/DECISION-LOG.md` `PROD-16`. `SmartEntrySheet` + `ConfirmCard`
+  replace the Voice Tracker tile's non-functional preview shell; the write path routes through
+  named functions (`writeWeightEntry`/`writeSleepEntry`/`writeExerciseEntry`/`writeRegimenEntry`)
+  shared with each tracker's own manual-entry sheet, so inventory decrement and reload/edit-routing
+  behavior are identical to a manual entry, not just similar. Provenance fields
+  (`source`/`sourceText`) added to every log entry. The 5-step verification pipeline passed (607
+  harness checks, 0 runtime errors) — **but the harness tests use a mocked `fetch` response, not
+  the actual deployed `/api/interpret` route**, so an end-to-end run against
+  `water-tracker-push.bob-barrows.workers.dev` from a real browser (or at minimum a manual
+  device-console check) is the next thing needed before calling this verified, plus the usual
+  real-device pass for the sheet's visual/touch-target feel. Analytics event logging (A5) and the
+  voice layer (v3.63.0) are explicitly deferred, not built this session.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to
@@ -945,7 +962,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 **Clinic-first** (`STRAT-10`). Clinic distribution gets priority for attention and sequencing; consumer continues as a downstream byproduct, with both acquisition ramps still in scope (`STRAT-05`).
 
-**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient. v3.41.0 through v3.61.0 were all further Rob-directed detours in the same vein (Today/My Day/Stats/My Plan layout and content changes, plus the RX/Supplements/partner-configuration data-model work) — the queued sequence above still hasn't formally started, **except** that Smart Entry Phase 1's worker side landed Aug 27, 2026 as its own scoped session, had five prompt/hardening fix rounds folded in Aug 28, 2026 (all found via live curl testing against the deployed route), and is now deployed and live (see `docs/DECISION-LOG.md` `PROD-15` and its Aug 28 amendment): `POST /api/interpret` in `worker/src/worker.js`, KV cache with prompt-version-aware invalidation, D1 migration run against production. The app-side half (confirm card, sheet, header wiring — the part that would actually bump the app version) is still unbuilt; when it ships it needs a fresh version number, not the brief's stale "v3.40.0" (the app is now at v3.61.0, many releases past that).
+**Working sequence (updated Aug 22, after v3.40.0):** The dark-theme conversion is complete app-wide. v3.40.0 was a Rob-directed detour (Log It! flow split + Voice Tracker tile preview), not the planned next roadmap item — the queued sequence is unchanged: new partner trackers (Time In Bed, Time Out of Bed, Steps, Resting Heart Rate, Calories Burned) → clinic protocol code + patient onboarding link → Smart Entry Phase 1 (text-based AI-assisted logging, brief already written). Note the Voice Tracker tile is a non-functional design preview only — actual Smart Entry backend/voice wiring is still unbuilt and still targets the Smart Entry Phase 1 slot. Sheet standardization (swipe/focus-trap/Escape) remains an open non-blocking item to slot in when convenient. v3.41.0 through v3.61.0 were all further Rob-directed detours in the same vein (Today/My Day/Stats/My Plan layout and content changes, plus the RX/Supplements/partner-configuration data-model work) — the queued sequence above still hasn't formally started, **except** that Smart Entry Phase 1's worker side landed Aug 27, 2026 as its own scoped session, had five prompt/hardening fix rounds folded in Aug 28, 2026 (all found via live curl testing against the deployed route), and is now deployed and live (see `docs/DECISION-LOG.md` `PROD-15` and its Aug 28 amendment): `POST /api/interpret` in `worker/src/worker.js`, KV cache with prompt-version-aware invalidation, D1 migration run against production. The app-side half shipped as its own session too, v3.62.0 (`PROD-16`): `SmartEntrySheet`/`ConfirmCard` replacing the Voice Tracker tile's dead preview shell, write-path provenance, all routed through the same functions manual entry uses. Passed the harness/lint pipeline but is **not yet verified against the live worker or a real device** — see Known outstanding. Voice (v3.63.0) and Smart Entry analytics event logging (A5) remain unbuilt.
 
 See `docs/ROADMAP-v3.md` (HydroPro-Master-Roadmap) for the full version-by-version plan.
 

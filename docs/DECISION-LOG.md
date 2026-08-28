@@ -256,6 +256,69 @@ D1 seed would confirm it at zero marginal cost if wanted.
 *Status:* **Locked** · Aug 28, 2026 — worker-side deployed and live; the front-end half of Phase A
 (confirm card, sheet, header wiring, write-path provenance) and Phase B (voice) remain unbuilt.
 
+**PROD-16 — Smart Entry Phase A, app side (v3.62.0): confirm card, sheet internals, write path.**
+Session ran from `docs/CC-BRIEF-smart-entry-app-v3.62.0.md`, which explicitly supersedes the
+original `docs/CC-BRIEF-smart-entry-v3.40.0-v3.41.0.md` (that file has been marked superseded at
+its top rather than deleted). Scoped by Rob to v3.62.0 only, text input, no voice — v3.63.0 (voice)
+is a separate future session per the brief's own "do not attempt both in one session" instruction.
+
+**What shipped:** `SmartEntrySheet` + `ConfirmCard` in `src/app.js`, replacing the Voice Tracker
+tile's non-functional preview shell. Handles all four `/api/interpret` response shapes (entries,
+declined, candidates, unmatched) plus a network-failure fallback. The confirm card is the mandatory
+human-review step `PROD-11` requires — editable/removable rows, low-confidence visual cue,
+candidates with nothing pre-selected (`PROD-10`'s inventory safeguard), unmatched shown plainly.
+Properly `createPortal`-ed to `document.body` with locally-hardcoded surface tokens (`UX-11`/
+`UX-11a`) — the prior preview shell had never actually been portaled, the exact omission `UX-11a`
+exists to prevent; this was a real, if latent, bug independent of Smart Entry itself. Provenance
+fields `source: "manual"|"smart"|"voice"` and `sourceText` added to every log entry via the
+existing migration path.
+
+**Write-path architecture decision, confirmed with Rob before building:** A4 says Smart Entry must
+route through "the existing entry function," but no single one exists — water/protein/calories
+share `pe()`, but weight/sleep/exercise/treatments/prescriptions/supplements each had their
+write logic inline inside that tracker's own sheet's `onSubmit`, with no function to call from
+elsewhere. Extended `pe()` with an optional source param; extracted the other five into named
+functions (`writeWeightEntry`, `writeSleepEntry`, `writeExerciseEntry`, `writeRegimenEntry` — the
+last one shared across treatments/rx/supplements, which have an identical shape) called by *both*
+the original sheet and Smart Entry's confirm handler. The alternative — leaving the five inline and
+having Smart Entry duplicate their shape — was explicitly rejected as the parallel path A4 warns
+against, since it risks silently drifting out of sync (e.g. a future inventory-decrement change
+applied to only one path). Each tracker's `onSubmit` edit-branch (updating an existing entry) was
+left untouched; only the new-entry construction was extracted, since only new-entry logic is
+shared with Smart Entry.
+
+**A real schema gap found and resolved by construction:** the shipped `/api/interpret` response's
+`entries` objects (`{tracker,value,unit,source,confidence}`) have no field to identify *which*
+configured treatment/RX/supplement a match refers to — only `candidates` carries an item id/name.
+The app now never lists `treatment`/`rx`/`supplement` in the request's `trackers` object, which
+makes the worker's own `enabledSet` filter (`normalizeInterpretResult`, already shipped) guarantee
+those three trackers can only ever arrive via `candidates` — never a forced, unidentifiable pick in
+`entries` — regardless of what the model returns. This is enforced by the existing server-side code,
+not a new client-side check, so it can't be bypassed by a future client change alone.
+
+**Deliberately not done this session:** voice (v3.63.0, needs its own real-device pass first per
+the brief); client-side Smart Entry analytics event logging (A5) — its D1 table
+(`worker/migrations/schema-003-smart-entry-events.sql`) is proposed, **not run**, ahead of the
+instrumentation that will use it.
+
+**Numbering/doc-drift note:** the new brief's own §1 corrections table promises a "§5" defining
+draft entries `UX-41` (source-attribution/spoken-brevity rule) and `PROD-14` (Web Speech API
+decision) — no such §5 section actually exists in `docs/CC-BRIEF-smart-entry-app-v3.62.0.md` as
+delivered. Both are Phase B (voice) concerns and not blocking for this text-only session, but
+whoever starts v3.63.0 should treat them as **not yet decided**, not assume they're already logged
+here, and should flag this same gap back if it's still unresolved.
+
+**Verification:** full 5-step pipeline run and passed against the exact shipped `bundle.js` (607
+checks pass, 0 runtime errors, 11-error vendor lint baseline unchanged; one unrelated pre-existing
+stale check, `wt-tile-togo`, still fails as documented since v3.44.0). While building this
+session's harness coverage, found and fixed a real pre-existing test-environment gap: the harness
+never set `window.WATER_TRACKER_CONFIG`, so `apiBase` read empty and every fetch-based feature —
+not just Smart Entry — was silently short-circuiting before reaching `window.fetch`, likely masked
+in every prior session's harness runs, not only this one.
+*Status:* **Locked** · Aug 28, 2026 · v3.62.0 — text-input path only. **Not yet verified against
+the live worker or on a real device** — harness coverage uses a mocked `fetch`, not the actual
+deployed `/api/interpret` route.
+
 ---
 
 ## Architecture
@@ -1256,7 +1319,14 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 28, 2026 (worker-only, no app version bump: PROD-15 amended — five prompt/
+*Last updated: August 28, 2026 (v3.62.0: PROD-16 added — Smart Entry Phase A app side (confirm
+card, sheet internals, write path), routing through named write functions extracted from each
+tracker's own sheet rather than a parallel path, provenance fields (source/sourceText) added via
+the migration path, the entries/candidates schema gap resolved by omitting treatment/rx/supplement
+from the trackers payload, analytics migration proposed not run; found and fixed a pre-existing
+harness gap (window.WATER_TRACKER_CONFIG never set, silently disabling every fetch-based feature
+in tests); not yet verified against the live worker or on a real device; earlier, worker-only, no
+app version bump: PROD-15 amended — five prompt/
 hardening rounds on the Smart Entry worker route, all found and fixed via live curl testing:
 over-conservative estimation (confidence rubric + tightened unmatched boundary), missing
 multi-tracker entries per food, prompt-version-aware cache invalidation, `bypassCache` gated behind
