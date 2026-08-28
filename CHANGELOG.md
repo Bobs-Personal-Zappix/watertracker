@@ -20,6 +20,33 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.4] — 2026-08-28
+
+App-launch splash screen: black, with the logo spinning to upright. Rob: opening the app from the
+home-screen icon showed a white screen with a static logo, doesn't match the style guide.
+
+- **Root cause**: the white screen is the OS/browser's own auto-generated PWA launch splash — both
+  Android/Chrome and iOS build it automatically from `manifest.json`'s `background_color` plus the
+  app icon, centered. It isn't rendered by the app and previously wasn't touched, so it defaulted
+  to `manifest.json`'s old `#F2F5F8` (near-white).
+- `site/app/manifest.json`: `background_color` changed to `#0B0F14` — the app's actual `--bg` dark
+  token (same one used everywhere else in the app, including the existing "Loading your
+  tracker…" state), not an arbitrary pure `#000`.
+- `site/app/index.html`: the same dark background for the brief window between the native splash
+  disappearing and the app's own JS taking over (previously white here too). Added a real
+  spinning-logo screen in that window — the actual header logo (`gauges/main-logo.png`), 2 full
+  rotations landing exactly upright (`animation-fill-mode: forwards`, not an infinite loop that
+  could be cut off mid-turn), respecting `prefers-reduced-motion` (matching an existing pattern
+  elsewhere in the app's own CSS). Lives in `#root`'s initial markup — React's `createRoot(...).
+  render()` replaces it cleanly on first commit, no JS coordination needed.
+- Pure HTML/CSS/config change, no `bundle.js` logic touched apart from the version bump. ESLint
+  no-undef sweep and jsdom harness (618 checks, 0 runtime errors) re-run to confirm the version
+  bump didn't break anything, but neither can exercise this change itself — CSS animation and
+  layout are outside what jsdom renders.
+- **Not verified visually** — no browser automation (Playwright/Puppeteer) available in this
+  environment. Needs Rob to confirm on a real device: background reads as black not gray/blue,
+  the logo spins and lands upright, and the transition into the app itself doesn't flash white.
+
 ## [3.63.3] — 2026-08-28
 
 Voice quality follow-up to v3.63.2, from Rob's Android testing. See `docs/DECISION-LOG.md`

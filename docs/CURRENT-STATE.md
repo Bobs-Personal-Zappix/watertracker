@@ -2,9 +2,11 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.3 (Smart Entry voice layer — see below; Rob's
+*As of: August 28, 2026 · Deployed version: 3.63.4 (Smart Entry voice layer — see below; Rob's
 preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2/3.63.3 are TTS
-rate/script/voice fixes from continued Android testing, not yet real-device confirmed)*
+rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4 is
+an unrelated fix: black app-launch splash with a spinning logo, replacing the OS's default white
+splash — see `PROD-18` — also not yet real-device confirmed)*
 
 ---
 
@@ -930,6 +932,15 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   arrays from the initial render) was found via the harness's own mocked-`SpeechRecognition`
   coverage and fixed with mirror refs. 5-step pipeline passed (618 harness checks, 0 runtime
   errors).
+- **App-launch splash screen (v3.63.4), needs Rob's real-device confirmation** — see
+  `docs/DECISION-LOG.md` `PROD-18`. The white screen + static logo on opening the app from the
+  home-screen icon was the OS/browser's own auto-generated PWA splash (built from
+  `manifest.json`'s `background_color` + app icon), not app-rendered. Fixed:
+  `manifest.json`'s `background_color` → `#0B0F14` (the app's real `--bg` dark token), plus a
+  matching dark `index.html` with a spinning `gauges/main-logo.png` (2 rotations, lands upright,
+  `prefers-reduced-motion`-aware) shown in the pre-React window, replaced cleanly when React's
+  `createRoot(...).render()` first commits. Pure HTML/CSS/manifest change — no jsdom or Playwright
+  coverage exists for this in the current toolchain, so it's **entirely unverified visually**.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to

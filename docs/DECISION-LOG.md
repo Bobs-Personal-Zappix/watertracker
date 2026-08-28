@@ -505,6 +505,29 @@ needs Rob's real-device (Android) confirmation. If the on-device ceiling still i
 this, the next step is the cloud-TTS path Rob explicitly declined this round, not further tuning
 of the on-device picker.
 
+**PROD-18 — App-launch splash: black background, spinning logo (v3.63.4).** Rob: opening the app
+from the home-screen icon showed a white screen with a static logo, not matching the style guide.
+Diagnosed as the OS/browser's own auto-generated PWA launch splash (Android/Chrome and iOS both
+build it from `manifest.json`'s `background_color` plus the app icon, centered) — not something
+the app renders, and previously untouched so it defaulted to the manifest's old near-white
+`#F2F5F8`. Fixed in two layers: `manifest.json`'s `background_color` set to `#0B0F14` (the app's
+actual `--bg` dark token, already used everywhere else including the existing "Loading your
+tracker…" state — not an arbitrary pure `#000`), and `index.html`'s inline body background
+matched for the brief pre-React window, with a spinning-logo screen added there (the real header
+logo, `gauges/main-logo.png`, 2 full rotations landing exactly upright via
+`animation-fill-mode:forwards` rather than an infinite loop that could cut off mid-turn,
+respecting `prefers-reduced-motion` per the app's own existing pattern). Lives in `#root`'s
+initial markup; React's `createRoot(...).render()` replaces it cleanly on first commit, no JS
+coordination needed.
+**Verification:** pure HTML/CSS/manifest change, no `bundle.js` logic touched apart from the
+version bump — ESLint no-undef sweep and jsdom harness re-run to confirm the bump itself didn't
+break anything (618 checks, 0 runtime errors), but neither exercises the splash change itself:
+CSS animation and layout are explicitly outside what jsdom renders. No Playwright/Puppeteer
+available in this environment for a screenshot check either.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.4 — shipped unverified visually; needs Rob's
+real-device confirmation (background reads black, logo spins and lands upright, no white flash
+on the transition into the app itself).
+
 ---
 
 ## Architecture
