@@ -115,6 +115,8 @@ Check every one of these against any change that touches data shape:
 - **Worker:** `wrangler deploy` from `worker/` — separate step, doesn't ride along with a push.
 - **D1:** migrations run via `wrangler d1 execute` against the **production database**. Propose the
   SQL and let Rob run it. Never run a destructive or schema-dropping command.
+  `--file` fails with `Authentication error [code: 10000]` on the `/import` endpoint under wrangler
+  3.114; use `--command` instead.
 - Bump the version and add a `CHANGELOG.md` entry with every shipped change.
 
 ## Status reporting must be precise
