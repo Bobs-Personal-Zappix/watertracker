@@ -411,6 +411,27 @@ over repeated real use. Treat as encouraging, not as closing this entry out.
 *Status:* **Locked** · Aug 28, 2026 · v3.63.0 — preliminary real-device signal positive, fuller
 real-device pass still outstanding.
 
+*Amended Aug 28, 2026 — TTS clarity fix (v3.63.1).* Continued real-device testing surfaced a
+concrete problem in the spoken prompt (B2/B4): Rob reported the confirm prompt ("Got N — say
+yes?") was hard to understand, muddy enough that the words weren't clear. Root cause: `X(R,A)`
+(the TTS play function, `site/app/bundle.js` line ~434) constructed
+`SpeechSynthesisUtterance` with no `rate` or `voice` set at all, so playback used whatever
+speed/voice the device's default happened to be — never deliberately chosen. Fixed by setting
+`utterance.rate = 0.82` (slower, more deliberate pacing) and adding a voice-preference lookup
+that picks a clearer named en-US voice from `speechSynthesis.getVoices()` when one is available
+(Google US English / Samantha / Aria / Zira, falling back to any local en-US voice, then any
+en-US voice, then the device default if none match). Also confirmed for Rob during this
+exchange: the spoken responses are **fixed template strings** ("Got N — say yes?", the
+no-speech/permission/network/unsupported error copy) substituted with a count — not generative;
+this was always true of B2/B4's design, just not previously stated explicitly back to Rob.
+**Verification:** full 3-step pipeline re-run against the exact shipped `bundle.js` — ESLint
+no-undef sweep unchanged (same 11 pre-existing vendor errors, none new), jsdom harness full pass
+including the voice-confirm path (0 runtime errors), end-state audit confirmed the edit present.
+jsdom cannot play actual audio, so clarity/pacing itself is **not verified** by this pipeline —
+real-device-only, same limitation as the rest of B7.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.1 — harness/lint verified; TTS rate/voice change
+still needs Rob's real-device confirmation that it actually sounds clearer.
+
 ---
 
 ## Architecture

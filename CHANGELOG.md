@@ -20,6 +20,29 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.1] — 2026-08-28
+
+Smart Entry voice layer follow-up, from Rob's continued real-device testing of v3.63.0. See
+`docs/DECISION-LOG.md` `PROD-17`'s Aug 28 amendment.
+
+- **Fix: spoken confirm prompt was hard to understand.** Rob reported the TTS response ("Got N —
+  say yes?") was muddy/unclear on real device. Root cause: `X(R,A)` (`site/app/bundle.js`, the
+  `speechSynthesis` play function) built its `SpeechSynthesisUtterance` with no `rate` or `voice`
+  set, so it played at whichever default the device happened to have — never a deliberate choice.
+  Now sets `utterance.rate = 0.82` (slower) and prefers a clearer named en-US voice
+  (Google US English / Samantha / Aria / Zira) from `speechSynthesis.getVoices()` when the browser
+  has one loaded, falling back to any local en-US voice, then any en-US voice, then the device
+  default.
+- **Clarified for Rob, not a code change**: the spoken responses are fixed template strings (the
+  confirm prompt, and the no-speech/permission/network/unsupported/declined error copy) with a
+  count substituted in — not generative. Same as designed in v3.63.0's B2/B4, just not previously
+  stated back explicitly.
+- Full verification pipeline re-run against the exact shipped `bundle.js`: ESLint no-undef sweep
+  unchanged (11 pre-existing vendor errors, same as baseline, none new), jsdom harness full pass
+  including the voice-confirm path (0 runtime errors), end-state audit confirmed the edit present.
+- **Not yet verified on a real device** — jsdom cannot play audio, so whether the slower rate/voice
+  actually sounds clearer is unconfirmed. Needs Rob's real-device pass.
+
 ## [3.63.0] — 2026-08-28
 
 Smart Entry Phase A, voice layer (`docs/CC-BRIEF-smart-entry-app-v3.62.0.md` section B). Built onto

@@ -2,8 +2,9 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.0 (Smart Entry voice layer — see below; Rob's
-preliminary real-device test "went well," fuller pass still in progress)*
+*As of: August 28, 2026 · Deployed version: 3.63.1 (Smart Entry voice layer — see below; Rob's
+preliminary real-device test "went well," fuller pass still in progress; v3.63.1 is a TTS
+clarity fix from that continued testing, not yet real-device confirmed)*
 
 ---
 
@@ -150,7 +151,10 @@ date control and a redesigned tile grid:
   local-only storage (`settings.profile`), not tied to account sign-in
 - **Smart Entry — text (v3.62.0/3.62.1) real-device confirmed working; voice (v3.63.0) preliminary
   real-device test positive, fuller pass still in progress.** Rob: "Preliminary testing went well!
-  Will test more but initially looks ok." The Voice Tracker tile (Log It! only) opens either a voice overlay
+  Will test more but initially looks ok." Continued testing surfaced that the spoken confirm
+  prompt was hard to understand (no `rate`/`voice` had ever been set on the TTS utterance); fixed
+  in v3.63.1 (slower rate, prefers a clearer named voice when available) but **not yet real-device
+  verified** — needs Rob's confirmation it actually sounds clearer. The Voice Tracker tile (Log It! only) opens either a voice overlay
   (`VoiceEntryOverlay`, when `SpeechRecognition` is available) or the text sheet (`SmartEntrySheet`,
   the fallback and text path — describe what you had, `POST /api/interpret` interprets it). Either
   way, a mandatory confirm card (editable/removable rows, low-confidence cue, candidate picker with
@@ -890,7 +894,10 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   progress** — see `docs/DECISION-LOG.md` `PROD-17` and its Aug 28 amendment. Rob's first real-device
   try: "Preliminary testing went well! Will test more but initially looks ok." Not yet exercised:
   correction rounds, the error-path copy, and whether the ~10-12s round-trip timing holds up over
-  repeated real use — treat as encouraging, not as this being fully verified yet.
+  repeated real use — treat as encouraging, not as this being fully verified yet. Continued testing
+  found the spoken confirm prompt hard to understand — fixed in **v3.63.1** (TTS `rate`/`voice` were
+  never set; now `rate=0.82` plus a preferred-voice lookup), harness/lint verified but **not yet
+  real-device confirmed** that it actually sounds clearer.
   `VoiceEntryOverlay` implements the brief's §B loop (mic starts
   on open, interim transcript streams live, confirm card shows before any spoken prompt, short
   non-enumerating spoken prompt, listens for yes/correction capped at 3 rounds); falls back to the
