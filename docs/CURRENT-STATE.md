@@ -2,8 +2,8 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.0 (Smart Entry voice layer — see below; not yet
-verified on a real device)*
+*As of: August 28, 2026 · Deployed version: 3.63.0 (Smart Entry voice layer — see below; Rob's
+preliminary real-device test "went well," fuller pass still in progress)*
 
 ---
 
@@ -148,8 +148,9 @@ date control and a redesigned tile grid:
 - In-app tutorial (lives in Settings)
 - Profile page (Full Name, Email, Phone, photo upload) — reached only via the header profile icon,
   local-only storage (`settings.profile`), not tied to account sign-in
-- **Smart Entry — text (v3.62.0/3.62.1) real-device confirmed working; voice (v3.63.0) NOT YET
-  verified on a real device.** The Voice Tracker tile (Log It! only) opens either a voice overlay
+- **Smart Entry — text (v3.62.0/3.62.1) real-device confirmed working; voice (v3.63.0) preliminary
+  real-device test positive, fuller pass still in progress.** Rob: "Preliminary testing went well!
+  Will test more but initially looks ok." The Voice Tracker tile (Log It! only) opens either a voice overlay
   (`VoiceEntryOverlay`, when `SpeechRecognition` is available) or the text sheet (`SmartEntrySheet`,
   the fallback and text path — describe what you had, `POST /api/interpret` interprets it). Either
   way, a mandatory confirm card (editable/removable rows, low-confidence cue, candidate picker with
@@ -880,8 +881,12 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   interpreted correctly). Still needed: Rob re-confirming the two v3.62.1 visibility fixes on the
   same device, and the usual real-device pass for the confirm card's visual/touch-target feel.
   Analytics event logging (A5) remains deferred, not built yet.
-- **Smart Entry voice layer (v3.63.0), NOT YET verified on a real device** — see
-  `docs/DECISION-LOG.md` `PROD-17`. `VoiceEntryOverlay` implements the brief's §B loop (mic starts
+- **Smart Entry voice layer (v3.63.0), preliminary real-device test positive, fuller pass still in
+  progress** — see `docs/DECISION-LOG.md` `PROD-17` and its Aug 28 amendment. Rob's first real-device
+  try: "Preliminary testing went well! Will test more but initially looks ok." Not yet exercised:
+  correction rounds, the error-path copy, and whether the ~10-12s round-trip timing holds up over
+  repeated real use — treat as encouraging, not as this being fully verified yet.
+  `VoiceEntryOverlay` implements the brief's §B loop (mic starts
   on open, interim transcript streams live, confirm card shows before any spoken prompt, short
   non-enumerating spoken prompt, listens for yes/correction capped at 3 rounds); falls back to the
   existing text sheet when `SpeechRecognition` is unavailable. Built by extracting two shared
@@ -891,9 +896,7 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   because the whole auto-confirm chain traced back to one mount-time `useEffect` holding empty
   arrays from the initial render) was found via the harness's own mocked-`SpeechRecognition`
   coverage and fixed with mirror refs. 5-step pipeline passed (618 harness checks, 0 runtime
-  errors). **This entire feature needs Rob's real-device pass before wider use** — jsdom cannot test
-  mic permission flow, actual speech recognition/synthesis, or whether the ~10-12s target timing
-  feels right in practice.
+  errors).
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to

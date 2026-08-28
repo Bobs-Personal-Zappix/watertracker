@@ -403,6 +403,14 @@ target ~10-12s timing feels right in practice (B7).
 *Status:* **Locked** · Aug 28, 2026 · v3.63.0. **Not yet verified on a real device** — this feature
 is real-device-only to meaningfully test; needs Rob's pass before wider use.
 
+*Amended Aug 28, 2026 — preliminary real-device result.* Rob's first pass on his iPhone: "Preliminary
+testing went well! Will test more but initially looks ok." Positive signal that the core loop works
+on the actual device this was built to spec against (B1), but explicitly preliminary — not yet a
+full pass on correction rounds, error-path copy, or whether the ~10-12s timing feels acceptable
+over repeated real use. Treat as encouraging, not as closing this entry out.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.0 — preliminary real-device signal positive, fuller
+real-device pass still outstanding.
+
 ---
 
 ## Architecture
@@ -1403,11 +1411,14 @@ The clinic path may make HydroPro a Business Associate. Separately, the FTC Heal
 
 ---
 
-*Last updated: August 28, 2026 (v3.63.0: PROD-17 added — Smart Entry voice layer, built onto
+*Last updated: August 28, 2026 (v3.63.0: PROD-17 amended — Rob's preliminary real-device test of the
+voice layer "went well," core loop works on the actual device this was built to spec against, but
+explicitly preliminary — fuller pass (correction rounds, error paths, timing feel over repeated use)
+still outstanding; earlier same day: PROD-17 added — Smart Entry voice layer, built onto
 v3.62.0's already-deployed confirm card/interpretation/write path via two shared extractions
 (callSmartEntryInterpret, buildSmartEntryConfirmPayload) rather than new logic; found and fixed a
 real stale-closure bug in the voice auto-confirm chain via the harness's own mocked-SpeechRecognition
-coverage; not yet verified on a real device; earlier, v3.62.1: PROD-16 amended — Rob's first
+coverage; earlier, v3.62.1: PROD-16 amended — Rob's first
 real-device test confirmed
 Smart Entry's interpretation works against the live worker (banana, grilled cheese both correct),
 but found two visibility bugs (white-on-white textarea, white-on-white close button), both simple
