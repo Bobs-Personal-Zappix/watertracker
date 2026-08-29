@@ -1496,6 +1496,18 @@ including the aggregate fix); chart severity coloring and the extracted section'
 layout remain **unverified visually**. Still needs Rob's real-device pass before the conference
 demo.
 
+*Amended Aug 29, 2026 — accepted for MVP.* Rob: "It is working for now. I may want to change the
+design but for now it is fine for MVP." Read as acceptance to move forward, not as a completed
+real-device visual verification pass — precision matters here since this entry's own prior status
+line explicitly still calls that unverified, and this message doesn't confirm pixel-level
+correctness (chart severity colors, extracted-section layout) the way a real-device screenshot or
+explicit "looks right" would. Recorded so a future session doesn't reopen this design
+unprompted, and doesn't mistake "accepted for MVP" for "real-device confirmed" either — both
+matter, and they're not the same claim.
+*Status:* **Locked** · Aug 29, 2026 · v3.65.1 — accepted for MVP by Rob; visual/real-device
+verification of chart severity coloring and section layout remains genuinely outstanding, not
+completed. Design may be revisited later per Rob's own caveat.
+
 **UX-40 — Six quick tweaks after Rob's v3.60.0 review, plus a real bugfix: My Day Supplements tile
 connected, Log It!'s fast-entry tiles locked to the bottom row, Weight ring tightened, three header/
 section-name renames.**

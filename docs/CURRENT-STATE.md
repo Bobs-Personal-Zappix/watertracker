@@ -9,7 +9,10 @@ rendering NOT verified — jsdom can't render Recharts charts at all. v3.65.1 pu
 into its own always-visible section and added a "glaring" low-adherence callout, per Rob's
 real-device feedback on v3.65.0. Also carries v3.64.0's partner showcase (`TRACK-03`) and
 v3.63.1–3.63.6's Smart Entry voice layer / app-launch splash fixes (`PROD-17`/`PROD-18`) — none
-of this session's or the prior two sessions' visual work is yet real-device confirmed)*
+of this session's or the prior two sessions' visual work is yet real-device confirmed. Rob has
+accepted the adherence design as-is for MVP purposes ("It is working for now... fine for MVP,"
+may revisit later) — distinct from a completed real-device visual verification pass, which is
+still outstanding)*
 
 ---
 
@@ -910,17 +913,19 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Adherence over time (v3.65.0/v3.65.1) needs Rob's real-device pass before the conference
-  demo** — see `docs/DECISION-LOG.md` `TRACK-04` and its Aug 29 amendment. Rob's first
-  real-device look confirmed v3.65.0 "looks ok" visually and asked for two changes, both shipped
-  in v3.65.1: Adherence extracted into its own always-visible section (was a toggle sharing the
-  segment control with Water/Protein/Calories/All 3), and a "glaring" low-adherence callout
-  (severity-colored bars + a bold "needs attention" row per struggling category, quiet "On
-  track" note when nothing is). Still fully unverified visually — jsdom cannot render Recharts
-  charts at all in this environment (`ResponsiveContainer` measures 0×0), so nothing about how
-  the severity colors or callout actually look has been confirmed. Also unverified: whether a
-  per-day *bar* for a non-daily-interval item (which reads as a stark 100%/0% spike rather than a
-  smooth percentage, by design — see `TRACK-04`) looks confusing in practice; the *period
+- **Adherence over time (v3.65.0/v3.65.1) — accepted for MVP by Rob, but not yet real-device
+  visually verified; those are two different claims, not one.** See `docs/DECISION-LOG.md`
+  `TRACK-04` and its two Aug 29 amendments. Rob's first real-device look confirmed v3.65.0 "looks
+  ok" visually and asked for two changes, both shipped in v3.65.1: Adherence extracted into its
+  own always-visible section (was a toggle sharing the segment control with Water/Protein/
+  Calories/All 3), and a "glaring" low-adherence callout (severity-colored bars + a bold "needs
+  attention" row per struggling category, quiet "On track" note when nothing is). Rob then said
+  "It is working for now... fine for MVP," which is accepted-to-move-forward, not a confirmed
+  pixel-level check of the severity colors or callout — jsdom still cannot render Recharts charts
+  at all in this environment (`ResponsiveContainer` measures 0×0), so that part remains genuinely
+  outstanding, and Rob flagged he may want to revisit the design later. Also unverified: whether
+  a per-day *bar* for a non-daily-interval item (which reads as a stark 100%/0% spike rather than
+  a smooth percentage, by design — see `TRACK-04`) looks confusing in practice; the *period
   aggregate* driving the callout is now confirmed mathematically correct (a real bug there was
   found and fixed in v3.65.1). Load demo data first (Settings → bottom) to have enough history
   for the chart to mean anything.

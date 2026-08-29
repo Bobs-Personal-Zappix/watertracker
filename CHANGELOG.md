@@ -20,6 +20,14 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## Adherence design accepted for MVP — 2026-08-29 (no app version bump)
+
+No code change. Rob on v3.65.1: "It is working for now. I may want to change the design but for
+now it is fine for MVP." Recorded in `docs/DECISION-LOG.md` `TRACK-04`'s second Aug 29 amendment
+as acceptance to move forward — explicitly not the same claim as a completed real-device visual
+verification pass, which remains outstanding (chart severity coloring, the extracted section's
+layout). Design may be revisited later per Rob's own caveat.
+
 ## [3.65.1] — 2026-08-29
 
 Adherence follow-up from Rob's real-device look at v3.65.0: extract it into its own section, and
