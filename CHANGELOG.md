@@ -20,6 +20,33 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.5] — 2026-08-28
+
+Splash-screen follow-up to v3.63.4, from Rob's continued real-device testing. See
+`docs/DECISION-LOG.md` `PROD-18`'s Aug 28 amendment for the full story.
+
+- **Real root cause of the persistent white screen, finally found**: it was never a caching bug.
+  `hydroprotracker.com` (the public marketing landing page, `site/index.html`) and
+  `hydroprotracker.com/app/` (the actual tracker) are two separate pages — Rob's home-screen icon
+  had been added from the marketing page, which has its own unrelated light background and
+  centered logo. Every "test" (cache clear, reinstall, plain browser tab) was correctly loading
+  that real, unfixed page. Re-adding the home-screen icon from `hydroprotracker.com/app/`
+  resolved it immediately — confirmed by Rob, no code change needed for this part.
+- **Fix: the spin now actually plays.** Once on the correct page, the logo showed but didn't
+  spin — because it lived inside `#root`, which React's first render replaces almost instantly
+  once the app is cached, too fast to show any rotation. Moved the boot screen to sit alongside
+  `#root` instead of inside it, and added a small script that holds it visible for a fixed 950ms
+  regardless of how fast the app underneath loads, then fades it out over 200ms. Animation
+  shortened to 0.9s (still 2 full rotations, still lands exactly upright) to comfortably finish
+  within that window.
+- **Tradeoff, stated plainly**: this adds a deliberate ~1.15s minimum to every app open, even
+  ones that would otherwise be instant. Chosen as a short default — easy to retune later.
+- Pure `index.html` change. ESLint no-undef sweep unchanged (11 pre-existing vendor errors, none
+  new), jsdom harness full pass (618 checks, 0 runtime errors) — neither exercises the splash
+  timing itself, which is real-device-only.
+- **Not yet verified on a real device** — needs Rob's confirmation that the spin is now visible
+  and that the added ~1.15s open delay feels acceptable.
+
 ## [3.63.4] — 2026-08-28
 
 App-launch splash screen: black, with the logo spinning to upright. Rob: opening the app from the

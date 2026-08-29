@@ -528,6 +528,47 @@ available in this environment for a screenshot check either.
 real-device confirmation (background reads black, logo spins and lands upright, no white flash
 on the transition into the app itself).
 
+*Amended Aug 28, 2026 — real root cause found (was never a caching bug), plus a fixed-duration
+fix (v3.63.5).* v3.63.4 shipped correctly but Rob kept seeing the exact same white screen +
+static logo through several rounds of troubleshooting: full "Clear & reset" of site data,
+uninstall/reinstall of the home-screen icon, even a plain mobile-browser-tab test (not the
+installed icon) — all showed the same white screen. That last result should have been the
+tell: a plain browser tab has no WebAPK layer to lag, so the "Google WebAPK-minting server
+caches the manifest" theory floated earlier in this session was wrong and is retracted here.
+
+**Actual cause**: `hydroprotracker.com` (root) and `hydroprotracker.com/app/` are two entirely
+separate pages — `site/index.html` (public marketing landing page, light `#F7F9FB` background,
+logo centered in its hero section, no manifest, no service worker) versus `site/app/index.html`
+(the actual tracker, where every fix in this entry lives). Rob's home-screen icon had been added
+from the marketing page at some point, not from inside the app — so every "test" was correctly,
+consistently loading a real, unrelated, unfixed page. Confirmed once Rob was walked through
+re-adding the icon specifically from `hydroprotracker.com/app/`: the black background then showed
+correctly on the very first try, no further caching workaround needed. Worth remembering:
+before floating a caching/propagation-delay theory, check whether the two URLs are being
+conflated — this session burned several rounds of Rob's time on it first.
+
+**Once on the right page, a second real bug surfaced**: the logo showed but didn't spin. Cause:
+the spinner was v3.63.4's `#wt-boot`, nested *inside* `#root`, so it was visible only until
+React's first `createRoot(...).render()` commit replaced `#root`'s children — normally fine, but
+on Rob's phone the app was by then fully cached (repeated testing), so that commit happened in
+well under 100ms, far too fast for even a subsecond animation to show visible rotation. Fixed by
+moving `#wt-boot` to a sibling of `#root` (a fixed, full-screen, `z-index:9999` overlay untouched
+by React's render), with a small inline script holding it visible for a fixed 950ms — independent
+of how fast the app underneath actually loads — before a 200ms fade and removal. Animation
+shortened to `.9s` (still 2 full rotations, still lands exactly upright) so it comfortably
+finishes within that guaranteed window. **Tradeoff, stated plainly**: this adds a deliberate
+~1.15s minimum to every app open, even ones that would otherwise be instant, in exchange for the
+spin reliably being visible. Chosen as a short default; easy to retune (one number) if it feels
+too slow or too rushed in practice.
+**Verification:** pure `index.html` change, no `bundle.js` logic touched apart from the version
+bump — ESLint no-undef sweep unchanged (11 pre-existing vendor errors, none new), jsdom harness
+full pass (618 checks, 0 runtime errors). Neither exercises the splash timing itself — CSS
+animation and real load-speed behavior remain outside jsdom's reach.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.5 — real root cause resolved and confirmed by Rob
+(black background correct on the actual app URL); the forced-duration spin fix is shipped but
+still needs Rob's real-device confirmation that it now visibly spins and that the added ~1.15s
+open delay feels acceptable.
+
 ---
 
 ## Architecture

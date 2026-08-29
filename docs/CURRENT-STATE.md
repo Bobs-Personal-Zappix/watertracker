@@ -2,11 +2,13 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.4 (Smart Entry voice layer — see below; Rob's
+*As of: August 28, 2026 · Deployed version: 3.63.5 (Smart Entry voice layer — see below; Rob's
 preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2/3.63.3 are TTS
-rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4 is
-an unrelated fix: black app-launch splash with a spinning logo, replacing the OS's default white
-splash — see `PROD-18` — also not yet real-device confirmed)*
+rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4/3.63.5
+are an unrelated fix: black app-launch splash with a spinning logo, replacing the OS's default white
+splash — see `PROD-18`. Black background confirmed working by Rob once he re-added the home-screen
+icon from `/app/` rather than the marketing landing page, which is what had been showing all
+along; v3.63.5's spin-timing fix still needs his confirmation)*
 
 ---
 
@@ -932,15 +934,22 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   arrays from the initial render) was found via the harness's own mocked-`SpeechRecognition`
   coverage and fixed with mirror refs. 5-step pipeline passed (618 harness checks, 0 runtime
   errors).
-- **App-launch splash screen (v3.63.4), needs Rob's real-device confirmation** — see
-  `docs/DECISION-LOG.md` `PROD-18`. The white screen + static logo on opening the app from the
-  home-screen icon was the OS/browser's own auto-generated PWA splash (built from
-  `manifest.json`'s `background_color` + app icon), not app-rendered. Fixed:
-  `manifest.json`'s `background_color` → `#0B0F14` (the app's real `--bg` dark token), plus a
-  matching dark `index.html` with a spinning `gauges/main-logo.png` (2 rotations, lands upright,
-  `prefers-reduced-motion`-aware) shown in the pre-React window, replaced cleanly when React's
-  `createRoot(...).render()` first commits. Pure HTML/CSS/manifest change — no jsdom or Playwright
-  coverage exists for this in the current toolchain, so it's **entirely unverified visually**.
+- **App-launch splash screen (v3.63.4/v3.63.5)** — see `docs/DECISION-LOG.md` `PROD-18` and its
+  Aug 28 amendment. The white screen + static logo Rob kept seeing through several rounds of
+  troubleshooting (cache clear, reinstall, even a plain browser tab) turned out **not** to be a
+  caching bug at all: `hydroprotracker.com` (marketing landing page, `site/index.html`) and
+  `hydroprotracker.com/app/` (the actual tracker) are separate pages, and Rob's home-screen icon
+  had been pointing at the marketing page the whole time — a real, unrelated, unfixed page with
+  its own light background and centered logo. Re-adding the icon from `/app/` fixed the black
+  background immediately, **confirmed working by Rob**. `manifest.json`'s `background_color` is
+  `#0B0F14` (the app's real `--bg` dark token). Once on the right page, a second real bug
+  surfaced: the logo showed but didn't spin, because it was cached/fast enough that React's first
+  render replaced it before any rotation was visible. **v3.63.5** moved the boot screen to sit
+  beside `#root` (not inside it, so React's render doesn't touch it) and holds it visible for a
+  fixed ~950ms regardless of load speed before fading out — a deliberate ~1.15s minimum added to
+  every app open, in exchange for the spin reliably playing. Pure `index.html`/`manifest.json`
+  change — no jsdom or Playwright coverage exists for this in the current toolchain, so v3.63.5's
+  spin-timing fix is **still unverified visually**, needs Rob's confirmation.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to
