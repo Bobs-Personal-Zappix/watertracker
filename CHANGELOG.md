@@ -20,6 +20,29 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## Source reconciliation: src/app.js caught up to bundle.js — 2026-08-28 (no app version bump)
+
+This session's v3.63.1–v3.63.6 TTS/voice-script fixes were made as direct edits to the deployed
+`site/app/bundle.js`, without porting them into `src/app.js` (the declared source of truth per
+`ARCH-OPEN-01`). Found before starting the v3.64.0 partner-showcase work, whose own verification
+steps open with `node esbuild.config.js` — running that against the stale source would have
+silently regressed the TTS fixes back out. See `docs/DECISION-LOG.md` `ARCH-OPEN-01`'s Aug 28
+addendum for the full story.
+
+- Ported the voice logic (`speak`, new `primeVoices` helper, `stopListening`,
+  `speakAndListenForConfirmation`, `doConfirm`, the mount `useEffect`) into `src/app.js`, using
+  its real identifier names.
+- Splash-screen work (`index.html`/`manifest.json`) needed no reconciliation — those are
+  hand-maintained static files outside `esbuild.config.js`'s build graph, not generated from
+  `src/app.js`.
+- Verified functionally identical to the previously-deployed bundle by matching every changed
+  phrase/marker between the fresh build and the prior `bundle.js` (all matched 1:1), then ran the
+  full 5-step pipeline (11-error vendor lint baseline unchanged, 618-check harness clean).
+- `bundle.build.js` copied over `site/app/bundle.js` — the deployed file is now esbuild's own
+  output rather than a hand-edited artifact, closing the loop going forward.
+- No functional or user-visible change. `src/app.js` and `site/app/bundle.js` are back in sync
+  at v3.63.6.
+
 ## [3.63.6] — 2026-08-28
 
 Cold-open-specific splash animation jank, follow-up to v3.63.5. See `docs/DECISION-LOG.md`

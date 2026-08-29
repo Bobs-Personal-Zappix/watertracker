@@ -244,7 +244,7 @@ CHANGELOG.md
 
 ## Standing risks (none have a deadline; all will drift if not raised)
 
-1. ~~**Source drift.**~~ **RESOLVED** — `ARCH-OPEN-01` complete Aug 20. `src/app.js` + `esbuild.config.js` are the source of truth. `src/App.jsx` is a known-stale legacy artifact, clearly labelled.
+1. ~~**Source drift.**~~ **RESOLVED** — `ARCH-OPEN-01` complete Aug 20. `src/app.js` + `esbuild.config.js` are the source of truth. `src/App.jsx` is a known-stale legacy artifact, clearly labelled. *Recurred and re-resolved Aug 28:* six direct `bundle.js`-only edits this session (v3.63.1–v3.63.6, TTS/voice fixes) went unported to `src/app.js` until caught before the next task started — see `ARCH-OPEN-01`'s Aug 28 addendum. Reconciled same day; both files back in sync at v3.63.6. Worth remembering as a live risk, not a one-time event: a session doing direct `bundle.js` edits must reconcile into `src/app.js` before it ends.
 2. **Data-loss exposure.** A user's history lives in one browser's `localStorage`. Cloud backup is opt-in. Someone clearing site data or switching phones without a backup loses everything. → `ARCH-OPEN-04`
 3. **No error monitoring.** Crashes are discovered only when a tester reports them. A blank white screen is otherwise invisible.
 4. **No analytics.** D1/D7/D30 retention — the only metric that matters for a tracker — cannot currently be measured.

@@ -1568,6 +1568,38 @@ Chosen approach: extract from live bundle. Executed Aug 20, 2026.
 - Worker side resolved (Aug 20): the real deployed `worker.js` (728 lines) committed, `wrangler.toml` has real values, first `wrangler deploy` succeeded (`OPS-09`).
 - `src/app.js` + `esbuild.config.js` are now the source of truth for all future edits.
 
+*Addendum Aug 28, 2026 — a fresh instance of the exact drift this decision closed, caught and
+reconciled before further work.* This session's TTS/voice-script fixes and app-launch-splash work
+(v3.63.1–v3.63.6, see `PROD-17`/`PROD-18` amendments) were all made as direct Python edits to
+the minified `site/app/bundle.js`, per the "Editing the minified bundle" workflow in `CLAUDE.md` —
+without ever porting the JS logic changes back into `src/app.js`. By the time the next task
+(`v3.64.0` partner-showcase brief) was about to start, `src/app.js` was still stamped `3.63.0`,
+six versions behind the deployed bundle, and the brief's own verification steps open with
+`node esbuild.config.js` — running that blind would have rebuilt from the stale source and
+silently regressed the `bundle.js` fixes, the exact failure mode this decision exists to prevent.
+Caught by checking `src/app.js`'s version constant before starting new work, per Rob's standing
+"state which files you need before exploring" instruction. Rob chose to reconcile before
+continuing (over skipping reconciliation and continuing the direct-edit pattern). The splash-
+screen work required no reconciliation — `index.html`/`manifest.json` are hand-maintained static
+files outside `esbuild.config.js`'s build graph entirely, not generated from `src/app.js`, so
+there was nothing there to drift. Only the TTS/voice logic (inside `VoiceEntryOverlay`) needed
+porting: `speak()`, a new `primeVoices()` helper, `stopListening()`, `speakAndListenForConfirmation()`,
+`doConfirm()`, and the mount `useEffect`, all rewritten in `src/app.js` using its real (non-
+minified) identifier names rather than the minified bundle's `X`/`Pv`/`U`/`G`/`E`. Verified
+functionally identical to the previously-deployed bundle by string-matching every changed phrase
+and code marker (opening prompt text, confirm script text, "All set!", the voice-preference
+tiers, `speechSynthesis.cancel`, `onvoiceschanged`, `rate=.82`) between `bundle.build.js` and the
+prior `bundle.js` — all matched 1:1. Full 5-step pipeline then run and passed (11-error vendor
+lint baseline unchanged, 618-check harness clean, both against the exact file now deployed).
+`bundle.build.js` was then copied over `site/app/bundle.js`, so the deployed file is now
+esbuild's own output rather than a hand-edited artifact — closing the loop for real going forward,
+not just for this incident. **Lesson for future sessions**: a "quick direct bundle edit" session
+must either be genuinely one-off, or must reconcile into `src/app.js` before the session ends —
+letting it ride across multiple sessions is exactly how this recurs.
+*Status:* **Locked — complete, drift found and reconciled** · Aug 28, 2026 · no functional
+change (same behavior, verified equivalent) — `src/app.js` and `site/app/bundle.js` are back in
+sync at v3.63.6.
+
 **ARCH-OPEN-02 — Data model: when to move off the single-blob store.**
 Currently one JSON blob in `account_backups.data`. Cannot answer "which patients are lapsing" or "what's D30 retention" — i.e. the entire B2B product. Proposed: keep the blob for sync, add normalized `log_entries` + `user_activity` rows.
 *Update (Aug 20, 2026):* `user_activity` shipped as part of `ARCH-OPEN-06` (retention analytics). The broader normalized model (`log_entries`, lapsing-patient queries) remains open — that's the clinic dashboard prerequisite.

@@ -336,7 +336,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.63.0",
+        xS = "3.63.6",
         SCHEMA_VERSION = 4,
         ES = {
             logs: {},
@@ -2967,13 +2967,19 @@ import {
         }
 
         function stopListening() {
-            if (!recognitionRef.current) return;
-            let rec = recognitionRef.current;
-            rec.onresult = null, rec.onerror = null, rec.onend = null;
+            if (recognitionRef.current) {
+                let rec = recognitionRef.current;
+                rec.onresult = null, rec.onerror = null, rec.onend = null;
+                try {
+                    rec.stop()
+                } catch {}
+                recognitionRef.current = null
+            }
+            // v3.63.2: closing mid-prompt (e.g. the new opening prompt, or the longer confirm
+            // script) shouldn't leave her still talking after the overlay is gone.
             try {
-                rec.stop()
+                typeof speechSynthesis < "u" && speechSynthesis.cancel()
             } catch {}
-            recognitionRef.current = null
         }
 
         function listenOnce(onFinal) {
@@ -2996,9 +3002,39 @@ import {
             }
         }
 
+        // Voice-list priming (v3.63.2). speechSynthesis.getVoices() commonly returns an empty
+        // list on the very first call after page load — the list populates asynchronously and
+        // only reliably appears once 'voiceschanged' fires. Without this, the voice preference
+        // below silently falls through to the raw default engine voice on a cold page load
+        // (the opening prompt is the highest-risk moment for exactly this timing gap).
+        function primeVoices(onReady) {
+            if (typeof speechSynthesis > "u") return void onReady();
+            if (speechSynthesis.getVoices().length) return void onReady();
+            let done = !1,
+                fire = () => {
+                    done || (done = !0, speechSynthesis.onvoiceschanged = null, onReady())
+                };
+            speechSynthesis.onvoiceschanged = fire, setTimeout(fire, 300)
+        }
+
         function speak(text, onDone) {
             if (typeof speechSynthesis > "u") return void (onDone && onDone());
             let utter = new SpeechSynthesisUtterance(text);
+            // v3.63.1: default rate/voice made the prompt hard to understand on real-device
+            // (Android) testing. Slower rate plus a preferred-voice lookup — v3.63.3 adds a
+            // top tier for iOS's "enhanced"/"premium"/"natural"-labeled voices (the higher-
+            // quality Siri voice variants), ahead of Android's "Google US English" network
+            // voice and the older named-voice fallback list.
+            utter.rate = .82, utter.pitch = 1;
+            try {
+                let voices = speechSynthesis.getVoices(),
+                    preferred = voices.find(v => /en-US/i.test(v.lang) && /enhanced|premium|natural/i.test(v.name)) ||
+                        voices.find(v => /en-US/i.test(v.lang) && /Google US English/i.test(v.name)) ||
+                        voices.find(v => /en-US/i.test(v.lang) && /Samantha|Ava|Zoe|Nicky|Aria|Microsoft Zira|Microsoft Aria/i.test(v.name)) ||
+                        voices.find(v => /en-US/i.test(v.lang) && v.localService) ||
+                        voices.find(v => /en-US/i.test(v.lang));
+                preferred && (utter.voice = preferred)
+            } catch {}
             utter.onend = () => onDone && onDone(), utter.onerror = () => onDone && onDone(), speechSynthesis.speak(utter)
         }
 
@@ -3023,9 +3059,13 @@ import {
         }
 
         function speakAndListenForConfirmation(count) {
-            // B2: never enumerate values — the card already shows them on screen. A bare count,
-            // under two seconds spoken, is the entire prompt.
-            let phrase = count <= 0 ? "I didn't catch anything to log. Try again, or edit the card." : `Got ${count} — say yes?`;
+            // v3.63.2: B2's original "Got N — say yes?" (under 2s, never enumerating values)
+            // was confirmed on real-device (Android) testing to be genuinely hard to understand.
+            // Rob asked for this exact script instead — still doesn't enumerate the actual
+            // values (the card on screen still carries those, per PROD-16), but is explicit
+            // about what saying "yes" does and that a correction is welcome. This deliberately
+            // supersedes B2's under-2-second timing doctrine; see DECISION-LOG PROD-17 amendment.
+            let phrase = count <= 0 ? "I didn't catch anything to log. Try again, or edit the card." : "Is this correct? If so, please say yes and I'll add it. Or tell me what you want changed and I'll update it.";
             speak(phrase, () => {
                 roundsRef.current < 3 && listenOnce(handleConfirmationResponse)
             })
@@ -3043,14 +3083,26 @@ import {
                 payload,
                 loggedCount
             } = buildSmartEntryConfirmPayload(workingEntriesRef.current, candidateGroupsRef.current, baseTextRef.current, "voice");
-            0 !== loggedCount && (setPhase("confirmed"), onConfirm(payload, loggedCount), onClose())
+            // v3.63.2: Rob's script calls for a spoken confirmation before the overlay closes,
+            // not a silent close — B4's loop never specified confirm copy, so this is new
+            // ground, not a change to an existing decision.
+            0 !== loggedCount && (setPhase("confirmed"), onConfirm(payload, loggedCount), speak("All set!", () => onClose()))
         }
 
         if ((0, React.useEffect)(() => {
                 if (!open) return;
                 if (!SpeechRecognitionCtor) return setPhase("error"), void setErrorKind("unsupported");
-                setPhase("listening"), setInterim(""), setErrorKind(null), setWorkingEntries([]), setUnmatched([]), setCandidateGroups([]), baseTextRef.current = "", roundsRef.current = 0, listenOnce(text => {
-                    text ? (baseTextRef.current = text, interpretAndPropose(text)) : (setPhase("error"), setErrorKind("no-speech"))
+                setPhase("listening"), setInterim(""), setErrorKind(null), setWorkingEntries([]), setUnmatched([]), setCandidateGroups([]), baseTextRef.current = "", roundsRef.current = 0,
+                // v3.63.2: an opening prompt before listening starts — this reverses B2's
+                // original "drop the opening prompt" timing decision, explicitly at Rob's
+                // direction after real-device testing found the terse original confirm line
+                // hard to understand; see DECISION-LOG PROD-17 amendment for the full tradeoff.
+                primeVoices(() => {
+                    speak("Tell me what you had and want to add.", () => {
+                        listenOnce(text => {
+                            text ? (baseTextRef.current = text, interpretAndPropose(text)) : (setPhase("error"), setErrorKind("no-speech"))
+                        })
+                    })
                 });
                 return stopListening
             }, [open]), !open) return null;
