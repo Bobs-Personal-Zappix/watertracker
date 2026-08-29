@@ -1,7 +1,7 @@
 # HydroPro Tracker
 
 Deployed React 18 PWA health-entry tracker on Cloudflare (Pages + Workers + D1 + KV) at
-hydroprotracker.com. Deployed version: 3.63.5. One part-time maintainer (Rob). Closed tester group
+hydroprotracker.com. Deployed version: 3.63.6. One part-time maintainer (Rob). Closed tester group
 behind Cloudflare Access.
 
 Read `docs/DECISION-LOG.md` before proposing anything. Never re-litigate entries marked

@@ -569,6 +569,40 @@ animation and real load-speed behavior remain outside jsdom's reach.
 still needs Rob's real-device confirmation that it now visibly spins and that the added ~1.15s
 open delay feels acceptable.
 
+*Amended Aug 28, 2026 — cold-open-specific animation jank (v3.63.6).* v3.63.5's black background
+was confirmed correct, and Rob confirmed the spin works "great" on an in-app pull-to-refresh
+(same browser process, JS already warm). But a true cold open — closing the app fully, then
+reopening from the home-screen icon — showed two screens: the native OS splash (large static
+icon, expected, can't be animated — that layer is drawn by the OS before any of our page loads)
+followed by our own `#wt-boot` spinner, but "smaller" and spinning "very briefly and fast"
+instead of the intended two full rotations.
+
+**Diagnosis** (not real-device-confirmed, reasoned from how CSS animations and browser process
+lifecycle work): a cold open destroys the previous renderer process, so `bundle.js` — a large,
+single-file, un-code-split bundle — must be freshly parsed and executed on the main thread from
+scratch, a much heavier one-time cost than a warm in-app reload (where a prior process's warm
+JS/compiled-code state is still available). CSS `animation` timing is driven by real elapsed
+wall-clock time, not frame count — so while the main thread is monopolized parsing/executing
+`bundle.js`, the animation's internal clock keeps advancing unpainted. By the time the browser is
+free to paint again, most of the declared 0.9s has already elapsed, and what paints is already
+near the end state — perceived as a brief, fast jump rather than a smooth two-rotation spin.
+
+**Fix:** added `will-change:transform` to `#wt-boot img`, hinting the browser to promote the
+spinning image to its own compositor/GPU layer. Transform-only compositor-layer animations can
+continue being painted independent of main-thread JS execution — the standard mitigation for
+exactly this "heavy JS blocks a CSS animation" failure mode. Purely additive CSS, no other
+change to the v3.63.5 boot-screen logic (still a fixed ~950ms hold regardless of load speed).
+**Verification:** ESLint no-undef sweep unchanged (11 pre-existing vendor errors, none new),
+jsdom harness full pass (618 checks, 0 runtime errors) confirming the version bump didn't break
+anything. jsdom cannot reproduce cold-process-restart JS-parsing timing or compositor-thread
+behavior at all — this fix is **reasoned, not verified**, and the diagnosis itself is inference
+from how the platform behaves, not a confirmed root cause. Genuinely needs Rob's real-device
+cold-open test.
+*Status:* **Locked** · Aug 28, 2026 · v3.63.6 — shipped as best-reasoned fix, unverified; if the
+cold-open spin is still janky after this, `will-change` alone wasn't sufficient and the next step
+would be profiling on the actual device (not something possible from this environment) rather
+than further guessing.
+
 ---
 
 ## Architecture

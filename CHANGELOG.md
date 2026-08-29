@@ -20,6 +20,32 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.63.6] — 2026-08-28
+
+Cold-open-specific splash animation jank, follow-up to v3.63.5. See `docs/DECISION-LOG.md`
+`PROD-18`'s second Aug 28 amendment.
+
+- Rob confirmed the spin works great on an in-app pull-to-refresh, but a true cold open (fully
+  closing the app, then reopening from the home-screen icon) showed the spinner appear "smaller"
+  and spin "very briefly and fast" instead of the full two rotations.
+- **Reasoned diagnosis** (not device-confirmed): a cold open destroys the previous browser
+  process, so `bundle.js` — one large, un-code-split file — must be freshly parsed and executed
+  on the main thread, a much heavier one-time cost than a warm reload. CSS `animation` timing
+  runs on real elapsed time regardless of whether frames get painted, so while the main thread is
+  busy with that parse/execute, the animation's clock keeps advancing unpainted — by the time the
+  browser is free to paint again, most of the 0.9s has already "elapsed," so what shows up is
+  already near the end, looking like a fast jump rather than a smooth spin.
+- **Fix:** added `will-change: transform` to the spinning logo, hinting the browser to run that
+  animation on its own compositor/GPU layer, independent of main-thread JS work — the standard
+  mitigation for this exact failure mode. Purely additive CSS; the fixed ~950ms hold from v3.63.5
+  is unchanged.
+- ESLint no-undef sweep unchanged (11 pre-existing vendor errors, none new), jsdom harness full
+  pass (618 checks, 0 runtime errors) confirming the version bump broke nothing — jsdom cannot
+  reproduce cold-process-restart JS timing or compositor behavior, so this fix is genuinely
+  **unverified**, a best-reasoned attempt, not a confirmed root cause.
+- **Needs Rob's real-device cold-open test.** If it's still janky after this, the next step is
+  profiling on the actual device — not further guessing from this environment.
+
 ## [3.63.5] — 2026-08-28
 
 Splash-screen follow-up to v3.63.4, from Rob's continued real-device testing. See

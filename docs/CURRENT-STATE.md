@@ -2,13 +2,15 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.5 (Smart Entry voice layer — see below; Rob's
+*As of: August 28, 2026 · Deployed version: 3.63.6 (Smart Entry voice layer — see below; Rob's
 preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2/3.63.3 are TTS
-rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4/3.63.5
+rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4/3.63.5/3.63.6
 are an unrelated fix: black app-launch splash with a spinning logo, replacing the OS's default white
 splash — see `PROD-18`. Black background confirmed working by Rob once he re-added the home-screen
 icon from `/app/` rather than the marketing landing page, which is what had been showing all
-along; v3.63.5's spin-timing fix still needs his confirmation)*
+along; the spin itself is confirmed smooth on a warm in-app refresh but was still janky on a true
+cold open (app fully closed, reopened from icon) — v3.63.6's compositor-layer fix for that is
+unverified, still needs Rob's real-device confirmation)*
 
 ---
 
@@ -934,22 +936,28 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
   arrays from the initial render) was found via the harness's own mocked-`SpeechRecognition`
   coverage and fixed with mirror refs. 5-step pipeline passed (618 harness checks, 0 runtime
   errors).
-- **App-launch splash screen (v3.63.4/v3.63.5)** — see `docs/DECISION-LOG.md` `PROD-18` and its
-  Aug 28 amendment. The white screen + static logo Rob kept seeing through several rounds of
-  troubleshooting (cache clear, reinstall, even a plain browser tab) turned out **not** to be a
-  caching bug at all: `hydroprotracker.com` (marketing landing page, `site/index.html`) and
-  `hydroprotracker.com/app/` (the actual tracker) are separate pages, and Rob's home-screen icon
-  had been pointing at the marketing page the whole time — a real, unrelated, unfixed page with
-  its own light background and centered logo. Re-adding the icon from `/app/` fixed the black
-  background immediately, **confirmed working by Rob**. `manifest.json`'s `background_color` is
-  `#0B0F14` (the app's real `--bg` dark token). Once on the right page, a second real bug
-  surfaced: the logo showed but didn't spin, because it was cached/fast enough that React's first
-  render replaced it before any rotation was visible. **v3.63.5** moved the boot screen to sit
-  beside `#root` (not inside it, so React's render doesn't touch it) and holds it visible for a
-  fixed ~950ms regardless of load speed before fading out — a deliberate ~1.15s minimum added to
-  every app open, in exchange for the spin reliably playing. Pure `index.html`/`manifest.json`
-  change — no jsdom or Playwright coverage exists for this in the current toolchain, so v3.63.5's
-  spin-timing fix is **still unverified visually**, needs Rob's confirmation.
+- **App-launch splash screen (v3.63.4/v3.63.5/v3.63.6)** — see `docs/DECISION-LOG.md` `PROD-18`
+  and its two Aug 28 amendments. The white screen + static logo Rob kept seeing through several
+  rounds of troubleshooting (cache clear, reinstall, even a plain browser tab) turned out **not**
+  to be a caching bug at all: `hydroprotracker.com` (marketing landing page, `site/index.html`)
+  and `hydroprotracker.com/app/` (the actual tracker) are separate pages, and Rob's home-screen
+  icon had been pointing at the marketing page the whole time — a real, unrelated, unfixed page
+  with its own light background and centered logo. Re-adding the icon from `/app/` fixed the
+  black background immediately, **confirmed working by Rob**. `manifest.json`'s
+  `background_color` is `#0B0F14` (the app's real `--bg` dark token). Once on the right page, a
+  second real bug surfaced: the logo showed but didn't spin, because it was cached/fast enough
+  that React's first render replaced it before any rotation was visible. **v3.63.5** moved the
+  boot screen to sit beside `#root` (not inside it, so React's render doesn't touch it) and holds
+  it visible for a fixed ~950ms regardless of load speed before fading out — a deliberate ~1.15s
+  minimum added to every app open, in exchange for the spin reliably playing. **Confirmed working
+  by Rob on a warm in-app refresh** ("works great"), but a true cold open (app fully closed,
+  reopened from the icon) still showed the spin jump/skip instead of playing smoothly — reasoned
+  as heavy one-time `bundle.js` parse/execute on a fresh process blocking the main thread while
+  the CSS animation's real-time clock keeps advancing unpainted. **v3.63.6** added
+  `will-change: transform` to promote the spinner to its own compositor layer, independent of
+  main-thread JS work. Pure `index.html`/`manifest.json` changes throughout — no jsdom or
+  Playwright coverage exists for any of this in the current toolchain, so v3.63.6's fix is
+  **reasoned but unverified**, still needs Rob's real-device cold-open confirmation.
 - **`docs/ROADMAP-v3.md` and `docs/SEQUENCING-PLAN.md` are referenced by name (`CLAUDE.md`, this
   file's own "Current direction" section) but don't exist in this repo** — only `ROADMAP-v2.md` is
   present on disk. Found while scoping partner-configuration work (Aug 27, 2026) when trying to
