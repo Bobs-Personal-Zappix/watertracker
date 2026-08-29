@@ -1427,7 +1427,10 @@ const STEPS = [
     check("Seed Pharmacy partner card is typed as Pharmacy", seedPharmacyCard ? seedPharmacyCard.textContent.includes("Pharmacy") : null, "true");
     const seedProviderCard = cards.find((c) => c.textContent.includes("Seed Provider"));
     check("My Plan shows a real partner card for the migrated Seed Provider partner", !!seedProviderCard, "true");
-    check("Seed Provider partner card lists its referencing item (SeedTreatment)", seedProviderCard ? seedProviderCard.textContent.includes("SeedTreatment") : null, "true");
+    // v3.64.0 (A): the card redesign replaced the per-item name list with a count ("N items"),
+    // per the brief's "legible at a glance" ask — SeedTreatment is the only item referencing
+    // Seed Provider at this point in the sequence, so the count reads "1 item".
+    check("Seed Provider partner card shows an item count (redesigned card, A) instead of listing item names", seedProviderCard ? seedProviderCard.textContent.includes("1 item") : null, "true");
   },
   () => check("open Add Partner sheet", clickByText("Add Partner", "button")),
   () => {
@@ -2071,6 +2074,117 @@ const STEPS = [
     uninstallMockSpeechRecognition();
   },
   () => check("no runtime errors after Smart Entry voice error-path check", errors.length, 0),
+
+  // ── v3.64.0 (A): My Health Providers card redesign — real cards with a logo, item count,
+  // tappable link, and whole-card tap-to-edit. Seed Pharmacy was deleted by the earlier
+  // partner-delete-flow test; Seed Provider (referenced by SeedTreatment, carries a logo and a
+  // link from the original seed) is still live at this point and is a real, non-trivial fixture
+  // to exercise the redesigned card against. ──
+  () => check("nav to My Plan (v3.64.0 partner-card redesign checks)", nav("My Plan")),
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-partner-card")];
+    check("partner cards render with the new .wt-partner-card class", cards.length > 0);
+    const seedProviderCard = cards.find((c) => c.textContent.includes("Seed Provider"));
+    check("Seed Provider card found", !!seedProviderCard);
+    const logo = seedProviderCard ? seedProviderCard.querySelector(".wt-partner-card-logo") : null;
+    check("Seed Provider card shows a generous logo (A)", !!logo);
+    check("Seed Provider's logo renders as a real <img> (has a logoDataUri, not the placeholder)", logo ? logo.tagName : null, "IMG");
+    const visitLink = seedProviderCard ? seedProviderCard.querySelector('a[href="https://example.com/seedtreatment"]') : null;
+    check("Seed Provider card shows a tappable Visit link (A)", !!visitLink);
+    if (seedProviderCard) fire(seedProviderCard);
+  },
+  () => {
+    const header = [...window.document.querySelectorAll(".wt-sheet-header h3")].find((h) => h.textContent === "Edit Partner");
+    check("tapping the card itself opened the Edit Partner sheet (A: whole-card tap-to-edit)", !!header);
+    check("close Edit Partner sheet", clickByAria("Close"));
+  },
+  () => check("no runtime errors after partner-card redesign checks", errors.length, 0),
+
+  // ── v3.64.0 (B): RX page inline partner logo resized 32px -> 28px per the brief. SeedRx's
+  // partnerId was cleared when Seed Pharmacy was deleted, but it still renders as a
+  // partner-branded card via its own legacy pharmacy/partnerLogoDataUri fields (self-managed
+  // items must not regress, per the brief — this proves that fallback still works too). ──
+  () => check("nav to RX (v3.64.0 logo-size check)", nav("RX")),
+  () => {
+    const seedRxCard = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")].find((c) => c.textContent.includes("SeedRx"));
+    check("SeedRx still renders as a partner-branded card after its partner was deleted (legacy-field fallback)", !!seedRxCard);
+    const img = seedRxCard ? seedRxCard.querySelector("img") : null;
+    check("SeedRx card's inline logo resized to 28px (B, was 32px)", img ? img.style.width : null, "28px");
+  },
+  () => check("no runtime errors after RX logo-size check", errors.length, 0),
+
+  // ── v3.64.0 (C): Care Team block on the Health Summary / doctor-share overlay. Only partners
+  // actually referenced by a current item should appear — Seed Provider (referenced by
+  // SeedTreatment) should show; the deleted Seed Pharmacy and the orphaned TestPartnerClinic
+  // (0 referencing items) should not. ──
+  () => check("nav to Stats (Care Team check)", nav("Stats")),
+  () => check("open Health Summary", clickByText("Share with your doctor", "button")),
+  () => {
+    const overlay = window.document.querySelector(".wt-doctor-share-overlay");
+    check("Health Summary overlay opened", !!overlay);
+    const careTeamHeading = [...window.document.querySelectorAll(".wt-doctor-share-section h2")].find((h) => h.textContent === "Care Team");
+    check("Care Team section present (C)", !!careTeamHeading);
+    const partnerNames = [...window.document.querySelectorAll(".wt-doctor-share-partner-name")].map((el) => el.textContent);
+    check("Care Team lists Seed Provider (referenced by SeedTreatment)", partnerNames.includes("Seed Provider"), "true");
+    check("Care Team omits the deleted Seed Pharmacy", partnerNames.includes("Seed Pharmacy"), false);
+    check("Care Team omits TestPartnerClinic (orphaned, 0 referencing items, C's exact ask)", partnerNames.includes("TestPartnerClinic"), false);
+  },
+  () => check("close Health Summary overlay", clickByAria("Close")),
+  () => check("no runtime errors after Care Team check", errors.length, 0),
+
+  // ── v3.64.0 (D): demo seed/clear data — hidden Settings action for conference-demo use ──
+  () => check("nav to Settings (demo seed checks)", nav("Settings")),
+  () => check("tap Load demo data", clickByText("Load demo data", "button")),
+  () => {
+    const data = stored();
+    check("demo seed marked active", data.settings.demoSeed ? data.settings.demoSeed.active : null, "true");
+    check("two demo partners tracked for later removal", data.settings.demoSeed ? data.settings.demoSeed.partnerIds.length : null, 2);
+    const riverside = partnerRecord("Riverside Pharmacy"), cascade = partnerRecord("Cascade Wellness Clinic");
+    check("Riverside Pharmacy partner created", !!riverside);
+    check("Riverside Pharmacy has a logo", riverside ? !!riverside.logoDataUri : null, "true");
+    check("Cascade Wellness Clinic partner created", !!cascade);
+    const metformin = rxItem("Metformin 500mg");
+    check("low-supply RX item created (D's explicit ask)", metformin ? metformin.qtyRemaining : null, 2);
+    check("low-supply RX item tagged demoSeeded", metformin ? metformin.demoSeeded : null, "true");
+    const magnesium = supp("Magnesium Glycinate");
+    // Check the actual trigger condition (QS()'s "expires within 7 days" window) via local-date
+    // math matching the app's own MS()/_S(), rather than an exact date string — ymd()'s
+    // toISOString() is UTC-based and can be off by a day from the app's local-date HS()/VS() near
+    // timezone boundaries.
+    const expParts = ((magnesium && magnesium.expirationDate) || "").split("-").map(Number);
+    const daysUntilExpiry = expParts.length === 3 ? Math.round((new Date(expParts[0], expParts[1] - 1, expParts[2]) - new Date(new Date().setHours(0, 0, 0, 0))) / 86400000) : null;
+    check("near-expiry supplement item created (D's explicit ask, expires within QS()'s 7-day near-expiry window)", daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 7);
+    const allLogs = Object.values(data.logs).flat();
+    const demoEntries = allLogs.filter((e) => e.demoSeeded);
+    check("demo seeder created a substantial number of log entries across ~30 days", demoEntries.length > 50);
+    const daysWithDemoEntries = Object.keys(data.logs).filter((k) => (data.logs[k] || []).some((e) => e.demoSeeded));
+    check("demo entries span a wide range of days, not just today", daysWithDemoEntries.length > 15);
+    const sources = new Set(demoEntries.map((e) => e.source));
+    check("demo entries mix source: manual/smart/voice, per D's explicit ask", sources.has("manual") && sources.has("smart"));
+  },
+  () => check("no runtime errors after Load demo data", errors.length, 0),
+  () => check("nav to RX (demo data visible check)", nav("RX")),
+  () => {
+    const cards = [...window.document.querySelectorAll(".wt-card, .wt-regimen-card")];
+    check("Metformin (demo) card visible on RX page", cards.some((c) => c.textContent.includes("Metformin 500mg")), "true");
+  },
+  () => check("nav to Settings (clear demo data)", nav("Settings")),
+  () => check("tap Clear demo data", clickByText("Clear demo data", "button")),
+  () => {
+    const data = stored();
+    check("demo seed marked inactive after clear", data.settings.demoSeed ? data.settings.demoSeed.active : null, "false");
+    check("Riverside Pharmacy partner removed", !!partnerRecord("Riverside Pharmacy"), false);
+    check("Cascade Wellness Clinic partner removed", !!partnerRecord("Cascade Wellness Clinic"), false);
+    check("Metformin 500mg RX item removed", !!rxItem("Metformin 500mg"), false);
+    check("Magnesium Glycinate supplement item removed", !!supp("Magnesium Glycinate"), false);
+    const allLogs = Object.values(data.logs).flat();
+    check("no demoSeeded log entries remain after clear (D's exact-removal ask)", allLogs.some((e) => e.demoSeeded), false);
+    // Pre-existing, non-demo fixtures must survive clear-demo-data untouched.
+    check("pre-existing Seed Provider partner untouched by clear-demo-data", !!partnerRecord("Seed Provider"), "true");
+    check("pre-existing SeedRx item untouched by clear-demo-data", !!rxItem("SeedRx"), "true");
+    check("pre-existing TestPartnerClinic untouched by clear-demo-data", !!partnerRecord("TestPartnerClinic"), "true");
+  },
+  () => check("no runtime errors after Clear demo data", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

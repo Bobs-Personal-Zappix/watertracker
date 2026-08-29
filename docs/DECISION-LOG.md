@@ -1259,6 +1259,98 @@ the business hasn't validated yet.
 `UX-28` (partner logo/link fields now resolve through a partner record, see that entry's v3.60.0
 amendment)
 
+**TRACK-03 — Partner showcase (v3.64.0): presenting `settings.partners` for a clinic-audience
+conference demo.** Session ran from `docs/CC-BRIEF-partner-showcase-v3.64.0.md`, written by a
+separate strategy-project Claude session ahead of Rob demoing to wellness-clinic operators,
+pharmacies, and physician offices. Explicit scope discipline going in: presentation only, no new
+data model, no server-side clinic infrastructure — if anything needed a new field on
+`settings.partners` itself, stop and flag it (none did; see below).
+
+**Brief's premise checked before building, not assumed** — per Rob's standing instruction to
+state needed files before exploring: the brief claimed "almost nothing in the app renders"
+`settings.partners` and that RX page rows were "visually identical regardless of who prescribed
+or administers it." Reading the actual current `src/app.js` (not the brief's own recall) found
+this false for the RX page specifically — `RxPage`'s `renderItem` already showed a partner's
+logo, name (`"From "`/`"Filled at "`), and a tappable link when a partner with a logo was
+linked, built under `TRACK-02`/`UX-28`. Reported this to Rob before writing code rather than
+duplicating already-shipped work; confirmed the real shape of the session was two genuine builds
+(A, C) and one real gap (D), against one cosmetic tweak (B), not four roughly-equal parts.
+
+**A — My Plan "My Health Providers" cards, real gap, built.** Replaced the plain list (name +
+green type badge + item-name list + Edit/Delete buttons) with real cards: a generous 56px logo
+(`.wt-partner-card-logo`, placeholder icon when none set), name, and a `--muted-dark` "Type · N
+items" line (explicitly replacing the old green `--success` badge treatment — the brief's own
+styling call-out asked for `--muted-dark` on the type label, not the prior badge look). The
+whole card is now the edit tap-target (`onClick` on the outer card, `stopPropagation()` on the
+nested Visit link and Delete button so they don't also trigger edit) — Delete kept as its own
+control since the brief's ask ("tap the card to edit") didn't call for removing existing delete
+capability. Empty state: a single inviting card explaining what a partner is, with its own Add
+Partner CTA, replacing a blank region; the separate dashed "+ Add Partner" button now only
+renders once at least one partner exists (redundant with the empty card's own CTA otherwise).
+
+**B — RX page partner attribution, cosmetic tweak only.** The only real gap versus the brief's
+~28px ask: the existing inline logo was 32px. Resized. No other change — self-managed items
+(no partner) were already unaffected before this session and remain so.
+
+**C — Care Team block on Health Summary/doctor-share, real gap, built.** The shared `DO`
+component (used by both the embedded overlay and the standalone `?share=` page — one component,
+so building it once covers both) had no partner/provider data at all; its data-building function
+only tracked item *names* from log history, with no `partnerId` link. Added a `partners` field
+to that function's return value — `settings.partners` filtered to only those referenced by a
+current Treatment/Prescription item (never an orphaned record), not scoped to the summary's date
+range since a partner relationship isn't a log-history fact. Renders as a "Care Team" section
+(logo or initials-fallback + name per partner) placed right after the header, before Daily
+Averages — the prominent placement the brief asked for ("needs to look deliberate"). No toggle
+added (brief explicitly permitted skipping it if non-trivial; default-on only, revisitable
+later). **Privacy note flagged, not solved, per the brief's own instruction**: the share link is
+unauthenticated with a 90-day expiry: this now adds provider names to what a leaked link
+reveals. Real consideration for `LEGAL-OPEN-01`, not resolved here.
+
+**D — Demo seed/clear data, real gap, built, and the bulk of this session.** Hidden Settings
+action (small, muted, bottom of the About card — findable, not literally invisible, per the
+brief's own "clearly labeled" instruction): "Load demo data" populates ~30 days of imperfect
+history (probabilistic misses/variation, not perfect adherence) across all trackers, two demo
+partners with generated SVG-logo data URIs (no real asset needed), an RX item at low supply
+(`qtyRemaining:2`) and a supplement at near-expiry (within `QS()`'s 7-day window) per the
+brief's explicit ask, and a source mix (`manual`/`smart`/`voice`, weighted realistically). "Clear
+demo data" removes exactly what was seeded — log entries via a `demoSeeded:true` tag (safe: `$S`
+passes all six known entry types through its normalizer unchanged, confirmed by reading it
+before assuming), rx/supplement/treatment items via the same tag on those records, and partner
+records via a **separate `settings.demoSeed.partnerIds` list**, deliberately *not* a field on the
+partner records themselves — the one place this session came close to the brief's stop-and-flag
+trigger. Reasoned this doesn't cross it: the trigger is about `settings.partners`' own business
+shape (the brief's concern is scope creep into the clinic data model), and a sibling bookkeeping
+key touches that shape not at all. Flagging the reasoning here rather than presenting it as
+self-evidently outside the brief's concern.
+**A second bug class found and fixed, not just avoided, before it could ship**: the
+`demoSeeded` tag on rx/supplement/treatment items required checking `USTracker()` and
+`normalizeTreatments()` — the exact hand-maintained per-item field whitelists `ARCH-OPEN-05`'s
+addendum already flagged as silently dropping unlisted fields on every boot. Without adding
+`demoSeeded` to both, the tag would have survived exactly one page reload before vanishing,
+breaking "Clear demo data" invisibly. Added to both; `SCHEMA_VERSION` bumped 4→5 for the new
+`settings.demoSeed` default key (not strictly required — `deepMergeDefaults` handles a new
+top-level settings key automatically regardless of version number — but kept for consistency
+with `TRACK-01`/`TRACK-02`'s own version-bump convention).
+
+**Verification:** full 5-step pipeline run and passed against the exact shipped `bundle.js`
+(11-error vendor lint baseline unchanged, harness clean, 0 runtime errors). `tools/harness.js`
+extended with new coverage for all four sections (A/B/C/D), including one pre-existing assertion
+(line ~1430, `docs/DECISION-LOG.md`-adjacent) that had to be *updated*, not just left alone —
+it checked for the old item-name-list markup A deliberately replaced with a count, which would
+otherwise have been a false regression signal on every future run. One test-side bug of my own
+found and fixed during this pass: an exact-date assertion for the near-expiry supplement used
+`toISOString()` (UTC) against the app's own local-date `HS()`/`VS()`, producing a false FAIL —
+fixed by asserting the actual trigger condition (within `QS()`'s 7-day window via local-date
+math) instead of a brittle exact string. Two intermittent FAILs seen on one run in unrelated
+date-pill/backfill tests this session never touched, tied to a wall-clock day-boundary crossing
+mid-run — confirmed as a pre-existing environmental flake, not a regression, by a clean re-run.
+Card proportions, real logo-image rendering, and the share page's print output are explicitly
+**real-device-only** — jsdom has no layout engine, so none of this session's visual work is
+actually confirmed to look right, only that the markup/data/logic are correct.
+*Status:* **Locked** · Aug 28, 2026 · v3.64.0 — harness/lint verified; needs Rob's real-device
+pass before the conference demo, particularly the RX page's small inline logos and the printed/
+shared Health Summary output, per the brief's own "Needs Rob" section.
+
 **UX-40 — Six quick tweaks after Rob's v3.60.0 review, plus a real bugfix: My Day Supplements tile
 connected, Log It!'s fast-entry tiles locked to the bottom row, Weight ring tightened, three header/
 section-name renames.**

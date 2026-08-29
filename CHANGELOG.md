@@ -20,6 +20,49 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.64.0] — 2026-08-28
+
+Partner showcase — presenting the existing `settings.partners` data model for Rob's conference
+demo to wellness-clinic operators, pharmacies, and physician offices. Session ran from
+`docs/CC-BRIEF-partner-showcase-v3.64.0.md`. See `docs/DECISION-LOG.md` `TRACK-03`.
+
+- **Checked the brief's premise before building**: it claimed the RX page showed partner data
+  as "visually identical" rows. Reading the actual source found that false — the RX page already
+  showed a partner's logo/name/link, built under `TRACK-02`. Reported this before writing
+  redundant code; the real shape of the session was two builds (A, C), one real gap (D), and one
+  cosmetic tweak (B), not four equal parts.
+- **A — My Plan "My Health Providers" cards, rebuilt.** Real cards: a 56px logo (placeholder
+  icon when none set), name, and a `--muted-dark` "Type · N items" line (replacing the old green
+  badge, per the brief's own styling ask). Whole card taps to edit; Visit link and Delete kept
+  as their own controls with `stopPropagation`. Empty state is a real inviting card with its own
+  Add Partner CTA, not a blank region.
+- **B — RX page inline logo, resized** 32px → 28px per the brief. Everything else there was
+  already built.
+- **C — "Care Team" block added to the Health Summary / doctor-share page** (shared by both the
+  embedded overlay and the standalone `?share=` page — one component, built once). Only lists
+  partners actually referenced by a current item, never an orphaned record. **Privacy note
+  flagged, not solved**: the share link is unauthenticated with a 90-day expiry, and this adds
+  provider names to what a leaked link reveals — a real `LEGAL-OPEN-01` consideration.
+- **D — "Load demo data" / "Clear demo data"** added to Settings (small, muted, bottom of the
+  About card). Populates ~30 days of imperfect history across every tracker, two demo partners
+  with generated logos, a low-supply RX item and a near-expiry supplement, and a
+  manual/smart/voice source mix. Clear removes exactly what was seeded via a `demoSeeded:true`
+  tag on log entries and rx/supplement/treatment items, and a separate
+  `settings.demoSeed.partnerIds` list for partners (deliberately not a new field on the partner
+  records themselves, to respect the brief's "no new field on settings.partners" scope line).
+- **A real bug caught before shipping**: the `demoSeeded` tag needed adding to `USTracker()` and
+  `normalizeTreatments()` — the exact hand-maintained field whitelists `ARCH-OPEN-05`'s addendum
+  already flagged as silently dropping unlisted fields on every boot. Without this, "Clear demo
+  data" would have silently broken after one page reload. `SCHEMA_VERSION` bumped 4→5 for the new
+  `settings.demoSeed` default key.
+- `tools/harness.js` extended with new coverage for A/B/C/D, including updating one pre-existing
+  assertion that checked for markup A deliberately replaced (would have been a false regression
+  signal on every future run otherwise). Full 5-step pipeline passed against the exact shipped
+  `bundle.js` (11-error vendor lint baseline unchanged, harness clean, 0 runtime errors).
+- **Not yet verified on a real device** — jsdom has no layout engine, so card proportions, real
+  logo rendering, and the share page's print output are unconfirmed. Needs Rob's pass before the
+  conference demo, especially the RX page's small inline logos and the printed Health Summary.
+
 ## Source reconciliation: src/app.js caught up to bundle.js — 2026-08-28 (no app version bump)
 
 This session's v3.63.1–v3.63.6 TTS/voice-script fixes were made as direct edits to the deployed

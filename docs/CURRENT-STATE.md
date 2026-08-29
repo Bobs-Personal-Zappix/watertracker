@@ -2,15 +2,11 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.63.6 (Smart Entry voice layer — see below; Rob's
-preliminary real-device test "went well," fuller pass still in progress; v3.63.1/3.63.2/3.63.3 are TTS
-rate/script/voice fixes from continued Android testing, not yet real-device confirmed. v3.63.4/3.63.5/3.63.6
-are an unrelated fix: black app-launch splash with a spinning logo, replacing the OS's default white
-splash — see `PROD-18`. Black background confirmed working by Rob once he re-added the home-screen
-icon from `/app/` rather than the marketing landing page, which is what had been showing all
-along; the spin itself is confirmed smooth on a warm in-app refresh but was still janky on a true
-cold open (app fully closed, reopened from icon) — v3.63.6's compositor-layer fix for that is
-unverified, still needs Rob's real-device confirmation)*
+*As of: August 28, 2026 · Deployed version: 3.64.0 (Partner showcase for Rob's conference demo —
+see `TRACK-03` and below; harness/lint verified, not yet real-device confirmed. Also carries
+v3.63.1–3.63.6: Smart Entry voice layer TTS rate/script/voice fixes from Android testing and the
+black app-launch splash with a spinning logo — see `PROD-17`/`PROD-18` — none of it yet
+real-device confirmed either)*
 
 ---
 
@@ -126,20 +122,36 @@ date control and a redesigned tile grid:
   v3.59.0 for consistency with the label used everywhere else) — lists every item of that type, not
   just inventory-tracked ones. Treatments and Prescriptions items can optionally link to a real
   partner record (`settings.partners`, v3.60.0 — see below) via `partnerId`; when a linked partner
-  has a logo set, the item renders as a partner-branded card instead of plain text. Supplements
-  have no partner concept.
-- **Partner configuration (v3.60.0)** — `settings.partners` (device-local only, no clinic/server
-  infrastructure): each partner is `{ id, name, type: "treatment"|"rx", logoDataUri, link }`,
-  managed via a real "Add Partner" sheet on My Plan (replacing a non-functional design placeholder)
-  and a real partner list under the "My Health Providers" section (renamed from "My Treatments" in
-  v3.61.0, since it now holds both Treatment and Prescription partners — replacing a hardcoded,
-  always-visible "Austin Drip Lounge" demo card with dead buttons). Treatment/RX entry forms offer a
-  partner picker (existing partners of the matching
-  type, or "No partner" — the default, preserving today's self-managed behavior) instead of a
-  free-text field with its own per-item logo/link upload; logo/link now live once on the partner
-  record. Deleting a partner clears `partnerId` on referencing items without deleting them. Existing
-  items with a legacy `provider`/`pharmacy` + logo/link were promoted into real partner records on
-  boot (one-time migration, `SCHEMA_VERSION` 4). See `docs/DECISION-LOG.md` `TRACK-02`.
+  has a logo set, the item renders as a partner-branded card instead of plain text (v3.64.0: logo
+  resized 32px → 28px per the partner-showcase brief). Supplements have no partner concept.
+- **Partner configuration (v3.60.0, cards redesigned v3.64.0)** — `settings.partners`
+  (device-local only, no clinic/server infrastructure): each partner is `{ id, name, type:
+  "treatment"|"rx", logoDataUri, link }`, managed via a real "Add Partner" sheet on My Plan
+  (replacing a non-functional design placeholder). The "My Health Providers" section (renamed
+  from "My Treatments" in v3.61.0) now shows real cards, not a plain list (v3.64.0,
+  `docs/DECISION-LOG.md` `TRACK-03`): a generous 56px logo, name, a "Type · N items" line
+  (`--muted-dark`, replacing the old green badge), a tappable Visit link, and the whole card taps
+  to edit (Visit/Delete are separate controls with `stopPropagation`). Empty state is a real
+  inviting card with its own Add Partner CTA. Treatment/RX entry forms offer a partner picker
+  (existing partners of the matching type, or "No partner" — the default, preserving self-managed
+  behavior) instead of a free-text field with its own per-item logo/link upload; logo/link now
+  live once on the partner record. Deleting a partner clears `partnerId` on referencing items
+  without deleting them. Existing items with a legacy `provider`/`pharmacy` + logo/link were
+  promoted into real partner records on boot (one-time migration, `SCHEMA_VERSION` 4). See
+  `docs/DECISION-LOG.md` `TRACK-02`/`TRACK-03`.
+- **Care Team block (v3.64.0)** — the Health Summary / doctor-share page (both the embedded
+  overlay and the standalone `?share=` page, one shared component) now shows a "Care Team"
+  section listing every partner actually referenced by a current item (logo or initials-fallback
+  + name), placed right after the header. Privacy tradeoff flagged, not solved: the share link is
+  unauthenticated with a 90-day expiry, so this adds provider names to what a leaked link
+  reveals — a real `LEGAL-OPEN-01` consideration. See `TRACK-03`.
+- **Demo seed/clear data (v3.64.0)** — a small, muted "Load demo data"/"Clear demo data" control
+  at the bottom of Settings' About card, for Rob's conference demo. Populates ~30 days of
+  imperfect history across every tracker, two demo partners with generated logos, a low-supply RX
+  item and a near-expiry supplement, and a manual/smart/voice source mix. Clear removes exactly
+  what was seeded via a `demoSeeded:true` tag on log entries/rx/supplement/treatment items and a
+  separate `settings.demoSeed.partnerIds` list for partners (kept off the partner records'
+  own shape). `SCHEMA_VERSION` bumped 4→5. See `TRACK-03`.
 - Past-days log viewer ("Edit Prior Days Logs" tile on Stats, between Sleep Over Time and Health
   Summary, as of v3.48.0 — moved off My Day, where it used to live behind a small calendar-icon
   button); past-day entries are deletable
@@ -868,6 +880,12 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
+- **Partner showcase (v3.64.0) needs Rob's real-device pass before the conference demo** — see
+  `docs/DECISION-LOG.md` `TRACK-03`. Harness/lint verified, but jsdom has no layout engine: card
+  proportions, real logo-image rendering (vs. the harness's tiny fixture data URIs), and the
+  share page's print output are all unconfirmed. Particularly worth checking: the RX page's
+  28px inline logos at real size, and printed/PDF Health Summary output with the new Care Team
+  section.
 - **`wrangler d1 execute --file` fails auth (`Authentication error [code: 10000]`) on `/import`
   under wrangler 3.114** — use `--command` with the SQL inline instead (works fine, same
   credentials, same database). Noted in `CLAUDE.md`'s D1 section and `docs/DECISION-LOG.md`
