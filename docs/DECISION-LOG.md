@@ -1441,6 +1441,61 @@ chart rendering, the 5-button segment control's real-device layout, and the filt
 screenshot-readiness are all **unverified visually** — jsdom cannot render any of it. Needs Rob's
 real-device pass before the conference demo, same as `TRACK-03`.
 
+*Amended Aug 29, 2026 — extracted into its own section, "glaring" low-adherence callout added,
+and a real aggregate math bug found and fixed (v3.65.1).* Rob's real-device look at v3.65.0
+("the visual looks ok for now") came with two explicit asks: (1) Adherence should not be a
+toggle sharing the segment control with Water/Protein/Calories/All 3 — it should be its own
+always-visible section; (2) low or zero adherence is exactly the signal a clinic partner needs to
+see made glaring, while 100% adherence needs no visual noise at all ("when they are at 100%
+nothing is needed").
+
+**Extraction**: Adherence removed from the metric segment control entirely (back to its original
+four options) and rebuilt as its own always-visible section — heading, chart, filter — placed
+between the Water/Protein/Calories/All 3 chart and "Weight Over Time," mirroring how Weight/Sleep
+Over Time already work as unconditional sections. Given its own independent period (`week`/
+`month`, no `day`) and date-navigation state, deliberately decoupled from the top chart's period
+control — extracting it into a separate section means a viewer paging through Adherence's own
+weeks shouldn't also move the Water/Protein/Calories chart's range, or vice versa.
+
+**"Glaring" callout, proposed and built the same session**: presented two options before
+building — per-bar severity coloring (reusing the exact `Cell`-based pattern the single-metric
+Water/Protein/Calories chart already uses for its own goal-met/goal-missed coloring) plus a bold
+callout row above the chart — and built both, combined. Each bar's fill now reflects severity
+(≥80% success green, 50–79% amber `#E3A83B`, <50% danger red) rather than a flat per-category
+color; each `Bar`'s own top-level `fill` still uses the original category token
+(`--treatment`/`--meds`/`--supplements`), so the Legend still identifies which series is which by
+its default swatch even though individual bars are overridden by severity. Above the chart, any
+category below 80% for the period renders as its own bold, colored callout row ("Prescriptions:
+20% this week — needs attention"), sorted worst-first; when every category with data is at or
+above 80%, a single quiet "✓ On track" note shows instead — good news stays quiet, bad news
+doesn't, exactly as asked.
+
+**A real bug found while building the callout, not before it**: the period-aggregate percentage
+(what the callout is based on) was computed by averaging each day's already-rounded display
+percentage. For anything less-than-daily this is badly wrong — a weekly item followed exactly on
+schedule shows 100% on the one day it's logged and a correct 0% on the other six, but *averaging*
+those six 0s and one 100 across the week reads as ~14% adherent, not the true 100%. Caught while
+writing the harness test for this exact scenario (a perfectly-followed weekly Treatment item),
+before it shipped. Root cause was a units mismatch, not an ordering issue: a logged dose was
+being credited at `expectedDailyRate` (a fractional day-share, e.g. 1/7) instead of a full whole
+dose (1). Fixed by crediting a logged dose as a whole `1` — this leaves the per-day *display*
+value unchanged (still clamps to 100% on the day logged, 0% otherwise, exactly as designed and
+already verified) while making the period aggregate mathematically correct: sum of real doses
+logged over the period ÷ sum of doses expected over the period, computed once, not an average of
+per-day percentages. Verified via 11 hand-worked standalone scenarios (the original 10 plus this
+one), all passing after the fix — see the session's own notes.
+**Verification**: full 5-step pipeline re-run and passed against the exact shipped `bundle.js`
+(11-error vendor lint baseline unchanged, harness clean, 0 runtime errors). `tools/harness.js`
+rewritten for the new always-visible section (no more "click Adherence to switch"; verifies the
+section's own Week/Month-only period control, its own independent range label, and — new this
+round — that the callout renders exactly one state (attention rows XOR the on-track note),
+matching the "loud for bad news, quiet for good news" design intent structurally, since jsdom
+still cannot render the chart itself to see the actual severity colors.
+*Status:* **Locked** · Aug 29, 2026 · v3.65.1 — computation re-verified (harness + standalone,
+including the aggregate fix); chart severity coloring and the extracted section's real-device
+layout remain **unverified visually**. Still needs Rob's real-device pass before the conference
+demo.
+
 **UX-40 — Six quick tweaks after Rob's v3.60.0 review, plus a real bugfix: My Day Supplements tile
 connected, Log It!'s fast-entry tiles locked to the bottom row, Weight ring tightened, three header/
 section-name renames.**

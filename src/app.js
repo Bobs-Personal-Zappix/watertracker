@@ -337,7 +337,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.65.0",
+        xS = "3.65.1",
         SCHEMA_VERSION = 5,
         ES = {
             logs: {},
@@ -3466,7 +3466,7 @@ import {
         dayLogs.forEach(entry => {
             zS(entry) ? (entry.items || []).forEach(nm => loggedNames.Treatments.add(nm)) : RXTypeS(entry) ? (entry.items || []).forEach(it => loggedNames.Prescriptions.add("string" == typeof it ? it : it.name)) : NS(entry) && (entry.items || []).forEach(it => loggedNames.Supplements.add("string" == typeof it ? it : it.name))
         });
-        let result = { isFuture };
+        let result = { isFuture, raw: {} };
         [
             ["Treatments", itemsByKind.treatment],
             ["Prescriptions", itemsByKind.rx],
@@ -3477,9 +3477,18 @@ import {
                 return !addedAt || addedAt <= dayDate
             }),
                 expected = existedByThen.reduce((sum, i) => sum + expectedDailyRate(i), 0);
-            if (expected <= 0) return void (result[label] = null);
-            let logged = existedByThen.reduce((sum, i) => sum + (loggedNames[label].has(i.name) ? expectedDailyRate(i) : 0), 0);
-            result[label] = Math.max(0, Math.min(100, Math.round(logged / expected * 100)))
+            if (expected <= 0) return result[label] = null, void (result.raw[label] = null);
+            // `logged` is a whole-dose credit (1) when an item was actually taken that day, not
+            // a fractional day-share — a real dose was taken, full credit. `expected` stays the
+            // fractional daily obligation (1/intervalDays). This makes the per-day display %
+            // clamp to 100% on a logged day regardless of interval (a weekly item's one real
+            // dose vastly exceeds that single day's fractional 1/7 obligation, clamped down to
+            // 100%) while ALSO making the period aggregate correct when these raw values are
+            // summed across days: total logged doses ÷ total expected doses over the period —
+            // e.g. a weekly item logged exactly once in a 7-day week correctly aggregates to
+            // 1÷1=100%, not the ~14% a naive per-day-percentage average would wrongly produce.
+            let logged = existedByThen.reduce((sum, i) => sum + (loggedNames[label].has(i.name) ? 1 : 0), 0);
+            result[label] = Math.max(0, Math.min(100, Math.round(logged / expected * 100))), result.raw[label] = { logged, expected }
         });
         return result
     }
@@ -3511,6 +3520,15 @@ import {
                 eb = null === b.expiryDays ? 1 / 0 : b.expiryDays;
             return ea !== eb ? ea - eb : (a.qtyRemaining || 0) - (b.qtyRemaining || 0)
         })
+    }
+
+    // v3.65.1: severity color for a single adherence bar — Rob's real-device feedback was
+    // explicit that good adherence (near 100%) needs no visual noise, but low/zero adherence is
+    // exactly the signal a clinic partner needs to see "glaring." Category color (--treatment/
+    // --meds/--supplements) still identifies the series via the Bar's own default fill (used for
+    // the Legend swatch); this only overrides each individual bar's fill by severity.
+    function adherenceSeverityColor(pct) {
+        return null === pct ? "transparent" : pct >= 80 ? hS : pct >= 50 ? "#E3A83B" : bS
     }
 
     function MO({
@@ -5036,33 +5054,48 @@ import {
         onDeleteLogForDate,
         onSaveBackfill
     }) {
-        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), [priorDaysOpen, setPriorDaysOpen] = (0, React.useState)(!1), [priorDaysHistoryDate, setPriorDaysHistoryDate] = (0, React.useState)(null), [priorDaysBackfillOpen, setPriorDaysBackfillOpen] = (0, React.useState)(!1), [adherencePartnerFilter, setAdherencePartnerFilter] = (0, React.useState)(null), u = "combined" === n, isAdherence = "adherence" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
+        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), [priorDaysOpen, setPriorDaysOpen] = (0, React.useState)(!1), [priorDaysHistoryDate, setPriorDaysHistoryDate] = (0, React.useState)(null), [priorDaysBackfillOpen, setPriorDaysBackfillOpen] = (0, React.useState)(!1), [adherencePartnerFilter, setAdherencePartnerFilter] = (0, React.useState)(null), [adherencePeriod, setAdherencePeriod] = (0, React.useState)("week"), [adherenceDate, setAdherenceDate] = (0, React.useState)(new Date), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
 
         function d(e) {
-            r(e), ("combined" === e || "adherence" === e) && "day" === a && o("week")
+            r(e), "combined" === e && "day" === a && o("week")
         }
-        let adherenceData = (0, React.useMemo)(() => {
-            if (!isAdherence) return { series: [], rangeLabel: "", asNeededCount: 0 };
-            let today = new Date;
-            today.setHours(0, 0, 0, 0);
-            let days, rangeLabel;
-            if ("month" === a) {
-                let start = GS(i);
-                days = Array.from({ length: XS(i) }, (v, idx) => VS(start, idx)), rangeLabel = aO(i)
-            } else {
-                let start = qS(i);
-                days = Array.from({ length: 7 }, (v, idx) => VS(start, idx)), rangeLabel = `${YS(days[0])} – ${YS(days[6])}`
-            }
-            let itemsByKind = {
-                treatment: filterItemsByPartner(e.settings.treatments, adherencePartnerFilter),
-                rx: filterItemsByPartner(e.settings.rx, adherencePartnerFilter),
-                supplement: filterItemsByPartner(e.settings.supplements, adherencePartnerFilter)
-            }, series = days.map(day => {
-                let bucket = computeAdherenceDayBucket(e, day, itemsByKind);
-                return { label: "month" === a ? String(day.getDate()) : fS[(day.getDay() + 6) % 7], Treatments: bucket.Treatments, Prescriptions: bucket.Prescriptions, Supplements: bucket.Supplements, isFuture: bucket.isFuture }
-            }), asNeededCount = countAsNeededLogged(e, days.filter(day => day.getTime() <= today.getTime()), itemsByKind);
-            return { series, rangeLabel, asNeededCount }
-        }, [isAdherence, a, i, e.logs, e.settings.treatments, e.settings.rx, e.settings.supplements, adherencePartnerFilter]),
+        // v3.65.1: Adherence pulled out of the metric segment control per Rob's real-device
+        // feedback into its own always-visible section (like Weight/Sleep Over Time below) — it
+        // gets its own period/date state so navigating it never moves the Water/Protein/Calories
+        // chart above and vice versa.
+        let adherenceIsCurrentPeriod = "month" === adherencePeriod ? adherenceDate.getFullYear() === (new Date).getFullYear() && adherenceDate.getMonth() === (new Date).getMonth() : qS(adherenceDate).getTime() === qS(new Date).getTime(),
+            adherenceData = (0, React.useMemo)(() => {
+                let today = new Date;
+                today.setHours(0, 0, 0, 0);
+                let days, rangeLabel;
+                if ("month" === adherencePeriod) {
+                    let start = GS(adherenceDate);
+                    days = Array.from({ length: XS(adherenceDate) }, (v, idx) => VS(start, idx)), rangeLabel = aO(adherenceDate)
+                } else {
+                    let start = qS(adherenceDate);
+                    days = Array.from({ length: 7 }, (v, idx) => VS(start, idx)), rangeLabel = `${YS(days[0])} – ${YS(days[6])}`
+                }
+                let itemsByKind = {
+                    treatment: filterItemsByPartner(e.settings.treatments, adherencePartnerFilter),
+                    rx: filterItemsByPartner(e.settings.rx, adherencePartnerFilter),
+                    supplement: filterItemsByPartner(e.settings.supplements, adherencePartnerFilter)
+                }, dayBuckets = days.map(day => computeAdherenceDayBucket(e, day, itemsByKind)),
+                    series = dayBuckets.map((bucket, idx) => ({ label: "month" === adherencePeriod ? String(days[idx].getDate()) : fS[(days[idx].getDay() + 6) % 7], Treatments: bucket.Treatments, Prescriptions: bucket.Prescriptions, Supplements: bucket.Supplements, isFuture: bucket.isFuture })),
+                    pastDays = days.filter(day => day.getTime() <= today.getTime()), asNeededCount = countAsNeededLogged(e, pastDays, itemsByKind),
+                    // Period-aggregate % per category, computed by summing RAW logged/expected
+                    // amounts across every past day in the period first and dividing once — NOT
+                    // by averaging the per-day display percentages. A perfectly-followed
+                    // every-7-days item reads 100%/0% per individual day (6 misses, 1 hit) by
+                    // design (matches "shaped like the existing bar chart"), but averaging those
+                    // day percentages would wrongly read it as ~14% adherent instead of the
+                    // correct 100%. This is what actually drives the "glaring" callout below —
+                    // a single day is too noisy a signal to call a patient out over (v3.65.1).
+                    aggregates = ["Treatments", "Prescriptions", "Supplements"].map(label => {
+                        let totals = dayBuckets.filter((bucket, idx) => !bucket.isFuture && bucket.raw[label]).reduce((acc, bucket) => (acc.logged += bucket.raw[label].logged, acc.expected += bucket.raw[label].expected, acc), { logged: 0, expected: 0 });
+                        return { label, pct: totals.expected > 0 ? Math.round(totals.logged / totals.expected * 100) : null }
+                    }).filter(agg => null !== agg.pct);
+                return { series, rangeLabel, asNeededCount, aggregates }
+            }, [adherencePeriod, adherenceDate, e.logs, e.settings.treatments, e.settings.rx, e.settings.supplements, adherencePartnerFilter]),
             inventoryTimeline = (0, React.useMemo)(() => buildInventoryTimeline(e.settings), [e.settings.treatments, e.settings.rx, e.settings.supplements]);
         let p = (0, React.useMemo)(() => {
                 let t = {};
@@ -5283,12 +5316,9 @@ import {
         }), "Cal"), React.default.createElement("button", {
             className: u ? "active" : "",
             onClick: () => d("combined")
-        }, "All 3"), React.default.createElement("button", {
-            className: isAdherence ? "active" : "",
-            onClick: () => d("adherence")
-        }, "Adherence")), React.default.createElement("div", {
+        }, "All 3")), React.default.createElement("div", {
             className: "wt-segment"
-        }, !u && !isAdherence && React.default.createElement("button", {
+        }, !u && React.default.createElement("button", {
             className: "day" === a ? "active" : "",
             onClick: () => {
                 o("day"), l(new Date)
@@ -5314,7 +5344,7 @@ import {
             size: 16
         })), React.default.createElement("span", {
             className: "wt-range-label"
-        }, isAdherence ? adherenceData.rangeLabel : g), React.default.createElement("button", {
+        }, g), React.default.createElement("button", {
             onClick: function() {
                 l("day" === a ? e => VS(e, 1) : "week" === a ? e => VS(e, 7) : e => new Date(e.getFullYear(), e.getMonth() + 1, 1))
             },
@@ -5322,103 +5352,7 @@ import {
             "aria-label": "Next"
         }, React.default.createElement(ChevronRight, {
             size: 16
-        }))), isAdherence ? React.default.createElement(React.default.Fragment, null, e.settings.partners.length > 0 && React.default.createElement("div", {
-            className: "wt-chip-row",
-            style: { marginBottom: 10 }
-        }, React.default.createElement("button", {
-            type: "button",
-            className: "wt-chip " + (adherencePartnerFilter ? "" : "active"),
-            onClick: () => setAdherencePartnerFilter(null)
-        }, "All partners"), React.default.createElement("button", {
-            type: "button",
-            className: "wt-chip " + ("self" === adherencePartnerFilter ? "active" : ""),
-            onClick: () => setAdherencePartnerFilter("self")
-        }, "Self-managed"), e.settings.partners.map(partner => React.default.createElement("button", {
-            key: partner.id,
-            type: "button",
-            className: "wt-chip " + (adherencePartnerFilter === partner.id ? "active" : ""),
-            onClick: () => setAdherencePartnerFilter(partner.id)
-        }, partner.logoDataUri && React.default.createElement("img", {
-            src: partner.logoDataUri,
-            alt: "",
-            style: { width: 16, height: 16, borderRadius: 4, objectFit: "cover", marginRight: 4, verticalAlign: -3 }
-        }), partner.name))), adherencePartnerFilter && React.default.createElement("p", {
-            className: "wt-card-note",
-            style: { marginBottom: 8, fontWeight: 700 }
-        }, "self" === adherencePartnerFilter ? "Filtered to self-managed items" : `Filtered to ${(e.settings.partners.find(p => p.id === adherencePartnerFilter) || {}).name || "partner"}`), React.default.createElement("p", {
-            className: "wt-card-note",
-            style: {
-                marginBottom: 10
-            }
-        }, "Percentage of scheduled doses actually logged — Treatments, Prescriptions, and Supplements. Items with no set schedule aren't included in the percentage; see the note below the chart."), React.default.createElement("div", {
-            className: "wt-card",
-            style: {
-                paddingBottom: 4
-            }
-        }, React.default.createElement(ResponsiveContainer, {
-            width: "100%",
-            height: 220
-        }, React.default.createElement(BarChart, {
-            data: adherenceData.series,
-            margin: {
-                top: 8,
-                right: 4,
-                left: -18,
-                bottom: 0
-            }
-        }, React.default.createElement(CartesianGrid, {
-            vertical: !1,
-            stroke: vS
-        }), React.default.createElement(XAxis, {
-            dataKey: "label",
-            tick: {
-                fontSize: 10,
-                fill: wS
-            },
-            interval: "month" === a ? Math.ceil(adherenceData.series.length / 6) : 0,
-            axisLine: {
-                stroke: vS
-            },
-            tickLine: !1
-        }), React.default.createElement(YAxis, {
-            domain: [0, 100],
-            tick: {
-                fontSize: 10,
-                fill: wS
-            },
-            axisLine: !1,
-            tickLine: !1
-        }), React.default.createElement(Tooltip, {
-            formatter: e => [null === e ? "no scheduled items" : `${e}%`, "adherence"],
-            contentStyle: {
-                fontSize: 12,
-                borderRadius: 8,
-                border: `1px solid ${vS}`
-            }
-        }), React.default.createElement(Legend, {
-            wrapperStyle: {
-                fontSize: 11
-            }
-        }), React.default.createElement(ReferenceLine, {
-            y: 100,
-            stroke: dS,
-            strokeDasharray: "3 3"
-        }), React.default.createElement(Bar, {
-            dataKey: "Treatments",
-            fill: "var(--treatment)",
-            radius: [3, 3, 0, 0]
-        }), React.default.createElement(Bar, {
-            dataKey: "Prescriptions",
-            fill: "var(--meds)",
-            radius: [3, 3, 0, 0]
-        }), React.default.createElement(Bar, {
-            dataKey: "Supplements",
-            fill: "var(--supplements)",
-            radius: [3, 3, 0, 0]
-        }))), adherenceData.asNeededCount > 0 && React.default.createElement("p", {
-            className: "wt-card-note",
-            style: { margin: "8px 0 0" }
-        }, `+ ${adherenceData.asNeededCount} as-needed dose${1===adherenceData.asNeededCount?"":"s"} logged this period (no fixed schedule, not included above)`))) : u ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+        }))), u ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 10
@@ -5559,6 +5493,137 @@ import {
             fill: "day" !== a && c > 0 && e.amount >= c ? hS : O,
             opacity: e.isFuture ? .25 : 1
         }))))))), React.default.createElement("div", {
+            className: "wt-divider"
+        }), React.default.createElement("div", {
+            className: "wt-section-label wt-section-label-lg"
+        }, "Adherence Over Time"), React.default.createElement("div", {
+            className: "wt-segment",
+            style: { marginBottom: 8 }
+        }, React.default.createElement("button", {
+            className: "week" === adherencePeriod ? "active" : "",
+            onClick: () => {
+                setAdherencePeriod("week"), setAdherenceDate(new Date)
+            }
+        }, "Week"), React.default.createElement("button", {
+            className: "month" === adherencePeriod ? "active" : "",
+            onClick: () => {
+                setAdherencePeriod("month"), setAdherenceDate(new Date)
+            }
+        }, "Month")), React.default.createElement("div", {
+            className: "wt-range-nav"
+        }, React.default.createElement("button", {
+            onClick: () => setAdherenceDate("week" === adherencePeriod ? e => VS(e, -7) : e => new Date(e.getFullYear(), e.getMonth() - 1, 1)),
+            "aria-label": "Previous"
+        }, React.default.createElement(ChevronLeft, { size: 16 })), React.default.createElement("span", {
+            className: "wt-range-label"
+        }, adherenceData.rangeLabel), React.default.createElement("button", {
+            onClick: () => setAdherenceDate("week" === adherencePeriod ? e => VS(e, 7) : e => new Date(e.getFullYear(), e.getMonth() + 1, 1)),
+            disabled: adherenceIsCurrentPeriod,
+            "aria-label": "Next"
+        }, React.default.createElement(ChevronRight, { size: 16 }))), e.settings.partners.length > 0 && React.default.createElement("div", {
+            className: "wt-chip-row",
+            style: { marginBottom: 10 }
+        }, React.default.createElement("button", {
+            type: "button",
+            className: "wt-chip " + (adherencePartnerFilter ? "" : "active"),
+            onClick: () => setAdherencePartnerFilter(null)
+        }, "All partners"), React.default.createElement("button", {
+            type: "button",
+            className: "wt-chip " + ("self" === adherencePartnerFilter ? "active" : ""),
+            onClick: () => setAdherencePartnerFilter("self")
+        }, "Self-managed"), e.settings.partners.map(partner => React.default.createElement("button", {
+            key: partner.id,
+            type: "button",
+            className: "wt-chip " + (adherencePartnerFilter === partner.id ? "active" : ""),
+            onClick: () => setAdherencePartnerFilter(partner.id)
+        }, partner.logoDataUri && React.default.createElement("img", {
+            src: partner.logoDataUri,
+            alt: "",
+            style: { width: 16, height: 16, borderRadius: 4, objectFit: "cover", marginRight: 4, verticalAlign: -3 }
+        }), partner.name))), adherencePartnerFilter && React.default.createElement("p", {
+            className: "wt-card-note",
+            style: { marginBottom: 8, fontWeight: 700 }
+        }, "self" === adherencePartnerFilter ? "Filtered to self-managed items" : `Filtered to ${(e.settings.partners.find(pt => pt.id === adherencePartnerFilter) || {}).name || "partner"}`), adherenceData.aggregates.length > 0 && React.default.createElement("div", {
+            style: { marginBottom: 10 }
+        }, adherenceData.aggregates.filter(agg => agg.pct < 80).sort((x, y) => x.pct - y.pct).length > 0 ? adherenceData.aggregates.filter(agg => agg.pct < 80).sort((x, y) => x.pct - y.pct).map(agg => React.default.createElement("div", {
+            key: agg.label,
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 12px",
+                borderRadius: 10,
+                marginBottom: 6,
+                background: agg.pct < 50 ? "rgba(193,82,62,.18)" : "rgba(227,168,59,.18)",
+                border: `1.5px solid ${agg.pct < 50 ? bS : "#E3A83B"}`
+            }
+        }, React.default.createElement(AlertCircle, { size: 16, color: agg.pct < 50 ? bS : "#E3A83B" }), React.default.createElement("span", {
+            style: { fontWeight: 700, fontSize: 13, color: "var(--ink-inverse)" }
+        }, `${agg.label}: ${agg.pct}% this ${adherencePeriod} — needs attention`))) : React.default.createElement("div", {
+            style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 12px",
+                borderRadius: 10,
+                background: "rgba(47,143,91,.15)"
+            }
+        }, React.default.createElement("span", {
+            style: { fontWeight: 700, fontSize: 13, color: hS }
+        }, "✓ On track — all categories at 80%+ adherence"))), React.default.createElement("p", {
+            className: "wt-card-note",
+            style: { marginBottom: 10 }
+        }, "Percentage of scheduled doses actually logged — Treatments, Prescriptions, and Supplements. Items with no set schedule aren't included in the percentage; see the note below the chart."), React.default.createElement("div", {
+            className: "wt-card",
+            style: { paddingBottom: 4 }
+        }, React.default.createElement(ResponsiveContainer, {
+            width: "100%",
+            height: 220
+        }, React.default.createElement(BarChart, {
+            data: adherenceData.series,
+            margin: { top: 8, right: 4, left: -18, bottom: 0 }
+        }, React.default.createElement(CartesianGrid, { vertical: !1, stroke: vS }), React.default.createElement(XAxis, {
+            dataKey: "label",
+            tick: { fontSize: 10, fill: wS },
+            interval: "month" === adherencePeriod ? Math.ceil(adherenceData.series.length / 6) : 0,
+            axisLine: { stroke: vS },
+            tickLine: !1
+        }), React.default.createElement(YAxis, {
+            domain: [0, 100],
+            tick: { fontSize: 10, fill: wS },
+            axisLine: !1,
+            tickLine: !1
+        }), React.default.createElement(Tooltip, {
+            formatter: e => [null === e ? "no scheduled items" : `${e}%`, "adherence"],
+            contentStyle: { fontSize: 12, borderRadius: 8, border: `1px solid ${vS}` }
+        }), React.default.createElement(Legend, { wrapperStyle: { fontSize: 11 } }), React.default.createElement(ReferenceLine, { y: 100, stroke: dS, strokeDasharray: "3 3" }), React.default.createElement(Bar, {
+            dataKey: "Treatments",
+            fill: "var(--treatment)",
+            radius: [3, 3, 0, 0]
+        }, adherenceData.series.map((dpt, idx) => React.default.createElement(Cell, {
+            key: idx,
+            fill: adherenceSeverityColor(dpt.Treatments),
+            opacity: dpt.isFuture ? .25 : 1
+        }))), React.default.createElement(Bar, {
+            dataKey: "Prescriptions",
+            fill: "var(--meds)",
+            radius: [3, 3, 0, 0]
+        }, adherenceData.series.map((dpt, idx) => React.default.createElement(Cell, {
+            key: idx,
+            fill: adherenceSeverityColor(dpt.Prescriptions),
+            opacity: dpt.isFuture ? .25 : 1
+        }))), React.default.createElement(Bar, {
+            dataKey: "Supplements",
+            fill: "var(--supplements)",
+            radius: [3, 3, 0, 0]
+        }, adherenceData.series.map((dpt, idx) => React.default.createElement(Cell, {
+            key: idx,
+            fill: adherenceSeverityColor(dpt.Supplements),
+            opacity: dpt.isFuture ? .25 : 1
+        }))))), adherenceData.asNeededCount > 0 && React.default.createElement("p", {
+            className: "wt-card-note",
+            style: { margin: "8px 0 0" }
+        }, `+ ${adherenceData.asNeededCount} as-needed dose${1 === adherenceData.asNeededCount ? "" : "s"} logged this period (no fixed schedule, not included above)`)), React.default.createElement("div", {
             className: "wt-divider"
         }), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-lg"

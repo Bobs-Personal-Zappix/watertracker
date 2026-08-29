@@ -2,12 +2,14 @@
 
 **Orientation card for a new conversation.** Answers "what exists right now" so it doesn't have to be rediscovered. Update when any of it changes.
 
-*As of: August 28, 2026 · Deployed version: 3.65.0 (Adherence over time on Stats, for Rob's
+*As of: August 29, 2026 · Deployed version: 3.65.1 (Adherence over time on Stats, for Rob's
 conference demo — see `TRACK-04` and below; harness/lint verified, computation verified
-standalone, chart rendering NOT verified — jsdom can't render Recharts charts at all. Also
-carries v3.64.0's partner showcase (`TRACK-03`) and v3.63.1–3.63.6's Smart Entry voice layer /
-app-launch splash fixes (`PROD-17`/`PROD-18`) — none of this session's or the prior two sessions'
-visual work is yet real-device confirmed)*
+standalone (including a real aggregate math bug found and fixed in the v3.65.1 follow-up), chart
+rendering NOT verified — jsdom can't render Recharts charts at all. v3.65.1 pulled Adherence out
+into its own always-visible section and added a "glaring" low-adherence callout, per Rob's
+real-device feedback on v3.65.0. Also carries v3.64.0's partner showcase (`TRACK-03`) and
+v3.63.1–3.63.6's Smart Entry voice layer / app-launch splash fixes (`PROD-17`/`PROD-18`) — none
+of this session's or the prior two sessions' visual work is yet real-device confirmed)*
 
 ---
 
@@ -160,23 +162,33 @@ date control and a redesigned tile grid:
 - Stats: day/week/month views per metric, All-3 comparison, weight and sleep trend lines. The
   Subscriptions panel was removed in v3.46.0 — superseded first by Today's "Remaining
   RX/Treatments" section, then by the RX page as of v3.49.0.
-- **Adherence over time (v3.65.0)** — a fifth option ("Adherence") in Stats' existing metric
-  segment control, alongside Water/Protein/Calories/All 3: a grouped bar chart of % of scheduled
-  doses actually logged, per Treatment/Prescription/Supplement, reusing the same chart structure
-  and category color tokens as the existing charts (no new Recharts modules). Percentages use
-  each item's average expected daily rate (`1/intervalDays`) as an approximation, since the app
-  has no historical due-date snapshot to reconstruct exactly — a real, documented nuance: a
-  single day's bar for a non-daily item reads as binary (100%/0%), only smoothing out when
-  averaged across a week/month. Items with no schedule (`intervalDays <= 0`) are excluded from
-  the percentage and shown as a raw "N logged" count instead. A partner-filter chip row ("All
-  partners"/"Self-managed"/one per partner) sits above the chart, hidden when no partners exist.
-  Below the Edit Prior Days Logs card, a new **Inventory & Expiration** section lists every
-  inventory-tracked item sorted by urgency (soonest expiry, then lowest supply), reusing the RX
-  page's existing `QS()` alert thresholds unchanged. See `docs/DECISION-LOG.md` `TRACK-04`. Chart
-  rendering itself is unverified — jsdom cannot render Recharts charts at all (a pre-existing,
-  documented harness limitation, not new to this session); the percentage math was verified
-  separately via 10 hand-worked standalone scenarios, and the segment control / partner filter /
-  Inventory list (all plain DOM, not SVG) are covered by `tools/harness.js`.
+- **Adherence over time (v3.65.0, extracted into its own section + "glaring" callout in
+  v3.65.1)** — its own always-visible section on Stats (not a toggle inside Water/Protein/
+  Calories/All 3, per Rob's real-device feedback), sitting between that chart and Weight Over
+  Time, with its own independent Week/Month period control: a grouped bar chart of % of
+  scheduled doses actually logged, per Treatment/Prescription/Supplement, reusing the same chart
+  structure and category color tokens as the existing charts (no new Recharts modules). Each
+  bar is colored by severity (≥80% green, 50–79% amber, <50% red) rather than a flat per-category
+  color — the Legend still shows category identity via each series' default color. Above the
+  chart, any category below 80% for the period gets a bold callout row ("Prescriptions: 20% this
+  week — needs attention"), worst first; when everything's ≥80%, a quiet "✓ On track" note shows
+  instead — loud only for what needs action, per Rob's explicit ask. Percentages use each item's
+  average expected daily rate (`1/intervalDays`) as an approximation, since the app has no
+  historical due-date snapshot to reconstruct exactly — a real, documented nuance: a single day's
+  *bar* for a non-daily item still reads as binary (100%/0%), by design, matching the existing
+  chart shape — but the *period aggregate* (what the callout is based on) is computed correctly
+  by summing raw logged/expected doses across the period, not by averaging daily percentages (a
+  real bug in the original v3.65.0 implementation, found and fixed in v3.65.1 — see
+  `docs/DECISION-LOG.md` `TRACK-04`'s amendment). Items with no schedule (`intervalDays <= 0`)
+  are excluded from the percentage and shown as a raw "N logged" count instead. A partner-filter
+  chip row ("All partners"/"Self-managed"/one per partner) sits above the chart, hidden when no
+  partners exist. Below the Edit Prior Days Logs card, a separate **Inventory & Expiration**
+  section lists every inventory-tracked item sorted by urgency (soonest expiry, then lowest
+  supply), reusing the RX page's existing `QS()` alert thresholds unchanged. Chart rendering
+  itself remains unverified — jsdom cannot render Recharts charts at all (a pre-existing,
+  documented harness limitation); the percentage math was verified separately via 11 hand-worked
+  standalone scenarios, and the section/segment control/partner filter/callout/Inventory list
+  (all plain DOM, not SVG) are covered by `tools/harness.js`.
 - Health Summary → printable/PDF doctor summary, plus shareable snapshot links (90-day expiry, no account needed to open) — at the bottom of Stats
 - Push notifications: interval reminders (progress-aware, suppressed if recently logged), bedtime, supplement, treatment
 - In-app feedback form with push alerts to watchers
@@ -898,15 +910,20 @@ hugging the icon ring. Hero-number caption font bumped 11px → 13px. Today page
 
 ## Known outstanding
 
-- **Adherence over time (v3.65.0) needs Rob's real-device pass before the conference demo** —
-  see `docs/DECISION-LOG.md` `TRACK-04`. Chart rendering is completely unverified: jsdom cannot
-  render Recharts charts at all in this environment (`ResponsiveContainer` measures 0×0, a
-  pre-existing limitation), so nothing about how the adherence bars actually look has been
-  confirmed. Also unverified: whether the segment control still reads cleanly with a 5th button
-  ("Adherence" added alongside Water/Protein/Calories/All 3), and whether a per-day bar for a
-  non-daily-interval item (which reads as a stark 100%/0% spike rather than a smooth percentage,
-  by design — see `TRACK-04`) looks confusing or acceptable in practice. Load demo data first
-  (Settings → bottom) to have enough history for the chart to mean anything.
+- **Adherence over time (v3.65.0/v3.65.1) needs Rob's real-device pass before the conference
+  demo** — see `docs/DECISION-LOG.md` `TRACK-04` and its Aug 29 amendment. Rob's first
+  real-device look confirmed v3.65.0 "looks ok" visually and asked for two changes, both shipped
+  in v3.65.1: Adherence extracted into its own always-visible section (was a toggle sharing the
+  segment control with Water/Protein/Calories/All 3), and a "glaring" low-adherence callout
+  (severity-colored bars + a bold "needs attention" row per struggling category, quiet "On
+  track" note when nothing is). Still fully unverified visually — jsdom cannot render Recharts
+  charts at all in this environment (`ResponsiveContainer` measures 0×0), so nothing about how
+  the severity colors or callout actually look has been confirmed. Also unverified: whether a
+  per-day *bar* for a non-daily-interval item (which reads as a stark 100%/0% spike rather than a
+  smooth percentage, by design — see `TRACK-04`) looks confusing in practice; the *period
+  aggregate* driving the callout is now confirmed mathematically correct (a real bug there was
+  found and fixed in v3.65.1). Load demo data first (Settings → bottom) to have enough history
+  for the chart to mean anything.
 - **Partner showcase (v3.64.0) needs Rob's real-device pass before the conference demo** — see
   `docs/DECISION-LOG.md` `TRACK-03`. Harness/lint verified, but jsdom has no layout engine: card
   proportions, real logo-image rendering (vs. the harness's tiny fixture data URIs), and the

@@ -2186,34 +2186,32 @@ const STEPS = [
   },
   () => check("no runtime errors after Clear demo data", errors.length, 0),
 
-  // ── v3.65.0 (A/B/C): adherence over time, per-partner filter, inventory/expiration timeline.
-  // Chart data itself (Recharts <Bar>/<Line> children) cannot be verified here — jsdom has no
-  // layout engine, so ResponsiveContainer measures 0x0 and Recharts renders no chart children at
-  // all (same documented limitation the existing Water/Protein/Calories coverage above already
-  // works around). What IS checked: the segment control, partner-filter chips and their DOM text
-  // (all plain HTML, not SVG), the as-needed/empty-state notes, and the Inventory & Expiration
-  // list, which is a real DOM list, not a chart, per the brief's own C. The percentage math
-  // itself was verified separately, standalone, against 10 hand-worked scenarios covering daily
-  // items, non-daily intervals, as-needed exclusion, mid-period addition, and legacy fixture ids
-  // — see the session's own notes; not re-run here since it has no DOM/React dependency to
-  // exercise through this harness. Reload demo data first — this feature is meaningless against
-  // the few days of real logging this suite's own fixtures produce. ──
+  // ── v3.65.1: adherence over time, extracted into its own always-visible section (Rob's
+  // real-device feedback on v3.65.0 was that it shouldn't be a toggle inside the Water/Protein/
+  // Calories/All-3 segment control) — plus a "glaring" low-adherence callout, also per Rob's
+  // explicit ask: good adherence needs no visual noise, but low/zero adherence needs to be
+  // impossible to miss. Chart data itself (Recharts <Bar> elements) still can't be verified here
+  // — same pre-existing jsdom/ResponsiveContainer 0x0 limitation as the rest of this file's
+  // chart coverage. What IS checked: the section is always visible (no click needed), its own
+  // Week/Month period control (no Day), the partner filter, the callout region, and the
+  // Inventory & Expiration list — all real DOM. The percentage math (including a real aggregate
+  // bug found and fixed this round — averaging per-day percentages badly under-counted anything
+  // less-than-daily; fixed to sum raw logged/expected doses across the period first) was
+  // verified separately, standalone; see the session's own notes, not re-run here since it has
+  // no DOM/React dependency to exercise through this harness. Reload demo data first. ──
   () => check("nav to Settings (reload demo data for adherence checks)", nav("Settings")),
-  () => check("tap Load demo data (v3.65.0 checks)", clickByText("Load demo data", "button")),
+  () => check("tap Load demo data (v3.65.1 checks)", clickByText("Load demo data", "button")),
   () => check("no runtime errors after reloading demo data", errors.length, 0),
   () => check("nav to Stats (adherence checks)", nav("Stats")),
-  () => check("switch Stats to the Adherence view", clickByText("Adherence")),
   () => {
-    const segments = [...window.document.querySelectorAll(".wt-segment")];
-    const metricSegment = segments[0];
-    const adherenceBtn = metricSegment ? [...metricSegment.querySelectorAll("button")].find((b) => b.textContent.trim() === "Adherence") : null;
-    check("Adherence button present in the same segment control as the other metrics (D's exact ask)", !!adherenceBtn);
-    check("Adherence button shows active state when selected", adherenceBtn ? adherenceBtn.className.includes("active") : null, "true");
-    const periodSegment = segments[1];
-    const dayBtn = periodSegment ? [...periodSegment.querySelectorAll("button")].find((b) => b.textContent.trim() === "Day") : null;
-    check("Day period option hidden for Adherence (day-hourly buckets don't apply to a scheduled-dose percentage)", !dayBtn);
-    const rangeLabel = window.document.querySelector(".wt-range-label");
-    check("range label populated for the Adherence view", !!(rangeLabel && rangeLabel.textContent.trim().length > 0));
+    const heading = [...window.document.querySelectorAll(".wt-section-label-lg")].find((h) => h.textContent === "Adherence Over Time");
+    check("Adherence Over Time is its own always-visible section (v3.65.1: no longer a toggle inside the other metrics)", !!heading);
+    const periodSegment = heading ? heading.nextElementSibling : null;
+    const periodBtns = periodSegment ? [...periodSegment.querySelectorAll("button")].map((b) => b.textContent.trim()) : [];
+    check("Adherence has its own Week/Month period control", periodBtns.includes("Week") && periodBtns.includes("Month"));
+    check("Adherence's own period control has no Day option (hourly buckets don't apply to a scheduled-dose percentage)", !periodBtns.includes("Day"));
+    const rangeLabels = [...window.document.querySelectorAll(".wt-range-label")];
+    check("Adherence section has its own range label, independent of the metric chart's range nav above it", rangeLabels.length >= 2);
   },
   () => {
     const note = [...window.document.querySelectorAll(".wt-card-note")].find((p) => p.textContent.includes("Percentage of scheduled doses"));
@@ -2227,6 +2225,19 @@ const STEPS = [
     check("partner filter shows 'Self-managed'", chips.some((t) => t === "Self-managed"));
     check("partner filter shows the demo Riverside Pharmacy partner (B: filter has no new visualization primitive, reuses .wt-chip)", chips.some((t) => t.includes("Riverside Pharmacy")));
     check("partner filter shows the demo Cascade Wellness Clinic partner", chips.some((t) => t.includes("Cascade Wellness Clinic")));
+  },
+  () => {
+    // v3.65.1's "glaring" callout: either at least one below-80% category is called out with an
+    // alert row, or (if everything's at/above 80%) a single quiet "On track" note shows instead
+    // — never both, never neither, whenever the period has any scheduled-item data at all.
+    const body = window.document.body.textContent;
+    const hasAttentionCallout = body.includes("needs attention");
+    const hasOnTrackNote = body.includes("On track");
+    check("adherence callout shows exactly one state (attention rows XOR the on-track note)", hasAttentionCallout !== hasOnTrackNote);
+    if (hasAttentionCallout) {
+      const attentionRow = [...window.document.querySelectorAll("span")].find((s) => s.textContent.includes("needs attention"));
+      check("attention callout names a category and a percentage", attentionRow ? /\w+: \d+% this (week|month) — needs attention/.test(attentionRow.textContent) : null, "true");
+    }
   },
   () => {
     const riversideChip = [...window.document.querySelectorAll(".wt-chip")].find((c) => c.textContent.includes("Riverside Pharmacy"));
@@ -2275,13 +2286,15 @@ const STEPS = [
   () => check("nav to Settings (clear demo data, then test the no-partners-configured edge case)", nav("Settings")),
   () => check("tap Clear demo data (removes the two demo partners)", clickByText("Clear demo data", "button")),
   () => check("nav to Stats (no-partners edge case)", nav("Stats")),
-  () => check("switch to Adherence view with no partners configured", clickByText("Adherence")),
   () => {
     // TestPartnerClinic (created earlier in the suite, 0 referencing items) and Seed Provider
     // (still referencing SeedTreatment) both still exist even after clearing demo data — so this
     // isn't truly a zero-partners state. Verified structurally instead: the filter only renders
     // when settings.partners.length > 0, which both fixtures satisfy, so the filter chip row
-    // should still be present and unbroken after the demo partners are gone.
+    // should still be present and unbroken after the demo partners are gone. The Adherence
+    // section itself needs no click to reach now (v3.65.1) — it's always visible.
+    const heading = [...window.document.querySelectorAll(".wt-section-label-lg")].find((h) => h.textContent === "Adherence Over Time");
+    check("Adherence section still present after clearing demo data", !!heading);
     const chips = [...window.document.querySelectorAll(".wt-chip")].map((c) => c.textContent.trim());
     check("filter chip row survives demo partners being removed (still shows real remaining partners)", chips.some((t) => t === "All partners"));
     check("removed demo partner Riverside Pharmacy no longer in the filter", !chips.some((t) => t.includes("Riverside Pharmacy")));

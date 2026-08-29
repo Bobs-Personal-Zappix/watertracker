@@ -20,6 +20,38 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.65.1] — 2026-08-29
+
+Adherence follow-up from Rob's real-device look at v3.65.0: extract it into its own section, and
+make low/zero adherence "glaring" while good adherence stays quiet. See `docs/DECISION-LOG.md`
+`TRACK-04`'s Aug 29 amendment.
+
+- **Extracted into its own always-visible section** — no longer a toggle sharing the segment
+  control with Water/Protein/Calories/All 3. Sits between that chart and Weight Over Time, with
+  its own independent Week/Month period and date-navigation, so paging through it doesn't move
+  the chart above it.
+- **"Glaring" low-adherence callout, per Rob's explicit design ask.** Each bar is now colored by
+  severity (≥80% green, 50–79% amber, <50% red) instead of a flat per-category color — the
+  Legend still shows category identity via each `Bar`'s own default color. Above the chart, any
+  category below 80% for the period gets its own bold callout row ("Prescriptions: 20% this
+  week — needs attention"), worst first; when everything's ≥80%, a single quiet "✓ On track" note
+  shows instead. Good news stays quiet, bad news doesn't.
+- **A real bug found while building the callout — the period-aggregate percentage was wrong.**
+  Averaging each day's display percentage badly under-counts anything less-than-daily: a weekly
+  item followed perfectly reads 100% the one day it's logged and correctly 0% the other six, but
+  *averaging* those seven values reads as ~14% adherent, not 100%. Caught while writing the
+  harness test for exactly this scenario, before shipping. Root cause: a logged dose was credited
+  at a fractional day-share instead of a full dose. Fixed by crediting a logged dose as a whole 1
+  — the per-day chart display is unchanged, but the period aggregate (what the callout is based
+  on) is now correct: total doses logged ÷ total doses expected over the period, not an average
+  of per-day percentages. Re-verified via 11 standalone scenarios, all passing.
+- `tools/harness.js` rewritten for the new always-visible section and extended to verify the
+  callout shows exactly one state (attention rows or the on-track note, never both/neither).
+  Full 5-step pipeline passed against the exact shipped `bundle.js` (11-error vendor lint
+  baseline unchanged, harness clean, 0 runtime errors).
+- **Not yet verified on a real device** — chart severity coloring and the extracted section's
+  layout are unconfirmed. Needs Rob's pass before the conference demo.
+
 ## [3.65.0] — 2026-08-28
 
 Adherence over time on Stats — resolving what `TRACK-02` §5 scoped but left open for a future
