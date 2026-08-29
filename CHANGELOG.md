@@ -20,6 +20,53 @@ Distilled from the archived entries so the hard-won parts stay in context. Each 
 
 ---
 
+## [3.65.0] — 2026-08-28
+
+Adherence over time on Stats — resolving what `TRACK-02` §5 scoped but left open for a future
+session. Session ran from `docs/CC-BRIEF-adherence-stats-v3.65.0.md`, which depends on v3.64.0's
+demo seed data (an adherence chart against a few days of real logging reads as broken). See
+`docs/DECISION-LOG.md` `TRACK-04`.
+
+- **A — Adherence chart.** New "Adherence" option in Stats' existing metric segment control
+  (alongside Water/Protein/Calories/All 3) — reuses the exact grouped-bar-chart structure the
+  "All 3" view already has, now showing Treatments/Prescriptions/Supplements percentages instead,
+  with the existing `--treatment`/`--meds`/`--supplements` color tokens. Zero new Recharts
+  modules; bundle grew 791.8kb → 798.6kb for this session's full A+B+C+D work, watched and
+  reported rather than shipped silently.
+- **Two simplifications, forced by real gaps in the data model** (no per-item "date added"
+  field, no historical due-date snapshots — and adding either was out of scope): percentages use
+  each item's average expected daily rate (`1/intervalDays`), not a reconstruction of its exact
+  due-date history; "added mid-period" is detected from the numeric prefix of the item's own
+  `id` (every write path already generates ids as `Date.now()-random`, so this isn't a new
+  field). **Real nuance surfaced by the first choice**: a single day's bar for a non-daily item
+  is binary (100%/0%) rather than smoothly percentage-like — only smooths out when averaged
+  across a week/month. Verified this is expected behavior, not a bug, via 10 hand-worked
+  standalone scenarios (see `TRACK-04`).
+- Items with no schedule (`intervalDays <= 0`, the same condition the app's own due-date logic
+  already treats as "never due") are excluded from the percentage and shown as a raw count
+  instead ("+N as-needed doses logged"), per `TRACK-02` §5's "don't fabricate a denominator"
+  reasoning.
+- **B — Per-partner filter**, reusing the app's existing `.wt-chip` filter control (no new
+  visualization primitive): "All partners," "Self-managed" (covers both never-linked items and
+  items whose partner was deleted), then one chip per partner with its logo. Selecting one shows
+  a bold "Filtered to {name}" note above the chart. Hidden entirely when no partners exist.
+- **C — Inventory & Expiration timeline**, a sorted list (not a chart — the app doesn't snapshot
+  `qtyRemaining` over time), placed on Stats between Edit Prior Days Logs and Health Summary.
+  Sorted by urgency (soonest expiry, then lowest supply); reuses `QS()`'s existing low-supply/
+  near-expiry thresholds unchanged. Each row shows the item, partner attribution, remaining
+  count, and expiry date.
+- **Verification honesty, per the brief's own instruction**: Recharts renders no chart children
+  at all in this harness — a pre-existing, documented jsdom limitation (`ResponsiveContainer`
+  always measures 0×0), not new to this session. What's covered: the segment control, the
+  partner filter's full behavior, the as-needed note, and the Inventory & Expiration list
+  end-to-end — all real DOM. The percentage math itself was verified separately, standalone
+  (10 scenarios, all passed), since it has no DOM dependency to exercise through the harness.
+  Full 5-step pipeline passed against the exact shipped `bundle.js` (11-error vendor lint
+  baseline unchanged, harness clean, 0 runtime errors).
+- **Not yet verified on a real device** — chart rendering, the now-5-button segment control's
+  layout, and the filtered-state screenshot readiness are all unconfirmed. Needs Rob's pass
+  before the conference demo, same as v3.64.0.
+
 ## [3.64.0] — 2026-08-28
 
 Partner showcase — presenting the existing `settings.partners` data model for Rob's conference

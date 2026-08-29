@@ -1250,6 +1250,9 @@ via clarifying questions before any code was written:
    breakdown (a filter on top of the other two, once `partnerId` exists — no new visualization
    primitive needed). Deferred to a future session; this entry preserves the scoped shape so that
    session doesn't have to re-derive it.
+   *Resolved Aug 28, 2026, v3.65.0 — see `TRACK-04` for the built shape and two simplifications
+   this exact scoping required once implemented (average-daily-rate percentages, id-timestamp-
+   inferred "date added").*
 *Why:* keeps day-to-day logging and My Plan's existing "system of record" role unchanged while
 finally giving the partner-branding fields `UX-28` introduced (name/logo/link duplicated per item,
 no reuse) a real, reusable home — the smallest data-model step that removes the "re-type and
@@ -1350,6 +1353,93 @@ actually confirmed to look right, only that the markup/data/logic are correct.
 *Status:* **Locked** · Aug 28, 2026 · v3.64.0 — harness/lint verified; needs Rob's real-device
 pass before the conference demo, particularly the RX page's small inline logos and the printed/
 shared Health Summary output, per the brief's own "Needs Rob" section.
+
+**TRACK-04 — Adherence over time on Stats (v3.65.0): resolving what `TRACK-02` §5 scoped but
+left open.** Session ran from `docs/CC-BRIEF-adherence-stats-v3.65.0.md`, which explicitly
+depends on `v3.64.0`'s demo seed data — an adherence chart against a few days of real logging
+reads as broken. Deployed after confirming v3.64.0 was live with the seeder working.
+
+**A — Adherence over time, the core view.** Added as a fifth option ("Adherence") in the same
+segment control that already switches between Water/Protein/Calories/All 3, per the brief's
+explicit placement instruction ("reachable from the same control... rather than a separate
+scrolling section") — reuses the exact grouped-bar-chart JSX structure the existing "All 3" view
+already has (`BarChart`/`CartesianGrid`/`XAxis`/`YAxis`/`Tooltip`/`Legend`/`ReferenceLine`/`Bar`),
+just with Treatments/Prescriptions/Supplements as the three series instead of Water/Protein/
+Calories, using the existing `--treatment`/`--meds`/`--supplements` category color tokens (no
+new tokens). Zero new Recharts modules — everything used was already imported for the existing
+charts; bundle grew v3.64.0's 791.8kb → 798.6kb for this session's total (A+B+C+D), flagged per
+the brief's "watch bundle weight" instruction rather than shipped silently. The "Day" period
+option is hidden for Adherence (day buckets are hourly breakdowns for the existing charts, which
+doesn't apply to a scheduled-dose percentage) — the same pattern already used to hide "Day" for
+the "All 3" combined view.
+
+**Two deliberate simplifications, both forced by real data-model gaps** (the app has no
+per-item "date added" field and doesn't snapshot historical due-dates, and the brief's scope
+forbids adding new fields):
+1. **"Percentage of scheduled" uses each item's average expected daily rate (`1/intervalDays`)**,
+   not a reconstruction of its exact historical due-date sequence via `TS()`/`AS()` — those are
+   stateful and can't be replayed backwards from today's single `lastTakenDate` snapshot. A
+   daily item contributes 1/day to the denominator; an every-3-days item contributes 1/3 per
+   day. **Real, non-obvious limitation surfaced by this choice**: at single-day granularity, a
+   non-daily item's bar is binary (100% the day it's logged, 0% every other day) rather than a
+   smooth percentage — the smoothing only becomes meaningful averaged across a week/month, which
+   is exactly the period a viewer would actually be looking at, but a single day's bar in
+   isolation can look misleadingly spiky for infrequent items. Verified this is the actual
+   behavior (not a bug) via 10 hand-worked scenarios run standalone, outside the harness (see
+   Verification below) — not silently accepted, flagged here specifically because it could read
+   as a defect in the demo if not understood going in.
+2. **"Added mid-period" (an edge case the brief called out explicitly) is detected from the
+   numeric prefix of the item's own `id`** — every write path in this app generates ids as
+   `` `${Date.now()}-${random}` ``, so the prefix is already an implicit creation timestamp, not
+   a new field. Hand-seeded test fixtures with non-numeric ids (e.g. `"t1"`) fall back to
+   "always existed," which is the correct read for genuinely pre-existing data.
+
+Items with `intervalDays <= 0` ("no schedule," the same condition `TS()`/`DS()` already treat as
+"never due," reusing existing semantics rather than inventing new ones) are excluded from the
+percentage entirely — shown instead as a raw count note below the chart ("+N as-needed doses
+logged this period"), per `TRACK-02` §5 / `UX-32`'s established "don't fabricate a denominator
+that doesn't exist" reasoning.
+
+**B — Per-partner filter.** A chip row (reusing `.wt-chip`/`.wt-chip-row`, already the app's
+established filter/multi-select control elsewhere — no new visualization primitive, per the
+brief's own instruction) — "All partners," "Self-managed" (items with no `partnerId`, covering
+both never-linked items and items whose partner was deleted, satisfying the brief's deleted-
+partner edge case for free since that's already how `partnerId` clearing works per `TRACK-02`),
+then one chip per configured partner with its logo inline. Selecting a partner shows a bold
+"Filtered to {name}" note directly above the chart — the brief's explicit ask that a screenshot
+of the filtered state be self-explanatory on its own. Filter chip row is hidden entirely (not
+shown empty) when `settings.partners.length === 0`, per the brief's edge case.
+
+**C — Inventory & expiration timeline.** A sorted list (not a chart, per `TRACK-02` §5 — the app
+doesn't snapshot `qtyRemaining` over time, so there's no real time axis to plot), placed on Stats
+between "Edit Prior Days Logs" and "Health Summary," matching the brief's placement instruction.
+Sorted by urgency: soonest expiry first, then lowest supply. Reuses `QS()` completely unchanged
+for the low-supply/near-expiry alert text and thresholds — the exact ones already used on the RX
+page, per the brief's explicit "do not invent new ones." Each row shows the item, its partner
+(logo + name, via the same `settings.partners` lookup `TRACK-03`'s RX page cards use), remaining
+count, and expiry date. Section hides entirely when no items track inventory, rather than
+showing an empty card.
+
+**Verification:** full 5-step pipeline run and passed against the exact shipped `bundle.js`
+(11-error vendor lint baseline unchanged, harness clean, 0 runtime errors). Per the brief's own
+instruction to verify computation, not assume visual coverage: **Recharts' chart data itself
+(the `<Bar>` elements) cannot be checked through this harness at all** — `tools/harness.js` has
+pre-existing, documented precedent that jsdom's lack of a layout engine means
+`ResponsiveContainer` always measures 0×0 and Recharts renders no chart children in that
+condition, for any of the app's charts, not just this session's. What the harness *does* newly
+cover: the segment control (Adherence button present/active, Day option hidden), the partner
+filter (chips render, filtering shows/clears the "Filtered to" note correctly, survives partner
+deletion), the as-needed note, and the Inventory & Expiration list end-to-end (rows present,
+correct alert text, correct urgency sort) — all real DOM, not SVG, so fully checkable. For the
+percentage math itself, which has no DOM/React dependency, verified separately and standalone: 10
+hand-worked scenarios (daily items, non-daily intervals, as-needed exclusion, mid-period
+addition via id-timestamp, legacy non-numeric fixture ids, multi-item averaging) all passed,
+catching the per-day-granularity spikiness noted above before it could be mistaken for a bug in
+front of Rob or a clinic operator.
+*Status:* **Locked** · Aug 28, 2026 · v3.65.0 — computation verified (harness + standalone);
+chart rendering, the 5-button segment control's real-device layout, and the filtered-state
+screenshot-readiness are all **unverified visually** — jsdom cannot render any of it. Needs Rob's
+real-device pass before the conference demo, same as `TRACK-03`.
 
 **UX-40 — Six quick tweaks after Rob's v3.60.0 review, plus a real bugfix: My Day Supplements tile
 connected, Log It!'s fast-entry tiles locked to the bottom row, Weight ring tightened, three header/

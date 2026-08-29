@@ -2185,6 +2185,108 @@ const STEPS = [
     check("pre-existing TestPartnerClinic untouched by clear-demo-data", !!partnerRecord("TestPartnerClinic"), "true");
   },
   () => check("no runtime errors after Clear demo data", errors.length, 0),
+
+  // ── v3.65.0 (A/B/C): adherence over time, per-partner filter, inventory/expiration timeline.
+  // Chart data itself (Recharts <Bar>/<Line> children) cannot be verified here — jsdom has no
+  // layout engine, so ResponsiveContainer measures 0x0 and Recharts renders no chart children at
+  // all (same documented limitation the existing Water/Protein/Calories coverage above already
+  // works around). What IS checked: the segment control, partner-filter chips and their DOM text
+  // (all plain HTML, not SVG), the as-needed/empty-state notes, and the Inventory & Expiration
+  // list, which is a real DOM list, not a chart, per the brief's own C. The percentage math
+  // itself was verified separately, standalone, against 10 hand-worked scenarios covering daily
+  // items, non-daily intervals, as-needed exclusion, mid-period addition, and legacy fixture ids
+  // — see the session's own notes; not re-run here since it has no DOM/React dependency to
+  // exercise through this harness. Reload demo data first — this feature is meaningless against
+  // the few days of real logging this suite's own fixtures produce. ──
+  () => check("nav to Settings (reload demo data for adherence checks)", nav("Settings")),
+  () => check("tap Load demo data (v3.65.0 checks)", clickByText("Load demo data", "button")),
+  () => check("no runtime errors after reloading demo data", errors.length, 0),
+  () => check("nav to Stats (adherence checks)", nav("Stats")),
+  () => check("switch Stats to the Adherence view", clickByText("Adherence")),
+  () => {
+    const segments = [...window.document.querySelectorAll(".wt-segment")];
+    const metricSegment = segments[0];
+    const adherenceBtn = metricSegment ? [...metricSegment.querySelectorAll("button")].find((b) => b.textContent.trim() === "Adherence") : null;
+    check("Adherence button present in the same segment control as the other metrics (D's exact ask)", !!adherenceBtn);
+    check("Adherence button shows active state when selected", adherenceBtn ? adherenceBtn.className.includes("active") : null, "true");
+    const periodSegment = segments[1];
+    const dayBtn = periodSegment ? [...periodSegment.querySelectorAll("button")].find((b) => b.textContent.trim() === "Day") : null;
+    check("Day period option hidden for Adherence (day-hourly buckets don't apply to a scheduled-dose percentage)", !dayBtn);
+    const rangeLabel = window.document.querySelector(".wt-range-label");
+    check("range label populated for the Adherence view", !!(rangeLabel && rangeLabel.textContent.trim().length > 0));
+  },
+  () => {
+    const note = [...window.document.querySelectorAll(".wt-card-note")].find((p) => p.textContent.includes("Percentage of scheduled doses"));
+    check("adherence explanatory note present", !!note);
+  },
+  () => {
+    // Two demo partners were just (re-)created by the Load demo data tap above — the filter
+    // chip row should show both, plus 'All partners' and 'Self-managed'.
+    const chips = [...window.document.querySelectorAll(".wt-chip")].map((c) => c.textContent.trim());
+    check("partner filter shows 'All partners'", chips.some((t) => t === "All partners"));
+    check("partner filter shows 'Self-managed'", chips.some((t) => t === "Self-managed"));
+    check("partner filter shows the demo Riverside Pharmacy partner (B: filter has no new visualization primitive, reuses .wt-chip)", chips.some((t) => t.includes("Riverside Pharmacy")));
+    check("partner filter shows the demo Cascade Wellness Clinic partner", chips.some((t) => t.includes("Cascade Wellness Clinic")));
+  },
+  () => {
+    const riversideChip = [...window.document.querySelectorAll(".wt-chip")].find((c) => c.textContent.includes("Riverside Pharmacy"));
+    check("found Riverside Pharmacy filter chip", !!riversideChip);
+    if (riversideChip) fire(riversideChip);
+  },
+  () => {
+    const filteredNote = [...window.document.querySelectorAll(".wt-card-note")].find((p) => p.textContent.includes("Filtered to"));
+    check("filtered-state note shows the selected partner's name, self-explanatory per the brief's screenshot ask (B)", filteredNote ? filteredNote.textContent.includes("Riverside Pharmacy") : null, "true");
+  },
+  () => {
+    const allPartnersChip = [...window.document.querySelectorAll(".wt-chip")].find((c) => c.textContent.trim() === "All partners");
+    if (allPartnersChip) fire(allPartnersChip);
+  },
+  () => {
+    const filteredNote = [...window.document.querySelectorAll(".wt-card-note")].find((p) => p.textContent.includes("Filtered to"));
+    check("filtered-state note disappears once back on 'All partners'", !filteredNote);
+  },
+  () => check("no runtime errors after adherence view checks", errors.length, 0),
+
+  // ── v3.65.0 (C): Inventory & Expiration — a sorted list, not a chart, so this IS fully
+  // DOM-checkable. Uses the same demo data (Metformin: low-supply, qtyRemaining 2; Magnesium
+  // Glycinate: near-expiry) loaded above. ──
+  () => {
+    const heading = [...window.document.querySelectorAll(".wt-section-label-strong")].find((h) => h.textContent === "Inventory & Expiration");
+    check("Inventory & Expiration section present (C)", !!heading);
+    const card = heading ? heading.nextElementSibling : null;
+    const rows = card ? [...card.children] : [];
+    check("Inventory & Expiration list has rows", rows.length > 0);
+    const metforminRow = rows.find((r) => r.textContent.includes("Metformin 500mg"));
+    check("low-supply Metformin (demo) appears in the list", !!metforminRow);
+    check("Metformin row shows its low-supply alert text (reuses QS(), the exact RX-page threshold — C's 'do not invent new ones')", metforminRow ? metforminRow.textContent.includes("2 left") : null, "true");
+    const magnesiumRow = rows.find((r) => r.textContent.includes("Magnesium Glycinate"));
+    check("near-expiry Magnesium Glycinate (demo) appears in the list", !!magnesiumRow);
+    check("Magnesium row shows its near-expiry alert text", magnesiumRow ? /Expires in \d+d/.test(magnesiumRow.textContent) : null, "true");
+    const lisinoprilRow = rows.find((r) => r.textContent.includes("Lisinopril 10mg"));
+    check("non-alerted Lisinopril (demo, fine supply/expiry) also appears in the list", !!lisinoprilRow);
+    if (metforminRow && lisinoprilRow) {
+      const metforminIdx = rows.indexOf(metforminRow), lisinoprilIdx = rows.indexOf(lisinoprilRow);
+      check("urgent item (Metformin, low-supply) sorts before a non-urgent item (Lisinopril) — C's 'sorted by urgency' ask", metforminIdx < lisinoprilIdx, "true");
+    }
+  },
+  () => check("no runtime errors after Inventory & Expiration checks", errors.length, 0),
+
+  // ── Edge cases the brief called out explicitly ──
+  () => check("nav to Settings (clear demo data, then test the no-partners-configured edge case)", nav("Settings")),
+  () => check("tap Clear demo data (removes the two demo partners)", clickByText("Clear demo data", "button")),
+  () => check("nav to Stats (no-partners edge case)", nav("Stats")),
+  () => check("switch to Adherence view with no partners configured", clickByText("Adherence")),
+  () => {
+    // TestPartnerClinic (created earlier in the suite, 0 referencing items) and Seed Provider
+    // (still referencing SeedTreatment) both still exist even after clearing demo data — so this
+    // isn't truly a zero-partners state. Verified structurally instead: the filter only renders
+    // when settings.partners.length > 0, which both fixtures satisfy, so the filter chip row
+    // should still be present and unbroken after the demo partners are gone.
+    const chips = [...window.document.querySelectorAll(".wt-chip")].map((c) => c.textContent.trim());
+    check("filter chip row survives demo partners being removed (still shows real remaining partners)", chips.some((t) => t === "All partners"));
+    check("removed demo partner Riverside Pharmacy no longer in the filter", !chips.some((t) => t.includes("Riverside Pharmacy")));
+  },
+  () => check("no runtime errors after post-clear adherence check", errors.length, 0),
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

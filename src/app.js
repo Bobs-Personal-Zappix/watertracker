@@ -337,7 +337,7 @@ import {
         wS = "#5C7085",
         wD = "#9FB0C4",
         wI = "#FFF6DB",
-        xS = "3.64.0",
+        xS = "3.65.0",
         SCHEMA_VERSION = 5,
         ES = {
             logs: {},
@@ -3421,6 +3421,98 @@ import {
         }
     }
 
+    // Adherence over time (v3.65.0, brief section A/B/C — see docs/DECISION-LOG.md TRACK-02 §5
+    // for the spec and TRACK-04 for how this session resolved the parts §5 left open). Pure,
+    // harness-testable functions — no Recharts/DOM dependency — kept separate from the Stats
+    // page component itself so the actual math can be verified directly.
+    //
+    // Two deliberate simplifications, undertaken because the data model has neither a per-item
+    // "date added" field nor a snapshot of historical due-dates, and the brief's scope forbids
+    // adding new fields:
+    // 1. "Percentage of scheduled" is computed from each item's average expected daily rate
+    //    (1/intervalDays) rather than reconstructing its exact historical due-date sequence via
+    //    TS()/AS() (which is stateful and can't be replayed backwards from today's single
+    //    lastTakenDate snapshot). A daily item contributes 1/day; an every-3-days item
+    //    contributes 1/3 per day. This is a standard adherence-rate approximation, not a
+    //    fabricated number — but it is an approximation, and is called out here so it can be
+    //    revisited if Rob's read of a real patient's chart disagrees with it.
+    // 2. "Added mid-period" (edge case in the brief) is detected from the numeric prefix of the
+    //    item's own `id` — every write path in this app generates ids as
+    //    `${Date.now()}-${random}`, so the prefix is already an implicit creation timestamp,
+    //    not a new field. Hand-seeded test fixtures (e.g. "t1") don't parse as a timestamp and
+    //    fall back to "always existed," which is the correct behavior for pre-existing data.
+    function itemAddedAt(item) {
+        let n = item && item.id ? parseInt(String(item.id).split("-")[0], 10) : NaN;
+        return Number.isFinite(n) && n > 946684800000 ? new Date(n) : null
+    }
+
+    function expectedDailyRate(item) {
+        return item.intervalDays > 0 ? 1 / item.intervalDays : 0
+    }
+
+    function filterItemsByPartner(items, partnerFilter) {
+        return partnerFilter ? "self" === partnerFilter ? items.filter(i => !i.partnerId) : items.filter(i => i.partnerId === partnerFilter) : items
+    }
+
+    // itemsByKind: { treatment: [...], rx: [...], supplement: [...] } — already partner-filtered
+    // by the caller once, not per day (this runs once per day bucket in a chart).
+    function computeAdherenceDayBucket(data, dayDate, itemsByKind) {
+        let dateKey = HS(dayDate),
+            today = new Date;
+        today.setHours(0, 0, 0, 0);
+        let isFuture = dayDate.getTime() > today.getTime(),
+            dayLogs = data.logs[dateKey] || [],
+            loggedNames = { Treatments: new Set, Prescriptions: new Set, Supplements: new Set };
+        dayLogs.forEach(entry => {
+            zS(entry) ? (entry.items || []).forEach(nm => loggedNames.Treatments.add(nm)) : RXTypeS(entry) ? (entry.items || []).forEach(it => loggedNames.Prescriptions.add("string" == typeof it ? it : it.name)) : NS(entry) && (entry.items || []).forEach(it => loggedNames.Supplements.add("string" == typeof it ? it : it.name))
+        });
+        let result = { isFuture };
+        [
+            ["Treatments", itemsByKind.treatment],
+            ["Prescriptions", itemsByKind.rx],
+            ["Supplements", itemsByKind.supplement]
+        ].forEach(([label, items]) => {
+            let existedByThen = items.filter(i => {
+                let addedAt = itemAddedAt(i);
+                return !addedAt || addedAt <= dayDate
+            }),
+                expected = existedByThen.reduce((sum, i) => sum + expectedDailyRate(i), 0);
+            if (expected <= 0) return void (result[label] = null);
+            let logged = existedByThen.reduce((sum, i) => sum + (loggedNames[label].has(i.name) ? expectedDailyRate(i) : 0), 0);
+            result[label] = Math.max(0, Math.min(100, Math.round(logged / expected * 100)))
+        });
+        return result
+    }
+
+    // As-needed items (intervalDays <= 0, i.e. no schedule — TS()/DS() already treat this as
+    // "never due" the same way) show a logged count instead of a fabricated percentage, per
+    // TRACK-02 §5 / UX-32's established reasoning. Counted separately from the percentage above.
+    function countAsNeededLogged(data, days, itemsByKind) {
+        let asNeeded = { treatment: new Set(itemsByKind.treatment.filter(i => !(i.intervalDays > 0)).map(i => i.name)), rx: new Set(itemsByKind.rx.filter(i => !(i.intervalDays > 0)).map(i => i.name)), supplement: new Set(itemsByKind.supplement.filter(i => !(i.intervalDays > 0)).map(i => i.name)) },
+            count = 0;
+        return days.forEach(day => {
+            (data.logs[HS(day)] || []).forEach(entry => {
+                zS(entry) ? (entry.items || []).forEach(nm => asNeeded.treatment.has(nm) && count++) : RXTypeS(entry) ? (entry.items || []).forEach(it => asNeeded.rx.has("string" == typeof it ? it : it.name) && count++) : NS(entry) && (entry.items || []).forEach(it => asNeeded.supplement.has("string" == typeof it ? it : it.name) && count++)
+            })
+        }), count
+    }
+
+    // Inventory & expiration timeline (brief section C) — a sorted list, not a chart, since the
+    // app doesn't snapshot qtyRemaining over time and there's no real time axis to plot. Reuses
+    // QS() unchanged (the exact low-supply/near-expiry thresholds already used on the RX page —
+    // "do not invent new ones").
+    function buildInventoryTimeline(settings) {
+        let all = [...settings.treatments.map(i => ({ ...i, kind: "treatment", kindLabel: "Treatment" })), ...settings.rx.map(i => ({ ...i, kind: "rx", kindLabel: "Prescription" })), ...settings.supplements.map(i => ({ ...i, kind: "supplement", kindLabel: "Supplement" }))].filter(i => i.trackInventory);
+        return all.map(i => {
+            let expiryDays = i.expirationDate ? _S(HS(new Date), i.expirationDate) : null;
+            return { ...i, alertText: QS(i), expiryDays }
+        }).sort((a, b) => {
+            let ea = null === a.expiryDays ? 1 / 0 : a.expiryDays,
+                eb = null === b.expiryDays ? 1 / 0 : b.expiryDays;
+            return ea !== eb ? ea - eb : (a.qtyRemaining || 0) - (b.qtyRemaining || 0)
+        })
+    }
+
     function MO({
         data: e,
         todayKey: t,
@@ -4944,11 +5036,34 @@ import {
         onDeleteLogForDate,
         onSaveBackfill
     }) {
-        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), [priorDaysOpen, setPriorDaysOpen] = (0, React.useState)(!1), [priorDaysHistoryDate, setPriorDaysHistoryDate] = (0, React.useState)(null), [priorDaysBackfillOpen, setPriorDaysBackfillOpen] = (0, React.useState)(!1), u = "combined" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
+        let [n, r] = (0, React.useState)("water"), [a, o] = (0, React.useState)("week"), [i, l] = (0, React.useState)(new Date), [priorDaysOpen, setPriorDaysOpen] = (0, React.useState)(!1), [priorDaysHistoryDate, setPriorDaysHistoryDate] = (0, React.useState)(null), [priorDaysBackfillOpen, setPriorDaysBackfillOpen] = (0, React.useState)(!1), [adherencePartnerFilter, setAdherencePartnerFilter] = (0, React.useState)(null), u = "combined" === n, isAdherence = "adherence" === n, s = "protein" === n ? "g" : "calories" === n ? "cal" : "oz", c = "protein" === n ? e.settings.goalProtein || 0 : "calories" === n ? e.settings.goalCalories || 0 : e.settings.goalOz || 0, f = "protein" === n ? "grams" : "calories" === n ? "calories" : "oz";
 
         function d(e) {
-            r(e), "combined" === e && "day" === a && o("week")
+            r(e), ("combined" === e || "adherence" === e) && "day" === a && o("week")
         }
+        let adherenceData = (0, React.useMemo)(() => {
+            if (!isAdherence) return { series: [], rangeLabel: "", asNeededCount: 0 };
+            let today = new Date;
+            today.setHours(0, 0, 0, 0);
+            let days, rangeLabel;
+            if ("month" === a) {
+                let start = GS(i);
+                days = Array.from({ length: XS(i) }, (v, idx) => VS(start, idx)), rangeLabel = aO(i)
+            } else {
+                let start = qS(i);
+                days = Array.from({ length: 7 }, (v, idx) => VS(start, idx)), rangeLabel = `${YS(days[0])} – ${YS(days[6])}`
+            }
+            let itemsByKind = {
+                treatment: filterItemsByPartner(e.settings.treatments, adherencePartnerFilter),
+                rx: filterItemsByPartner(e.settings.rx, adherencePartnerFilter),
+                supplement: filterItemsByPartner(e.settings.supplements, adherencePartnerFilter)
+            }, series = days.map(day => {
+                let bucket = computeAdherenceDayBucket(e, day, itemsByKind);
+                return { label: "month" === a ? String(day.getDate()) : fS[(day.getDay() + 6) % 7], Treatments: bucket.Treatments, Prescriptions: bucket.Prescriptions, Supplements: bucket.Supplements, isFuture: bucket.isFuture }
+            }), asNeededCount = countAsNeededLogged(e, days.filter(day => day.getTime() <= today.getTime()), itemsByKind);
+            return { series, rangeLabel, asNeededCount }
+        }, [isAdherence, a, i, e.logs, e.settings.treatments, e.settings.rx, e.settings.supplements, adherencePartnerFilter]),
+            inventoryTimeline = (0, React.useMemo)(() => buildInventoryTimeline(e.settings), [e.settings.treatments, e.settings.rx, e.settings.supplements]);
         let p = (0, React.useMemo)(() => {
                 let t = {};
                 return Object.keys(e.logs).sort().forEach(n => {
@@ -5168,9 +5283,12 @@ import {
         }), "Cal"), React.default.createElement("button", {
             className: u ? "active" : "",
             onClick: () => d("combined")
-        }, "All 3")), React.default.createElement("div", {
+        }, "All 3"), React.default.createElement("button", {
+            className: isAdherence ? "active" : "",
+            onClick: () => d("adherence")
+        }, "Adherence")), React.default.createElement("div", {
             className: "wt-segment"
-        }, !u && React.default.createElement("button", {
+        }, !u && !isAdherence && React.default.createElement("button", {
             className: "day" === a ? "active" : "",
             onClick: () => {
                 o("day"), l(new Date)
@@ -5196,7 +5314,7 @@ import {
             size: 16
         })), React.default.createElement("span", {
             className: "wt-range-label"
-        }, g), React.default.createElement("button", {
+        }, isAdherence ? adherenceData.rangeLabel : g), React.default.createElement("button", {
             onClick: function() {
                 l("day" === a ? e => VS(e, 1) : "week" === a ? e => VS(e, 7) : e => new Date(e.getFullYear(), e.getMonth() + 1, 1))
             },
@@ -5204,7 +5322,103 @@ import {
             "aria-label": "Next"
         }, React.default.createElement(ChevronRight, {
             size: 16
-        }))), u ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
+        }))), isAdherence ? React.default.createElement(React.default.Fragment, null, e.settings.partners.length > 0 && React.default.createElement("div", {
+            className: "wt-chip-row",
+            style: { marginBottom: 10 }
+        }, React.default.createElement("button", {
+            type: "button",
+            className: "wt-chip " + (adherencePartnerFilter ? "" : "active"),
+            onClick: () => setAdherencePartnerFilter(null)
+        }, "All partners"), React.default.createElement("button", {
+            type: "button",
+            className: "wt-chip " + ("self" === adherencePartnerFilter ? "active" : ""),
+            onClick: () => setAdherencePartnerFilter("self")
+        }, "Self-managed"), e.settings.partners.map(partner => React.default.createElement("button", {
+            key: partner.id,
+            type: "button",
+            className: "wt-chip " + (adherencePartnerFilter === partner.id ? "active" : ""),
+            onClick: () => setAdherencePartnerFilter(partner.id)
+        }, partner.logoDataUri && React.default.createElement("img", {
+            src: partner.logoDataUri,
+            alt: "",
+            style: { width: 16, height: 16, borderRadius: 4, objectFit: "cover", marginRight: 4, verticalAlign: -3 }
+        }), partner.name))), adherencePartnerFilter && React.default.createElement("p", {
+            className: "wt-card-note",
+            style: { marginBottom: 8, fontWeight: 700 }
+        }, "self" === adherencePartnerFilter ? "Filtered to self-managed items" : `Filtered to ${(e.settings.partners.find(p => p.id === adherencePartnerFilter) || {}).name || "partner"}`), React.default.createElement("p", {
+            className: "wt-card-note",
+            style: {
+                marginBottom: 10
+            }
+        }, "Percentage of scheduled doses actually logged — Treatments, Prescriptions, and Supplements. Items with no set schedule aren't included in the percentage; see the note below the chart."), React.default.createElement("div", {
+            className: "wt-card",
+            style: {
+                paddingBottom: 4
+            }
+        }, React.default.createElement(ResponsiveContainer, {
+            width: "100%",
+            height: 220
+        }, React.default.createElement(BarChart, {
+            data: adherenceData.series,
+            margin: {
+                top: 8,
+                right: 4,
+                left: -18,
+                bottom: 0
+            }
+        }, React.default.createElement(CartesianGrid, {
+            vertical: !1,
+            stroke: vS
+        }), React.default.createElement(XAxis, {
+            dataKey: "label",
+            tick: {
+                fontSize: 10,
+                fill: wS
+            },
+            interval: "month" === a ? Math.ceil(adherenceData.series.length / 6) : 0,
+            axisLine: {
+                stroke: vS
+            },
+            tickLine: !1
+        }), React.default.createElement(YAxis, {
+            domain: [0, 100],
+            tick: {
+                fontSize: 10,
+                fill: wS
+            },
+            axisLine: !1,
+            tickLine: !1
+        }), React.default.createElement(Tooltip, {
+            formatter: e => [null === e ? "no scheduled items" : `${e}%`, "adherence"],
+            contentStyle: {
+                fontSize: 12,
+                borderRadius: 8,
+                border: `1px solid ${vS}`
+            }
+        }), React.default.createElement(Legend, {
+            wrapperStyle: {
+                fontSize: 11
+            }
+        }), React.default.createElement(ReferenceLine, {
+            y: 100,
+            stroke: dS,
+            strokeDasharray: "3 3"
+        }), React.default.createElement(Bar, {
+            dataKey: "Treatments",
+            fill: "var(--treatment)",
+            radius: [3, 3, 0, 0]
+        }), React.default.createElement(Bar, {
+            dataKey: "Prescriptions",
+            fill: "var(--meds)",
+            radius: [3, 3, 0, 0]
+        }), React.default.createElement(Bar, {
+            dataKey: "Supplements",
+            fill: "var(--supplements)",
+            radius: [3, 3, 0, 0]
+        }))), adherenceData.asNeededCount > 0 && React.default.createElement("p", {
+            className: "wt-card-note",
+            style: { margin: "8px 0 0" }
+        }, `+ ${adherenceData.asNeededCount} as-needed dose${1===adherenceData.asNeededCount?"":"s"} logged this period (no fixed schedule, not included above)`))) : u ? React.default.createElement(React.default.Fragment, null, React.default.createElement("p", {
             className: "wt-card-note",
             style: {
                 marginBottom: 10
@@ -5507,7 +5721,41 @@ import {
             data: e,
             onClose: () => setPriorDaysBackfillOpen(!1),
             onSave: onSaveBackfill
-        }), React.default.createElement("div", {
+        }), inventoryTimeline.length > 0 && React.default.createElement(React.default.Fragment, null, React.default.createElement("div", {
+            className: "wt-section-label wt-section-label-strong"
+        }, "Inventory & Expiration"), React.default.createElement("div", {
+            className: "wt-card"
+        }, inventoryTimeline.map((item, idx) => {
+            let partner = item.partnerId ? e.settings.partners.find(p => p.id === item.partnerId) : null;
+            return React.default.createElement("div", {
+                key: item.id,
+                style: {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "8px 0",
+                    borderTop: idx > 0 ? "1px solid var(--line)" : "none"
+                }
+            }, partner && partner.logoDataUri && React.default.createElement("img", {
+                src: partner.logoDataUri,
+                alt: "",
+                style: { width: 24, height: 24, borderRadius: 6, objectFit: "cover", flexShrink: 0 }
+            }), React.default.createElement("div", {
+                style: { flex: 1, minWidth: 0 }
+            }, React.default.createElement("div", {
+                style: { fontWeight: 700, fontSize: 14 }
+            }, item.name), React.default.createElement("div", {
+                style: { fontSize: 12, color: wS }
+            }, item.kindLabel, partner && ` · ${partner.name}`, !item.alertText && `${item.qtyRemaining || item.expirationDate ? " · " : ""}${item.qtyRemaining ? `${item.qtyRemaining} remaining` : ""}${item.qtyRemaining && item.expirationDate ? ", " : ""}${item.expirationDate ? `expires ${YS(MS(item.expirationDate))}` : ""}`)), item.alertText && React.default.createElement("span", {
+                style: {
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    color: bS,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0
+                }
+            }, item.alertText))
+        }))), React.default.createElement("div", {
             className: "wt-section-label wt-section-label-strong"
         }, "Health Summary"), React.default.createElement("div", {
             className: "wt-card"
